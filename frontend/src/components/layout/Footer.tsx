@@ -11,9 +11,11 @@ export const Footer: React.FC = () => {
           {/* Brand Col */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-navy-900 via-teal-500 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/25">
-                <ParkingCircle className="w-6 h-6 stroke-[2.5]" />
-              </div>
+              <img
+                src="/logo-icon.png"
+                alt="PARKIA"
+                className="w-10 h-10 object-contain drop-shadow-md brightness-110"
+              />
               <div className="flex flex-col">
                 <span className="text-2xl font-black tracking-tight text-white leading-none">PARKIA</span>
                 <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 mt-0.5">ESTACIONA FÁCIL</span>

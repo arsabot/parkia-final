@@ -65,9 +65,11 @@ export const LoginPage: React.FC = () => {
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-            <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/25 group-hover:scale-105 transition-transform">
-              <ParkingCircle className="w-7 h-7 stroke-[2.5]" />
-            </div>
+            <img
+              src="/logo-icon.png"
+              alt="PARKIA"
+              className="w-14 h-14 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
+            />
           </Link>
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             Iniciar Sesión

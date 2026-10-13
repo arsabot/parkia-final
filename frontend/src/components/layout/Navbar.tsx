@@ -50,9 +50,11 @@ export const Navbar: React.FC = () => {
           
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-navy-900 via-teal-500 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/25 group-hover:scale-105 transition-transform">
-              <ParkingCircle className="w-6 h-6 stroke-[2.5]" />
-            </div>
+            <img
+              src="/logo-icon.png"
+              alt="PARKIA"
+              className="w-10 h-10 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
+            />
             <div className="flex flex-col">
               <span className="text-2xl font-black tracking-tight text-navy-900 leading-none">
                 PARKIA
