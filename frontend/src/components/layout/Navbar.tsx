@@ -49,16 +49,16 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-700 via-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/25 group-hover:scale-105 transition-transform">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-navy-900 via-teal-500 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/25 group-hover:scale-105 transition-transform">
               <ParkingCircle className="w-6 h-6 stroke-[2.5]" />
             </div>
-            <div>
-              <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-950 via-slate-800 to-brand-700 bg-clip-text text-transparent">
+            <div className="flex flex-col">
+              <span className="text-2xl font-black tracking-tight text-navy-900 leading-none">
                 PARKIA
               </span>
-              <span className="hidden sm:inline-block ml-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200">
-                Mobility
+              <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 mt-0.5">
+                ESTACIONA FÁCIL
               </span>
             </div>
           </Link>

@@ -26,13 +26,13 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background-color: #1e1b4b;
+  background-color: #1A2B42; /* Azul Marino Oscuro */
   color: #ffffff;
   padding: 6px 10px;
   border-radius: 9999px;
   font-weight: 700;
   font-size: 13px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 14px rgba(26, 43, 66, 0.35);
   border: 2px solid #ffffff;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
@@ -41,18 +41,18 @@
 
 .custom-pin-inner:hover,
 .custom-pin-inner.active {
-  background-color: #4f46e5;
+  background: linear-gradient(135deg, #1A2B42 0%, #2D7A9E 50%, #28C175 100%);
   transform: scale(1.12) translateY(-4px);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 8px 22px rgba(40, 193, 117, 0.45);
 }
 
 .custom-user-pin {
   width: 20px;
   height: 20px;
-  background-color: #3b82f6;
+  background-color: #28C175; /* Verde Esmeralda */
   border: 3px solid #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 8px rgba(40, 193, 117, 0.3);
   animation: pulse-ring 2s infinite;
 }
 
