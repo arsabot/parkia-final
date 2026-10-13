@@ -1,0 +1,14 @@
+{
+  "name": "parkia-project",
+  "version": "1.0.0",
+  "description": "PARKIA - Plataforma Inteligente de Reserva de Estacionamiento",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "dev:backend": "backend/venv/bin/python backend/manage.py runserver 127.0.0.1:8000",
+    "start": "./start.sh",
+    "build": "npm run build --prefix frontend"
+  },
+  "keywords": ["parking", "react", "django", "vite"],
+  "author": "",
+  "license": "ISC"
+}
