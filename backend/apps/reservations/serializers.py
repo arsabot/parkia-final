@@ -52,6 +52,11 @@ class ReservationSerializer(serializers.ModelSerializer):
             'status',
             'status_display',
             'cancellation_reason',
+            'check_in_time',
+            'check_out_time',
+            'payment_status',
+            'payment_method',
+            'staff_notes',
             'created_at',
             'updated_at',
         ]

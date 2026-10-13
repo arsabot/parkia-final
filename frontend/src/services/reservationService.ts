@@ -53,4 +53,27 @@ export const reservationService = {
   }> {
     return api.get('/reservations/check_availability/', params);
   },
+
+  async verifyQr(code: string): Promise<{ valid: boolean; message: string; reservation: Reservation }> {
+    return api.post<{ valid: boolean; message: string; reservation: Reservation }>('/reservations/verify_qr/', { code });
+  },
+
+  async checkIn(id: number, data?: { notes?: string; payment_method?: string }): Promise<{ message: string; reservation: Reservation }> {
+    return api.post<{ message: string; reservation: Reservation }>(`/reservations/${id}/check_in/`, data || {});
+  },
+
+  async checkOut(id: number, data?: { notes?: string; payment_method?: string }): Promise<{ message: string; reservation: Reservation }> {
+    return api.post<{ message: string; reservation: Reservation }>(`/reservations/${id}/check_out/`, data || {});
+  },
+
+  async registerWalkIn(data: {
+    parking_id: number;
+    vehicle_plate: string;
+    vehicle_model?: string;
+    hours: number;
+    payment_method: string;
+    notes?: string;
+  }): Promise<{ message: string; reservation: Reservation }> {
+    return api.post<{ message: string; reservation: Reservation }>('/reservations/register_walk_in/', data);
+  },
 };

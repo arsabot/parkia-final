@@ -90,6 +90,11 @@ export interface Reservation {
   status: ReservationStatus;
   status_display: string;
   cancellation_reason?: string;
+  check_in_time?: string;
+  check_out_time?: string;
+  payment_status?: 'pending' | 'paid' | 'refunded';
+  payment_method?: string;
+  staff_notes?: string;
   created_at: string;
   updated_at: string;
 }

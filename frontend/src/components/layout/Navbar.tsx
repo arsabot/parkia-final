@@ -13,7 +13,8 @@ import {
   X, 
   ShieldAlert,
   ParkingCircle,
-  Sparkles
+  Sparkles,
+  ScanLine
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
@@ -117,6 +118,18 @@ export const Navbar: React.FC = () => {
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
+                </Link>
+
+                <Link
+                  to="/admin/gate"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                    isActive('/admin/gate')
+                      ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <ScanLine className="w-4 h-4 text-teal-600" />
+                  Control Accesos & Caja
                 </Link>
 
                 <Link

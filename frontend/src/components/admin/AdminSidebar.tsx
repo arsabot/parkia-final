@@ -7,12 +7,15 @@ import {
   CalendarCheck, 
   TrendingUp, 
   Settings, 
-  ShieldCheck 
+  ShieldCheck,
+  ScanLine,
+  DollarSign
 } from 'lucide-react';
 
 export const AdminSidebar: React.FC = () => {
   const links = [
     { to: '/admin', label: 'Panel General', icon: LayoutDashboard, end: true },
+    { to: '/admin/gate', label: 'Control Accesos & Caja', icon: ScanLine },
     { to: '/admin/parkings', label: 'Estacionamientos', icon: Car },
     { to: '/admin/spaces', label: 'Gestión de Plazas', icon: Grid },
     { to: '/admin/reservations', label: 'Historial de Reservas', icon: CalendarCheck },

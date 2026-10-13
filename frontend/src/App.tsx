@@ -21,6 +21,7 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminParkingsPage } from './pages/admin/AdminParkingsPage';
 import { AdminSpacesPage } from './pages/admin/AdminSpacesPage';
 import { AdminReservationsPage } from './pages/admin/AdminReservationsPage';
+import { AdminGatePage } from './pages/admin/AdminGatePage';
 
 // Protected Route for Admin Role
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -112,6 +113,14 @@ export const App: React.FC = () => {
                   element={
                     <AdminRoute>
                       <AdminDashboardPage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/gate"
+                  element={
+                    <AdminRoute>
+                      <AdminGatePage />
                     </AdminRoute>
                   }
                 />

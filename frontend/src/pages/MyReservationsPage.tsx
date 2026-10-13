@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   ArrowRight,
   Frown,
-  Calendar
+  Calendar,
+  QrCode
 } from 'lucide-react';
 import { Reservation } from '../types';
 import { reservationService } from '../services/reservationService';
@@ -20,6 +21,8 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
 import { EmptyState } from '../components/common/EmptyState';
+import { Modal } from '../components/common/Modal';
+import { QRCodeDisplay } from '../components/common/QRCodeDisplay';
 import { CancelReservationModal } from '../components/reservations/CancelReservationModal';
 
 export const MyReservationsPage: React.FC = () => {
@@ -30,6 +33,7 @@ export const MyReservationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
   const [selectedForCancel, setSelectedForCancel] = useState<Reservation | null>(null);
+  const [selectedForQr, setSelectedForQr] = useState<Reservation | null>(null);
 
   const fetchReservations = async () => {
     try {
@@ -134,17 +138,28 @@ export const MyReservationsPage: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  `${nextReservation.parking_name} ${nextReservation.parking_address}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="emerald" size="sm" leftIcon={<Navigation className="w-4 h-4" />}>
-                  Cómo llegar con GPS
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="emerald"
+                  size="sm"
+                  leftIcon={<QrCode className="w-4 h-4" />}
+                  onClick={() => setSelectedForQr(nextReservation)}
+                >
+                  Ver Pase QR
                 </Button>
-              </a>
+
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    `${nextReservation.parking_name} ${nextReservation.parking_address}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="secondary" size="sm" leftIcon={<Navigation className="w-4 h-4" />}>
+                    GPS
+                  </Button>
+                </a>
+              </div>
 
               <button
                 onClick={() => setSelectedForCancel(nextReservation)}
@@ -243,14 +258,25 @@ export const MyReservationsPage: React.FC = () => {
                     </span>
                   </div>
 
-                  {res.status === 'confirmed' && (
+                  <div className="flex items-center gap-2 mt-2">
                     <button
-                      onClick={() => setSelectedForCancel(res)}
-                      className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 transition-colors"
+                      onClick={() => setSelectedForQr(res)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-navy-900 hover:text-brand-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 transition-colors"
+                      title="Ver código QR"
                     >
-                      Cancelar
+                      <QrCode className="w-3.5 h-3.5 text-teal-600" />
+                      QR
                     </button>
-                  )}
+
+                    {res.status === 'confirmed' && (
+                      <button
+                        onClick={() => setSelectedForCancel(res)}
+                        className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -258,6 +284,33 @@ export const MyReservationsPage: React.FC = () => {
         )}
 
       </div>
+
+      {/* QR Code Modal for Driver */}
+      {selectedForQr && (
+        <Modal
+          isOpen={!!selectedForQr}
+          onClose={() => setSelectedForQr(null)}
+          title={`Pase Digital • #${selectedForQr.booking_code}`}
+          maxWidth="sm"
+        >
+          <div className="p-4 text-center space-y-4">
+            <QRCodeDisplay
+              value={selectedForQr.booking_code}
+              size={210}
+              title="Escaneo en Garita / Molinete"
+            />
+            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left text-xs space-y-1">
+              <div><strong>Estacionamiento:</strong> {selectedForQr.parking_name}</div>
+              <div><strong>Vehículo:</strong> {selectedForQr.vehicle_plate}</div>
+              <div><strong>Fecha y Hora:</strong> {selectedForQr.date} ({selectedForQr.start_time.slice(0, 5)} - {selectedForQr.end_time.slice(0, 5)} hs)</div>
+              <div><strong>Plaza Asignada:</strong> <span className="text-emerald-700 font-bold">{selectedForQr.space_code}</span></div>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Presenta este código al ingresar o salir. El operador o lector registrará automáticamente tu estadía y pago.
+            </p>
+          </div>
+        </Modal>
+      )}
 
       {/* Cancel Modal Instance */}
       {selectedForCancel && (

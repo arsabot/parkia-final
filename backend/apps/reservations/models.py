@@ -35,7 +35,24 @@ class Reservation(models.Model):
     
     status = models.CharField('Estado', max_length=20, choices=Status.choices, default=Status.CONFIRMED)
     cancellation_reason = models.TextField('Motivo de cancelación', blank=True, null=True)
-    
+
+    # Registro de Ingreso / Egreso y Finanzas
+    check_in_time = models.DateTimeField('Hora real de ingreso', blank=True, null=True)
+    check_out_time = models.DateTimeField('Hora real de egreso', blank=True, null=True)
+    payment_status = models.CharField('Estado del Pago', max_length=20, default='paid', choices=[
+        ('pending', 'Pendiente de cobro'),
+        ('paid', 'Cobrado / Pagado'),
+        ('refunded', 'Reembolsado')
+    ])
+    payment_method = models.CharField('Medio de Pago', max_length=30, default='Efectivo', choices=[
+        ('Efectivo', 'Efectivo en Garita'),
+        ('Mercado Pago', 'Mercado Pago (QR)'),
+        ('Tarjeta Débito', 'Tarjeta de Débito'),
+        ('Tarjeta Crédito', 'Tarjeta de Crédito'),
+        ('Transferencia', 'Transferencia Bancaria')
+    ])
+    staff_notes = models.CharField('Notas del Operador', max_length=255, blank=True, default='')
+
     created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
     updated_at = models.DateTimeField('Última actualización', auto_now=True)
 

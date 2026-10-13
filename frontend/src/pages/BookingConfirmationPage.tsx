@@ -16,6 +16,7 @@ import {
 import { Reservation } from '../types';
 import { reservationService } from '../services/reservationService';
 import { Button } from '../components/common/Button';
+import { QRCodeDisplay } from '../components/common/QRCodeDisplay';
 import { useToast } from '../context/ToastContext';
 import confetti from 'canvas-confetti';
 
@@ -166,6 +167,18 @@ export const BookingConfirmationPage: React.FC = () => {
                 </span>
               </div>
 
+            </div>
+
+            {/* QR Code Ticket Access */}
+            <div className="flex flex-col items-center justify-center p-5 bg-gradient-to-b from-slate-50 to-white rounded-2xl border border-slate-200 text-center">
+              <QRCodeDisplay
+                value={reservation.booking_code}
+                size={190}
+                title="Pase Digital • Escanear al Ingreso / Egreso"
+              />
+              <p className="text-xs text-slate-500 max-w-sm mt-3">
+                Mostrá este código QR en la garita o terminal de acceso al llegar para validar tu ingreso automático y registrar tu estadía.
+              </p>
             </div>
 
             {/* Total Price Bar */}
