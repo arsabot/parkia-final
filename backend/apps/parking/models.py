@@ -10,7 +10,17 @@ class Parking(models.Model):
     longitude = models.FloatField('Longitud')
     description = models.TextField('Descripción detallada', blank=True)
     phone = models.CharField('Teléfono de contacto', max_length=50, blank=True)
-    
+
+    # Owner / Operator relationship
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='owned_parkings',
+        verbose_name='Dueño / Operador responsable'
+    )
+
     # Pricing & Hours
     price_per_hour = models.DecimalField('Precio por hora ($)', max_digits=10, decimal_places=2)
     price_per_day = models.DecimalField('Precio por estadía/día ($)', max_digits=10, decimal_places=2, null=True, blank=True)

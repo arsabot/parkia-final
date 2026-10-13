@@ -6,6 +6,10 @@ export const parkingService = {
     return api.get<Parking[]>('/parking/', filters);
   },
 
+  async getMyParkings(): Promise<Parking[]> {
+    return api.get<Parking[]>('/parking/my_parkings/');
+  },
+
   async getParkingById(id: number | string): Promise<Parking> {
     return api.get<Parking>(`/parking/${id}/`);
   },

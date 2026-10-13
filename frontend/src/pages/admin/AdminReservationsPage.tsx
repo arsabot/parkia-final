@@ -14,11 +14,13 @@ import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { reservationService } from '../../services/reservationService';
 import { parkingService } from '../../services/parkingService';
 import { Reservation, Parking, ReservationStatus } from '../../types';
 
 export const AdminReservationsPage: React.FC = () => {
+  const { isOwner } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [parkings, setParkings] = useState<Parking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,8 +50,19 @@ export const AdminReservationsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    parkingService.getParkings().then(setParkings).catch(() => {});
-  }, []);
+    const fetchParkings = async () => {
+      try {
+        const data = isOwner ? await parkingService.getMyParkings() : await parkingService.getParkings();
+        setParkings(data);
+        if (isOwner && data.length > 0) {
+          setParkingFilter(String(data[0].id));
+        }
+      } catch (err) {
+        console.error('Error fetching parkings', err);
+      }
+    };
+    fetchParkings();
+  }, [isOwner]);
 
   useEffect(() => {
     fetchReservations();
@@ -137,16 +150,23 @@ export const AdminReservationsPage: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-600">Estacionamiento:</span>
-                  <select
-                    value={parkingFilter}
-                    onChange={(e) => setParkingFilter(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none"
-                  >
-                    <option value="all">Todos los estacionamientos</option>
-                    {parkings.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                  {isOwner && parkings.length <= 1 ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{parkings[0]?.name || 'Tu Garaje'}</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={parkingFilter}
+                      onChange={(e) => setParkingFilter(e.target.value)}
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none"
+                    >
+                      {!isOwner && <option value="all">Todos los estacionamientos</option>}
+                      {parkings.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
             </div>

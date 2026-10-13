@@ -16,7 +16,14 @@ class ReservationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Reservation.objects.select_related('parking', 'space', 'user').all()
 
-        if user.role not in ['admin', 'owner'] and not user.is_superuser:
+        if user.role == 'admin' or user.is_superuser:
+            # Super Admin Ariel ve todas las reservas de la plataforma
+            pass
+        elif user.role == 'owner':
+            # El dueño de garaje solo ve las reservas de sus propios estacionamientos
+            queryset = queryset.filter(parking__owner=user)
+        else:
+            # Los conductores solo ven sus propias reservas
             queryset = queryset.filter(user=user)
 
         # Filters
@@ -123,6 +130,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
         except Reservation.DoesNotExist:
             return Response({'error': f'No se encontró ninguna reserva con el código "{code}".'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Si el usuario es dueño de garaje, verificar que el código pertenezca a su propio estacionamiento
+        if request.user.role == 'owner' and reservation.parking.owner != request.user and not request.user.is_superuser:
+            return Response({
+                'error': f'Este código QR pertenece al estacionamiento "{reservation.parking.name}". Solo puedes validar reservas de tu propio estacionamiento asignado.'
+            }, status=status.HTTP_403_FORBIDDEN)
+
         return Response({
             'valid': True,
             'message': 'Código QR validado exitosamente.',
@@ -137,6 +150,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         from django.utils import timezone
         reservation = self.get_object()
+
+        # Si es dueño de garaje, validar que sea su propio estacionamiento
+        if request.user.role == 'owner' and reservation.parking.owner != request.user and not request.user.is_superuser:
+            return Response({'error': 'No tienes permiso para operar este estacionamiento ajeno.'}, status=status.HTTP_403_FORBIDDEN)
+
         reservation.check_in_time = timezone.now()
         reservation.status = Reservation.Status.CONFIRMED
         
@@ -168,6 +186,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         from django.utils import timezone
         reservation = self.get_object()
+
+        # Si es dueño de garaje, validar que sea su propio estacionamiento
+        if request.user.role == 'owner' and reservation.parking.owner != request.user and not request.user.is_superuser:
+            return Response({'error': 'No tienes permiso para operar este estacionamiento ajeno.'}, status=status.HTTP_403_FORBIDDEN)
+
         now = timezone.now()
         reservation.check_out_time = now
         reservation.status = Reservation.Status.COMPLETED
@@ -211,6 +234,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
             parking = Parking.objects.get(id=parking_id)
         except Parking.DoesNotExist:
             return Response({'error': 'Estacionamiento no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Si es dueño de garaje, validar que sea su propio estacionamiento
+        if request.user.role == 'owner' and parking.owner != request.user and not request.user.is_superuser:
+            return Response({'error': 'No tienes permiso para registrar ingresos en un estacionamiento ajeno.'}, status=status.HTTP_403_FORBIDDEN)
 
         now = timezone.now()
         price = round(hours * float(parking.price_per_hour), 2)

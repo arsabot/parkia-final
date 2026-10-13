@@ -40,7 +40,7 @@ export const AdminSpacesPage: React.FC = () => {
     const loadParkings = async () => {
       try {
         setLoading(true);
-        const data = await parkingService.getParkings();
+        const data = isOwner ? await parkingService.getMyParkings() : await parkingService.getParkings();
         setParkings(data);
         if (data.length > 0) {
           setSelectedParkingId(data[0].id);
@@ -52,7 +52,7 @@ export const AdminSpacesPage: React.FC = () => {
       }
     };
     loadParkings();
-  }, []);
+  }, [isOwner]);
 
   useEffect(() => {
     const loadSpaces = async () => {
@@ -161,19 +161,38 @@ export const AdminSpacesPage: React.FC = () => {
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="w-full sm:w-auto flex-1">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                  Estacionamiento Seleccionado
+                  {isOwner && parkings.length <= 1 ? 'Garaje Asignado' : 'Estacionamiento Seleccionado'}
                 </label>
-                <select
-                  value={selectedParkingId || ''}
-                  onChange={(e) => setSelectedParkingId(Number(e.target.value))}
-                  className="w-full sm:max-w-md bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                >
-                  {parkings.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.address})
-                    </option>
-                  ))}
-                </select>
+                {isOwner && parkings.length <= 1 ? (
+                  <div className="w-full sm:max-w-md bg-emerald-50/80 border border-emerald-200/80 rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <div>
+                        <h4 className="text-sm font-extrabold text-navy-900 leading-tight">
+                          {currentParking?.name || parkings[0]?.name || 'Tu Garaje'}
+                        </h4>
+                        <p className="text-xs text-slate-500 font-medium">
+                          {currentParking?.address || parkings[0]?.address}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-extrabold bg-emerald-200/60 text-emerald-800 px-2 py-0.5 rounded-full uppercase">
+                      Tu Garaje
+                    </span>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedParkingId || ''}
+                    onChange={(e) => setSelectedParkingId(Number(e.target.value))}
+                    className="w-full sm:max-w-md bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  >
+                    {parkings.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.address})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {/* Status Counters */}

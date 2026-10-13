@@ -105,6 +105,14 @@ class DemoLoginView(views.APIView):
                 user.role = user_role
                 user.save()
 
+        # Si es dueño de garaje demo, asegurar asignación de su estacionamiento
+        if user_role == User.Role.OWNER:
+            from apps.parking.models import Parking
+            parking = Parking.objects.filter(id=1).first()
+            if parking and parking.owner != user:
+                parking.owner = user
+                parking.save()
+
         tokens = get_tokens_for_user(user)
         user_data = UserSerializer(user).data
         return Response({

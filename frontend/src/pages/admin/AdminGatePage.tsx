@@ -64,12 +64,18 @@ export const AdminGatePage: React.FC = () => {
     try {
       setLoading(true);
       const [parkingList, resList] = await Promise.all([
-        parkingService.getParkings(),
+        isOwner ? parkingService.getMyParkings() : parkingService.getParkings(),
         reservationService.getReservations()
       ]);
       setParkings(parkingList);
-      if (parkingList.length > 0 && selectedParkingId === 'all') {
-        setWalkInParkingId(parkingList[0].id);
+      if (parkingList.length > 0) {
+        if (isOwner) {
+          // El dueño solo opera su propio estacionamiento asignado
+          setSelectedParkingId(parkingList[0].id);
+          setWalkInParkingId(parkingList[0].id);
+        } else if (selectedParkingId === 'all') {
+          setWalkInParkingId(parkingList[0].id);
+        }
       }
       setReservations(resList);
     } catch (err: any) {
@@ -81,7 +87,7 @@ export const AdminGatePage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [isOwner]);
 
   // Filter reservations based on selected parking
   const filteredReservations = reservations.filter((r) => {
@@ -228,18 +234,28 @@ export const AdminGatePage: React.FC = () => {
 
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 {/* Parking selector filter */}
-                <select
-                  value={selectedParkingId}
-                  onChange={(e) => setSelectedParkingId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                  className="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
-                >
-                  <option value="all">🏢 Todos los Estacionamientos</option>
-                  {parkings.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                {isOwner && parkings.length <= 1 ? (
+                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-900 shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Garaje: <strong>{parkings[0]?.name || 'Tu Garaje'}</strong></span>
+                    <span className="text-[10px] bg-emerald-200/60 text-emerald-800 px-1.5 py-0.5 rounded-md font-extrabold uppercase">
+                      Asignado
+                    </span>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedParkingId}
+                    onChange={(e) => setSelectedParkingId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                    className="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+                  >
+                    {!isOwner && <option value="all">🏢 Todos los Estacionamientos</option>}
+                    {parkings.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
 
                 <Button
                   variant="emerald"
@@ -725,17 +741,26 @@ export const AdminGatePage: React.FC = () => {
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 Estacionamiento Destino:
               </label>
-              <select
-                value={walkInParkingId}
-                onChange={(e) => setWalkInParkingId(Number(e.target.value))}
-                className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-              >
-                {parkings.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} (${Number(p.price_per_hour).toLocaleString('es-AR')}/h)
-                  </option>
-                ))}
-              </select>
+              {isOwner && parkings.length <= 1 ? (
+                <div className="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 flex items-center justify-between">
+                  <span>🏢 {parkings[0]?.name || 'Tu Estacionamiento'}</span>
+                  <span className="text-emerald-700 font-extrabold">
+                    ${Number(parkings[0]?.price_per_hour || 0).toLocaleString('es-AR')}/h
+                  </span>
+                </div>
+              ) : (
+                <select
+                  value={walkInParkingId}
+                  onChange={(e) => setWalkInParkingId(Number(e.target.value))}
+                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                  {parkings.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} (${Number(p.price_per_hour).toLocaleString('es-AR')}/h)
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">

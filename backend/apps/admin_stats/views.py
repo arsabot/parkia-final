@@ -13,19 +13,29 @@ class AdminDashboardStatsView(views.APIView):
 
     def get(self, request):
         today = date.today()
+        user = request.user
+
+        # Aislamiento de datos: el dueño solo ve las métricas de sus garajes asignados
+        if user.role == 'owner' and not user.is_superuser:
+            parkings_qs = Parking.objects.filter(owner=user)
+            spaces_qs = ParkingSpace.objects.filter(parking__owner=user)
+            all_reservations = Reservation.objects.filter(parking__owner=user)
+        else:
+            parkings_qs = Parking.objects.all()
+            spaces_qs = ParkingSpace.objects.all()
+            all_reservations = Reservation.objects.all()
         
         # 1. Total counts
-        total_parkings = Parking.objects.count()
-        active_parkings = Parking.objects.filter(is_active=True).count()
+        total_parkings = parkings_qs.count()
+        active_parkings = parkings_qs.filter(is_active=True).count()
         
-        total_spaces = ParkingSpace.objects.count()
-        occupied_spaces = ParkingSpace.objects.filter(
+        total_spaces = spaces_qs.count()
+        occupied_spaces = spaces_qs.filter(
             status__in=[ParkingSpace.Status.OCCUPIED, ParkingSpace.Status.RESERVED]
         ).count()
         occupancy_rate = round((occupied_spaces / total_spaces * 100), 1) if total_spaces > 0 else 0
 
         # Reservations stats
-        all_reservations = Reservation.objects.all()
         total_reservations = all_reservations.count()
         today_reservations = all_reservations.filter(date=today).count()
         
@@ -65,7 +75,7 @@ class AdminDashboardStatsView(views.APIView):
 
         # 4. Revenue by parking lot
         top_parkings = []
-        for p in Parking.objects.all()[:5]:
+        for p in parkings_qs[:5]:
             p_rev = revenue_qs.filter(parking=p).aggregate(total=Sum('total_price'))['total'] or 0
             p_count = all_reservations.filter(parking=p).count()
             top_parkings.append({

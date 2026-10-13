@@ -117,9 +117,22 @@ class ParkingViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def my_parkings(self, request):
+        """Devuelve únicamente los estacionamientos asignados al dueño actual"""
+        if request.user.role == 'owner' and not request.user.is_superuser:
+            qs = Parking.objects.filter(owner=request.user)
+        else:
+            qs = Parking.objects.all()
+        serializer = ParkingListSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data)
+
     @action(detail=True, methods=['get'])
     def spaces(self, request, pk=None):
         parking = self.get_object()
+        # Si es dueño, verificar que sea su garaje
+        if request.user.is_authenticated and request.user.role == 'owner' and parking.owner != request.user and not request.user.is_superuser:
+            return Response({'error': 'No tienes permiso para ver o administrar plazas de otro garaje.'}, status=status.HTTP_403_FORBIDDEN)
         spaces = parking.spaces.all()
         serializer = ParkingSpaceSerializer(spaces, many=True)
         return Response(serializer.data)
@@ -141,7 +154,12 @@ class ParkingSpaceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminRole]
 
     def get_queryset(self):
+        user = self.request.user
         queryset = ParkingSpace.objects.all()
+        # Si es dueño de garaje, restringir a los espacios de su propio garaje
+        if user.is_authenticated and user.role == 'owner' and not user.is_superuser:
+            queryset = queryset.filter(parking__owner=user)
+
         parking_id = self.request.query_params.get('parking_id')
         if parking_id:
             queryset = queryset.filter(parking_id=parking_id)
@@ -150,6 +168,10 @@ class ParkingSpaceViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'])
     def set_status(self, request, pk=None):
         space = self.get_object()
+        # Si es dueño de garaje, verificar que sea el propietario
+        if request.user.role == 'owner' and space.parking.owner != request.user and not request.user.is_superuser:
+            return Response({'error': 'No tienes permiso para modificar plazas de otro estacionamiento.'}, status=status.HTTP_403_FORBIDDEN)
+
         new_status = request.data.get('status')
         if new_status not in [choice[0] for choice in ParkingSpace.Status.choices]:
             return Response({'error': 'Estado no válido.'}, status=status.HTTP_400_BAD_REQUEST)
