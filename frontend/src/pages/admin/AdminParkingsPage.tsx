@@ -186,11 +186,19 @@ export const AdminParkingsPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Gestión de Estacionamientos
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300">
+                👑 Super Admin • Ariel
+              </span>
+              <span className="text-xs font-bold text-slate-400">
+                Gestión Central de la Plataforma
+              </span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-navy-900 tracking-tight">
+              Alta y Baja de Estacionamientos
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Crea, edita, actualiza tarifas y gestiona la disponibilidad de tus garages.
+              Habilita o da de baja estacionamientos en la red, aprueba nuevos garajes, ajusta tarifas y administra la flota completa.
             </p>
           </div>
 
@@ -198,9 +206,9 @@ export const AdminParkingsPage: React.FC = () => {
             variant="primary"
             onClick={handleOpenCreate}
             leftIcon={<Plus className="w-4 h-4" />}
-            className="shadow-lg shadow-brand-500/25"
+            className="shadow-lg shadow-brand-500/25 font-bold"
           >
-            Nuevo Estacionamiento
+            Dar de Alta Nuevo Garaje
           </Button>
         </div>
 

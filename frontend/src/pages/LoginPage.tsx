@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, LogIn, ParkingCircle, Sparkles, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Mail, Lock, LogIn, Sparkles, Building2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
+import { UserRole } from '../types';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -31,6 +32,8 @@ export const LoginPage: React.FC = () => {
       success(`¡Bienvenido de vuelta, ${res.user.first_name}!`);
       if (res.user.role === 'admin') {
         navigate('/admin');
+      } else if (res.user.role === 'owner') {
+        navigate('/admin/gate');
       } else {
         navigate(from);
       }
@@ -41,13 +44,16 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickDemo = async (role: 'driver' | 'admin') => {
+  const handleQuickDemo = async (role: UserRole) => {
     try {
       setDemoLoading(role);
       const res = await demoLogin(role);
-      success(`Accediste con la cuenta demo de ${role === 'admin' ? 'Administrador' : 'Conductor'}`);
+      const roleName = role === 'admin' ? 'Super Administrador (Ariel)' : role === 'owner' ? 'Dueño de Estacionamiento' : 'Conductor';
+      success(`Accediste con la cuenta demo de ${roleName}`);
       if (role === 'admin') {
         navigate('/admin');
+      } else if (role === 'owner') {
+        navigate('/admin/gate');
       } else {
         navigate('/search');
       }
@@ -71,7 +77,7 @@ export const LoginPage: React.FC = () => {
               className="w-14 h-14 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
             />
           </Link>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl font-extrabold text-navy-900 tracking-tight">
             Iniciar Sesión
           </h2>
           <p className="text-slate-500 text-sm mt-2">
@@ -82,29 +88,42 @@ export const LoginPage: React.FC = () => {
         {/* Card */}
         <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
           
-          {/* Quick Demo Logins Box */}
+          {/* Quick Demo Logins Box with 3 roles */}
           <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2 text-center">
               Accesos Demo para pruebas rápidas
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => handleQuickDemo('driver')}
                 disabled={!!demoLoading}
-                className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 hover:border-brand-500 hover:text-brand-600 text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 hover:border-brand-500 hover:text-brand-600 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1"
               >
-                <Sparkles className="w-3.5 h-3.5 text-brand-600" />
-                Conductor Demo
+                <Sparkles className="w-4 h-4 text-brand-600" />
+                <span>Conductor</span>
               </button>
+              
+              <button
+                type="button"
+                onClick={() => handleQuickDemo('owner')}
+                disabled={!!demoLoading}
+                className="p-2.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1"
+                title="Dueño de garaje (Cámara QR, garita y plazas vacantes)"
+              >
+                <Building2 className="w-4 h-4 text-teal-600" />
+                <span>Dueño Garaje</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => handleQuickDemo('admin')}
                 disabled={!!demoLoading}
-                className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 hover:bg-indigo-100 text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1"
+                title="Super Admin Ariel (Alta/Baja de garajes y control total)"
               >
-                <ShieldAlert className="w-3.5 h-3.5 text-indigo-600" />
-                Admin Demo
+                <Crown className="w-4 h-4 text-amber-500" />
+                <span>Super Admin</span>
               </button>
             </div>
           </div>
@@ -112,7 +131,7 @@ export const LoginPage: React.FC = () => {
           <div className="relative flex py-2 items-center mb-6">
             <div className="flex-grow border-t border-slate-200" />
             <span className="flex-shrink mx-3 text-slate-400 text-xs uppercase tracking-wider font-semibold">
-              O con tu correo
+              O con tus credenciales
             </span>
             <div className="flex-grow border-t border-slate-200" />
           </div>

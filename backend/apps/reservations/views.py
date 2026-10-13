@@ -16,7 +16,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Reservation.objects.select_related('parking', 'space', 'user').all()
 
-        if user.role != 'admin' and not user.is_superuser:
+        if user.role not in ['admin', 'owner'] and not user.is_superuser:
             queryset = queryset.filter(user=user)
 
         # Filters
@@ -67,7 +67,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         user = request.user
 
         # Only owner or admin can cancel
-        if user != reservation.user and user.role != 'admin' and not user.is_superuser:
+        if user != reservation.user and user.role not in ['admin', 'owner'] and not user.is_superuser:
             return Response({'error': 'No tienes permiso para cancelar esta reserva.'}, status=status.HTTP_403_FORBIDDEN)
 
         if reservation.status == Reservation.Status.CANCELLED:
@@ -88,8 +88,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def change_status(self, request, pk=None):
-        if request.user.role != 'admin' and not request.user.is_superuser:
-            return Response({'error': 'Acción solo permitida para administradores.'}, status=status.HTTP_403_FORBIDDEN)
+        if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
+            return Response({'error': 'Acción solo permitida para administradores u operadores.'}, status=status.HTTP_403_FORBIDDEN)
 
         reservation = self.get_object()
         new_status = request.data.get('status')
@@ -106,7 +106,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def verify_qr(self, request):
         """Verifica un código de reserva escaneado vía QR"""
-        if request.user.role != 'admin' and not request.user.is_superuser:
+        if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
             return Response({'error': 'Solo el personal del estacionamiento puede validar códigos QR.'}, status=status.HTTP_403_FORBIDDEN)
 
         raw_code = request.data.get('code', '').strip()
@@ -132,7 +132,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def check_in(self, request, pk=None):
         """Registra el ingreso de un vehículo (por QR o manual)"""
-        if request.user.role != 'admin' and not request.user.is_superuser:
+        if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
             return Response({'error': 'Permiso denegado.'}, status=status.HTTP_403_FORBIDDEN)
 
         from django.utils import timezone
@@ -163,7 +163,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def check_out(self, request, pk=None):
         """Registra el egreso y cobro final de un vehículo"""
-        if request.user.role != 'admin' and not request.user.is_superuser:
+        if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
             return Response({'error': 'Permiso denegado.'}, status=status.HTTP_403_FORBIDDEN)
 
         from django.utils import timezone
@@ -196,7 +196,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def register_walk_in(self, request):
         """Registra un ingreso directo en ventanilla sin reserva previa"""
-        if request.user.role != 'admin' and not request.user.is_superuser:
+        if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
             return Response({'error': 'Permiso denegado.'}, status=status.HTTP_403_FORBIDDEN)
 
         from django.utils import timezone

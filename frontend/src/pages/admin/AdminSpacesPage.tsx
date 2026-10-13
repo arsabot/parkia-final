@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Grid, 
   Car, 
@@ -8,21 +9,26 @@ import {
   AlertCircle, 
   Clock, 
   Wrench,
-  Sparkles
+  Sparkles,
+  ScanLine,
+  Filter
 } from 'lucide-react';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { parkingService } from '../../services/parkingService';
 import { Parking, ParkingSpace, SpaceStatus } from '../../types';
 
 export const AdminSpacesPage: React.FC = () => {
+  const { isSuperAdmin, isOwner } = useAuth();
   const [parkings, setParkings] = useState<Parking[]>([]);
   const [selectedParkingId, setSelectedParkingId] = useState<number | null>(null);
   const [spaces, setSpaces] = useState<ParkingSpace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedSpace, setSelectedSpace] = useState<ParkingSpace | null>(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [newSpaceCode, setNewSpaceCode] = useState('');
@@ -102,6 +108,11 @@ export const AdminSpacesPage: React.FC = () => {
   const countReserved = spaces.filter((s) => s.status === 'reserved').length;
   const countMaintenance = spaces.filter((s) => s.status === 'maintenance').length;
 
+  const filteredSpaces = spaces.filter((s) => {
+    if (filterStatus === 'all') return true;
+    return s.status === filterStatus;
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,13 +120,36 @@ export const AdminSpacesPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Gestión y Monitoreo de Plazas
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                isOwner 
+                  ? 'bg-teal-100 text-teal-800 border border-teal-200' 
+                  : 'bg-amber-100 text-amber-800 border border-amber-200'
+              }`}>
+                {isOwner ? '🏢 Panel Dueño de Garaje' : '👑 Super Administrador'}
+              </span>
+              <span className="text-xs font-bold text-slate-400">
+                Monitoreo de Ocupación en Tiempo Real
+              </span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-navy-900 tracking-tight">
+              Gestión de Plazas Vacantes
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Visualiza en vivo la cuadrícula de espacios (A01, B02...) y cambia estados manualmente.
+              Visualiza en vivo los espacios libres, autos estacionados y modifica la disponibilidad con 1 toque.
             </p>
           </div>
+
+          <Link to="/admin/gate">
+            <Button
+              variant="emerald"
+              size="md"
+              leftIcon={<ScanLine className="w-4 h-4" />}
+              className="shadow-md shadow-emerald-500/20"
+            >
+              Ir a Cámara Escáner QR
+            </Button>
+          </Link>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -123,11 +157,11 @@ export const AdminSpacesPage: React.FC = () => {
 
           <div className="flex-1 space-y-6">
             
-            {/* Garage Selector Bar */}
+            {/* Garage Selector & Vacancy Counters */}
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="w-full sm:w-auto flex-1">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                  Seleccionar Estacionamiento
+                  Estacionamiento Seleccionado
                 </label>
                 <select
                   value={selectedParkingId || ''}
@@ -144,45 +178,82 @@ export const AdminSpacesPage: React.FC = () => {
 
               {/* Status Counters */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <button
+                  onClick={() => setFilterStatus(filterStatus === 'available' ? 'all' : 'available')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                    filterStatus === 'available'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${filterStatus === 'available' ? 'bg-white' : 'bg-emerald-500'}`} />
                   {countAvailable} Libres
-                </span>
-                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                </button>
+                <button
+                  onClick={() => setFilterStatus(filterStatus === 'occupied' ? 'all' : 'occupied')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                    filterStatus === 'occupied'
+                      ? 'bg-rose-600 text-white border-rose-600 shadow-md'
+                      : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${filterStatus === 'occupied' ? 'bg-white' : 'bg-rose-500'}`} />
                   {countOccupied} Ocupados
-                </span>
-                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                </button>
+                <button
+                  onClick={() => setFilterStatus(filterStatus === 'reserved' ? 'all' : 'reserved')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                    filterStatus === 'reserved'
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-md'
+                      : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${filterStatus === 'reserved' ? 'bg-white' : 'bg-amber-500'}`} />
                   {countReserved} Reservados
-                </span>
-                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-slate-400" />
+                </button>
+                <button
+                  onClick={() => setFilterStatus(filterStatus === 'maintenance' ? 'all' : 'maintenance')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                    filterStatus === 'maintenance'
+                      ? 'bg-slate-700 text-white border-slate-700 shadow-md'
+                      : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${filterStatus === 'maintenance' ? 'bg-white' : 'bg-slate-400'}`} />
                   {countMaintenance} Taller
-                </span>
+                </button>
               </div>
             </div>
 
             {/* Interactive Grid of Spaces */}
             <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                 <div>
                   <h3 className="font-bold text-slate-900 text-lg">
-                    Mapa de Plazas - {currentParking?.name}
+                    Cuadrícula de Plazas - {currentParking?.name}
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Haz click en cualquier plaza para modificar su estado de forma inmediata.
+                    Toca cualquier plaza para liberarla u ocuparla inmediatamente.
                   </p>
                 </div>
+
+                {filterStatus !== 'all' && (
+                  <button
+                    onClick={() => setFilterStatus('all')}
+                    className="text-xs text-teal-600 font-bold hover:underline"
+                  >
+                    Mostrar todas ({spaces.length})
+                  </button>
+                )}
               </div>
 
-              {spaces.length === 0 ? (
+              {filteredSpaces.length === 0 ? (
                 <div className="py-12 text-center text-slate-400 text-sm">
-                  No hay plazas registradas para este estacionamiento.
+                  No hay plazas registradas con el filtro seleccionado.
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                  {spaces.map((space) => {
+                  {filteredSpaces.map((space) => {
                     const isAvailable = space.status === 'available';
                     const isOccupied = space.status === 'occupied';
                     const isReserved = space.status === 'reserved';

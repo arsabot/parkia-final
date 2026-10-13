@@ -14,13 +14,16 @@ import {
   ShieldAlert,
   ParkingCircle,
   Sparkles,
-  ScanLine
+  ScanLine,
+  Building2,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
+import { UserRole } from '../../types';
 
 export const Navbar: React.FC = () => {
-  const { user, isAuthenticated, isAdmin, logout, demoLogin } = useAuth();
+  const { user, isAuthenticated, isAdmin, isSuperAdmin, isOwner, logout, demoLogin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -32,11 +35,13 @@ export const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  const handleQuickDemo = async (role: 'driver' | 'admin') => {
+  const handleQuickDemo = async (role: UserRole) => {
     await demoLogin(role);
     setUserDropdownOpen(false);
     if (role === 'admin') {
       navigate('/admin');
+    } else if (role === 'owner') {
+      navigate('/admin/gate');
     } else {
       navigate('/search');
     }
@@ -106,11 +111,12 @@ export const Navbar: React.FC = () => {
                   Favoritos
                 </Link>
               </>
-            ) : (
+            ) : isSuperAdmin ? (
+              /* Super Admin Links (Platform Master) */
               <>
                 <Link
                   to="/admin"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
                     isActive('/admin')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -121,39 +127,78 @@ export const Navbar: React.FC = () => {
                 </Link>
 
                 <Link
+                  to="/admin/parkings"
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-colors ${
+                    isActive('/admin/parkings')
+                      ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  Alta/Baja Garajes
+                </Link>
+
+                <Link
                   to="/admin/gate"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
                     isActive('/admin/gate')
                       ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
                   <ScanLine className="w-4 h-4 text-teal-600" />
-                  Control Accesos & Caja
-                </Link>
-
-                <Link
-                  to="/admin/parkings"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                    isActive('/admin/parkings')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <Car className="w-4 h-4" />
-                  Estacionamientos
+                  Control Accesos & QR
                 </Link>
 
                 <Link
                   to="/admin/spaces"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
                     isActive('/admin/spaces')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
                   <Grid className="w-4 h-4" />
-                  Espacios
+                  Plazas
+                </Link>
+
+                <Link
+                  to="/admin/reservations"
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                    isActive('/admin/reservations')
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <CalendarCheck className="w-4 h-4" />
+                  Reservas
+                </Link>
+              </>
+            ) : (
+              /* Parking Owner / Operator Links (Garaje Tools) */
+              <>
+                <Link
+                  to="/admin/gate"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+                    isActive('/admin/gate')
+                      ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <ScanLine className="w-4 h-4 text-teal-600" />
+                  Cámara QR & Garita
+                </Link>
+
+                <Link
+                  to="/admin/spaces"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+                    isActive('/admin/spaces')
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Grid className="w-4 h-4 text-emerald-600" />
+                  Plazas Vacantes en Vivo
                 </Link>
 
                 <Link
@@ -165,7 +210,7 @@ export const Navbar: React.FC = () => {
                   }`}
                 >
                   <CalendarCheck className="w-4 h-4" />
-                  Reservas
+                  Caja & Turnos
                 </Link>
               </>
             )}
@@ -175,23 +220,31 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center gap-3">
             {!isAuthenticated ? (
               <div className="flex items-center gap-2">
-                {/* Demo Logins for easy MVP testing */}
+                {/* Demo Logins for fast testing */}
                 <div className="hidden xl:flex items-center gap-1.5 mr-2">
                   <button
                     onClick={() => handleQuickDemo('driver')}
                     className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors flex items-center gap-1"
-                    title="Entrar rápido con cuenta de conductor demo"
+                    title="Entrar rápido como conductor demo"
                   >
                     <Sparkles className="w-3 h-3 text-brand-600" />
-                    Demo Conductor
+                    Conductor
+                  </button>
+                  <button
+                    onClick={() => handleQuickDemo('owner')}
+                    className="text-xs px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold transition-colors flex items-center gap-1 border border-teal-200"
+                    title="Entrar rápido como Dueño de Estacionamiento (Roberto Garaje Central)"
+                  >
+                    <Building2 className="w-3 h-3 text-teal-600" />
+                    Dueño Garaje
                   </button>
                   <button
                     onClick={() => handleQuickDemo('admin')}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium transition-colors flex items-center gap-1"
-                    title="Entrar rápido con cuenta de administrador demo"
+                    className="text-xs px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition-colors flex items-center gap-1 border border-amber-200"
+                    title="Entrar rápido como Super Admin Ariel (Alta/Baja de Garajes)"
                   >
-                    <ShieldAlert className="w-3 h-3 text-indigo-600" />
-                    Demo Admin
+                    <Crown className="w-3 h-3 text-amber-600" />
+                    Super Admin
                   </button>
                 </div>
 
@@ -216,33 +269,103 @@ export const Navbar: React.FC = () => {
                     <p className="text-xs font-bold text-slate-900 leading-tight">
                       {user?.first_name} {user?.last_name}
                     </p>
-                    <span className="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">
-                      {isAdmin ? 'Administrador' : 'Conductor'}
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block ${
+                      isSuperAdmin 
+                        ? 'text-amber-600' 
+                        : isOwner 
+                        ? 'text-teal-600' 
+                        : 'text-brand-600'
+                    }`}>
+                      {isSuperAdmin 
+                        ? '👑 Super Admin' 
+                        : isOwner 
+                        ? '🏢 Dueño Garaje' 
+                        : '🚗 Conductor'}
                     </span>
                   </div>
-                  <div className="w-9 h-9 rounded-xl bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-sm shadow-inner">
+                  <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner ${
+                    isSuperAdmin
+                      ? 'bg-amber-100 text-amber-800'
+                      : isOwner
+                      ? 'bg-teal-100 text-teal-800'
+                      : 'bg-brand-100 text-brand-700'
+                  }`}>
                     {user?.first_name ? user.first_name[0] : 'U'}
                   </div>
                 </button>
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 animate-scale-in z-50">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 animate-scale-in z-50">
                     <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-xs text-slate-500">Sesión iniciada como</p>
                       <p className="text-sm font-bold text-slate-900 truncate">{user?.email}</p>
+                      <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
+                        isSuperAdmin 
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200' 
+                          : isOwner 
+                          ? 'bg-teal-50 text-teal-800 border border-teal-200' 
+                          : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje Operador' : 'Conductor'}
+                      </span>
                     </div>
 
                     <div className="py-1">
-                      {isAdmin ? (
-                        <Link
-                          to="/admin"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                        >
-                          <LayoutDashboard className="w-4 h-4 text-brand-600" />
-                          Panel de Control
-                        </Link>
+                      {isSuperAdmin ? (
+                        <>
+                          <Link
+                            to="/admin"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-brand-600" />
+                            Panel General
+                          </Link>
+                          <Link
+                            to="/admin/parkings"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-amber-700 font-semibold hover:bg-amber-50"
+                          >
+                            <Crown className="w-4 h-4 text-amber-500" />
+                            Alta y Baja de Garajes
+                          </Link>
+                          <Link
+                            to="/admin/gate"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            <ScanLine className="w-4 h-4 text-teal-600" />
+                            Cámara QR & Garita
+                          </Link>
+                        </>
+                      ) : isOwner ? (
+                        <>
+                          <Link
+                            to="/admin/gate"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-teal-800 font-bold hover:bg-teal-50"
+                          >
+                            <ScanLine className="w-4 h-4 text-teal-600" />
+                            Cámara QR & Control Garita
+                          </Link>
+                          <Link
+                            to="/admin/spaces"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            <Grid className="w-4 h-4 text-emerald-600" />
+                            Plazas Vacantes en Vivo
+                          </Link>
+                          <Link
+                            to="/admin/reservations"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            <CalendarCheck className="w-4 h-4 text-brand-600" />
+                            Caja & Historial
+                          </Link>
+                        </>
                       ) : (
                         <>
                           <Link
@@ -266,17 +389,35 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="border-t border-slate-100 pt-1">
-                      {/* Switch role demo helper */}
-                      <button
-                        onClick={() => handleQuickDemo(isAdmin ? 'driver' : 'admin')}
-                        className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        Cambiar a rol {isAdmin ? 'Conductor' : 'Administrador'}
-                      </button>
+                      <div className="px-3 py-1">
+                        <p className="text-[10px] font-bold uppercase text-slate-400 px-1 mb-1">
+                          Cambiar de rol demo:
+                        </p>
+                        <div className="grid grid-cols-3 gap-1">
+                          <button
+                            onClick={() => handleQuickDemo('driver')}
+                            className="px-2 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
+                          >
+                            Conductor
+                          </button>
+                          <button
+                            onClick={() => handleQuickDemo('owner')}
+                            className="px-2 py-1 text-[11px] font-bold rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800"
+                          >
+                            Dueño
+                          </button>
+                          <button
+                            onClick={() => handleQuickDemo('admin')}
+                            className="px-2 py-1 text-[11px] font-bold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800"
+                          >
+                            Super
+                          </button>
+                        </div>
+                      </div>
+
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="w-full text-left flex items-center gap-2 px-4 py-2 mt-1 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
                         Cerrar Sesión
@@ -331,7 +472,7 @@ export const Navbar: React.FC = () => {
                   Favoritos
                 </Link>
               </>
-            ) : (
+            ) : isSuperAdmin ? (
               <>
                 <Link
                   to="/admin"
@@ -339,15 +480,23 @@ export const Navbar: React.FC = () => {
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   <LayoutDashboard className="w-5 h-5 text-brand-600" />
-                  Dashboard
+                  Dashboard Global
                 </Link>
                 <Link
                   to="/admin/parkings"
                   onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-bold text-amber-700 hover:bg-amber-50"
+                >
+                  <Crown className="w-5 h-5 text-amber-500" />
+                  Alta y Baja de Garajes
+                </Link>
+                <Link
+                  to="/admin/gate"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  <Car className="w-5 h-5 text-brand-600" />
-                  Estacionamientos
+                  <ScanLine className="w-5 h-5 text-teal-600" />
+                  Control Accesos & QR
                 </Link>
                 <Link
                   to="/admin/spaces"
@@ -355,7 +504,7 @@ export const Navbar: React.FC = () => {
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   <Grid className="w-5 h-5 text-brand-600" />
-                  Espacios
+                  Plazas
                 </Link>
                 <Link
                   to="/admin/reservations"
@@ -366,13 +515,43 @@ export const Navbar: React.FC = () => {
                   Reservas
                 </Link>
               </>
+            ) : (
+              <>
+                <Link
+                  to="/admin/gate"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-bold text-teal-800 hover:bg-teal-50"
+                >
+                  <ScanLine className="w-5 h-5 text-teal-600" />
+                  Cámara QR & Garita (Tablet/Móvil)
+                </Link>
+                <Link
+                  to="/admin/spaces"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-bold text-emerald-800 hover:bg-emerald-50"
+                >
+                  <Grid className="w-5 h-5 text-emerald-600" />
+                  Plazas Vacantes en Vivo
+                </Link>
+                <Link
+                  to="/admin/reservations"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <CalendarCheck className="w-5 h-5 text-brand-600" />
+                  Caja & Turnos
+                </Link>
+              </>
             )}
           </nav>
 
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
             {!isAuthenticated ? (
               <>
-                <div className="grid grid-cols-2 gap-2 pb-2">
+                <p className="text-[11px] font-bold uppercase text-slate-400 text-center">
+                  Acceso Demo Rápido:
+                </p>
+                <div className="grid grid-cols-3 gap-2 pb-2">
                   <button
                     onClick={() => {
                       handleQuickDemo('driver');
@@ -380,16 +559,25 @@ export const Navbar: React.FC = () => {
                     }}
                     className="p-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 text-center"
                   >
-                    Demo Conductor
+                    Conductor
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleQuickDemo('owner');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="p-2 text-xs font-bold rounded-xl bg-teal-50 text-teal-800 text-center border border-teal-200"
+                  >
+                    Dueño Garaje
                   </button>
                   <button
                     onClick={() => {
                       handleQuickDemo('admin');
                       setMobileMenuOpen(false);
                     }}
-                    className="p-2 text-xs font-semibold rounded-xl bg-indigo-50 text-indigo-700 text-center"
+                    className="p-2 text-xs font-bold rounded-xl bg-amber-50 text-amber-800 text-center border border-amber-200"
                   >
-                    Demo Admin
+                    Super Admin
                   </button>
                 </div>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
@@ -406,8 +594,11 @@ export const Navbar: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 <div className="p-3 bg-slate-50 rounded-xl">
-                  <p className="text-sm font-bold text-slate-900">{user?.full_name}</p>
+                  <p className="text-sm font-bold text-slate-900">{user?.first_name} {user?.last_name}</p>
                   <p className="text-xs text-slate-500">{user?.email}</p>
+                  <p className="text-[11px] font-extrabold text-teal-600 uppercase mt-1">
+                    {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje' : 'Conductor'}
+                  </p>
                 </div>
                 <Button variant="danger" onClick={handleLogout} className="w-full">
                   Cerrar Sesión

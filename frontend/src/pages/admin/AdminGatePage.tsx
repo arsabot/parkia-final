@@ -13,7 +13,10 @@ import {
   CreditCard,
   Banknote,
   PlusCircle,
-  FileText
+  FileText,
+  Camera,
+  Keyboard,
+  Smartphone
 } from 'lucide-react';
 import { reservationService } from '../../services/reservationService';
 import { parkingService } from '../../services/parkingService';
@@ -21,10 +24,14 @@ import { Reservation, Parking } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
+import { AdminSidebar } from '../../components/admin/AdminSidebar';
+import { CameraQrScanner } from '../../components/common/CameraQrScanner';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const AdminGatePage: React.FC = () => {
   const { success, error, info } = useToast();
+  const { isSuperAdmin, isOwner, user } = useAuth();
 
   const [parkings, setParkings] = useState<Parking[]>([]);
   const [selectedParkingId, setSelectedParkingId] = useState<number | 'all'>('all');
@@ -33,6 +40,7 @@ export const AdminGatePage: React.FC = () => {
 
   // QR Scan / Code Search state
   const [qrCodeInput, setQrCodeInput] = useState<string>('');
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState<boolean>(false);
   const [verifiedReservation, setVerifiedReservation] = useState<Reservation | null>(null);
   const [verifying, setVerifying] = useState<boolean>(false);
 
@@ -88,24 +96,39 @@ export const AdminGatePage: React.FC = () => {
     .filter((r) => r.payment_status === 'paid' || r.status === 'completed')
     .reduce((acc, curr) => acc + Number(curr.total_price), 0);
 
-  // Handle Verify QR
-  const handleVerifyQr = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!qrCodeInput.trim()) {
-      error('Por favor escribe o escanea un código QR');
+  // Process and verify booking code
+  const verifyCode = async (codeToVerify: string) => {
+    if (!codeToVerify.trim()) {
+      error('Por favor ingresa o escanea un código QR.');
       return;
     }
+    // Clean code: extract PK-XXXXXX pattern if URL or text
+    const match = codeToVerify.match(/PK-[A-Z0-9]+/i);
+    const code = match ? match[0].toUpperCase() : codeToVerify.trim().toUpperCase();
+
     try {
       setVerifying(true);
-      const res = await reservationService.verifyQr(qrCodeInput.trim());
+      const res = await reservationService.verifyQr(code);
       setVerifiedReservation(res.reservation);
-      success('¡Código QR validado exitosamente!');
+      setQrCodeInput(code);
+      success(`¡QR validado con éxito! Vehículo: ${res.reservation.vehicle_plate}`);
     } catch (err: any) {
-      error(err.message || 'Código QR no encontrado o inválido.');
+      error(err.message || `No se encontró ninguna reserva para el código "${code}".`);
       setVerifiedReservation(null);
     } finally {
       setVerifying(false);
     }
+  };
+
+  // Handle Manual Form Submit
+  const handleVerifyQr = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    await verifyCode(qrCodeInput);
+  };
+
+  // Handle Camera QR Scan Result
+  const handleCameraScanSuccess = async (decodedText: string) => {
+    await verifyCode(decodedText);
   };
 
   // Handle Quick Check-In (Ingreso)
@@ -173,382 +196,435 @@ export const AdminGatePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      
-      {/* Header and Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold text-teal-600 uppercase tracking-widest block mb-1">
-            Módulo de Operación y Control
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-900 tracking-tight">
-            Control de Ingresos, Egresos & Caja
-          </h1>
-          <p className="text-slate-500 text-sm">
-            Escanéate pases QR de clientes, registra ingresos manuales de garita y controla la recaudación diaria en vivo.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Parking selector filter */}
-          <select
-            value={selectedParkingId}
-            onChange={(e) => setSelectedParkingId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
-          >
-            <option value="all">🏢 Todos los Estacionamientos</option>
-            {parkings.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-
-          <Button
-            variant="emerald"
-            size="sm"
-            leftIcon={<PlusCircle className="w-4 h-4" />}
-            onClick={() => setIsWalkInOpen(true)}
-          >
-            Ingreso Directo
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
-            onClick={loadData}
-          >
-            Actualizar
-          </Button>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="min-h-screen bg-slate-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Autos actualmente dentro */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 block">Vehículos Adentro</span>
-            <span className="text-2xl font-black text-navy-900 mt-1 block">
-              {checkedInList.length}
-            </span>
-            <span className="text-[11px] font-bold text-teal-600 flex items-center gap-1 mt-0.5">
-              <ArrowDownRight className="w-3.5 h-3.5" /> En estadía activa
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
-            <Car className="w-6 h-6" />
-          </div>
-        </div>
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* Role-tailored Sidebar */}
+          <AdminSidebar />
 
-        {/* Egresos completados */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 block">Egresos Registrados</span>
-            <span className="text-2xl font-black text-navy-900 mt-1 block">
-              {checkedOutToday.length}
-            </span>
-            <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
-              <ArrowUpRight className="w-3.5 h-3.5" /> Salidas exitosas
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Recaudación Total en Caja */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 block">Recaudación / Caja</span>
-            <span className="text-2xl font-black text-navy-900 mt-1 block">
-              ${totalMoneyCollected.toLocaleString('es-AR')}
-            </span>
-            <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
-              <DollarSign className="w-3.5 h-3.5" /> Ingresos de dinero
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <DollarSign className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Reservas Pendientes de Ingreso */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold text-slate-500 block">Por Ingresar (Hoy)</span>
-            <span className="text-2xl font-black text-navy-900 mt-1 block">
-              {filteredReservations.filter((r) => r.status === 'confirmed' && !r.check_in_time).length}
-            </span>
-            <span className="text-[11px] font-bold text-indigo-600 flex items-center gap-1 mt-0.5">
-              <Clock className="w-3.5 h-3.5" /> Con reserva confirmada
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <Clock className="w-6 h-6" />
-          </div>
-        </div>
-
-      </div>
-
-      {/* QR Scanner & Code Validation Station */}
-      <div className="bg-gradient-to-r from-navy-950 via-navy-900 to-teal-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
-        <div className="max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="p-2 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30">
-              <ScanLine className="w-5 h-5 animate-pulse" />
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              Terminal de Escaneo de Código QR
-            </h2>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
-            Ingresa o escanea con lector de mano / cámara el código del cliente (ejemplo: <code>PK-XXXXXX</code>) para verificar en 1 segundo los datos, plaza asignada y registrar el ingreso o salida.
-          </p>
-
-          <form onSubmit={handleVerifyQr} className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Escanear o tipear código (ej: PK-892401)..."
-                value={qrCodeInput}
-                onChange={(e) => setQrCodeInput(e.target.value.toUpperCase())}
-                className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl pl-12 pr-4 py-3.5 text-white placeholder-slate-400 font-mono text-sm sm:text-base font-bold focus:outline-none focus:ring-2 focus:ring-teal-400"
-              />
-            </div>
-            <Button
-              type="submit"
-              variant="emerald"
-              isLoading={verifying}
-              className="px-6 py-3.5 text-sm font-bold shadow-lg shadow-emerald-500/30"
-              leftIcon={<ScanLine className="w-4 h-4" />}
-            >
-              Validar QR
-            </Button>
-          </form>
-
-          {/* Quick Demo Code helper buttons */}
-          <div className="flex items-center gap-2 mt-4 text-xs text-slate-400 flex-wrap">
-            <span>Probar con reservas del sistema:</span>
-            {filteredReservations.slice(0, 3).map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => {
-                  setQrCodeInput(r.booking_code);
-                  reservationService.verifyQr(r.booking_code).then((res) => setVerifiedReservation(res.reservation));
-                }}
-                className="font-mono bg-white/10 hover:bg-white/20 text-teal-300 px-2 py-0.5 rounded-lg border border-white/10 transition-colors"
-              >
-                {r.booking_code}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Verified QR Detail Box */}
-        {verifiedReservation && (
-          <div className="mt-6 pt-6 border-t border-white/15 bg-white/5 p-5 rounded-2xl border border-white/10">
+          {/* Main Operations Area */}
+          <div className="flex-1 space-y-8 animate-fade-in">
+            
+            {/* Header and Controls */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono font-black text-xl text-amber-300">
-                    #{verifiedReservation.booking_code}
+                  <span className="text-xs font-bold text-teal-600 uppercase tracking-widest">
+                    Módulo de Operación y Garita
                   </span>
-                  <Badge variant={verifiedReservation.status as any}>
-                    {verifiedReservation.status_display}
-                  </Badge>
-                  {verifiedReservation.check_in_time && !verifiedReservation.check_out_time && (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
-                      Adentro
-                    </span>
-                  )}
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                    {isSuperAdmin ? 'Super Admin' : 'Panel de Dueño'}
+                  </span>
                 </div>
-                <h4 className="font-bold text-white text-base">
-                  {verifiedReservation.user_name} • Vehículo: <span className="font-mono text-emerald-400">{verifiedReservation.vehicle_plate}</span>
-                </h4>
-                <p className="text-xs text-slate-300 mt-1">
-                  Estacionamiento: <strong>{verifiedReservation.parking_name}</strong> | Plaza: <strong className="text-teal-300">{verifiedReservation.space_code}</strong> | Horario: {verifiedReservation.start_time.slice(0, 5)} - {verifiedReservation.end_time.slice(0, 5)} hs | Total: <strong>${Number(verifiedReservation.total_price).toLocaleString('es-AR')}</strong>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-900 tracking-tight">
+                  Control de Accesos, Cámara QR & Caja
+                </h1>
+                <p className="text-slate-500 text-sm">
+                  Utiliza la cámara de tu tablet o teléfono para validar pases QR, registrar entradas/salidas y controlar la recaudación en tiempo real.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                {!verifiedReservation.check_in_time && (
-                  <Button
-                    variant="emerald"
-                    size="md"
-                    onClick={() => handleCheckIn(verifiedReservation)}
-                    leftIcon={<ArrowDownRight className="w-4 h-4" />}
-                  >
-                    Registrar Ingreso
-                  </Button>
-                )}
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                {/* Parking selector filter */}
+                <select
+                  value={selectedParkingId}
+                  onChange={(e) => setSelectedParkingId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                  className="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+                >
+                  <option value="all">🏢 Todos los Estacionamientos</option>
+                  {parkings.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
 
-                {verifiedReservation.check_in_time && !verifiedReservation.check_out_time && (
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={() => setCheckoutTarget(verifiedReservation)}
-                    leftIcon={<ArrowUpRight className="w-4 h-4" />}
-                  >
-                    Registrar Egreso & Cobro
-                  </Button>
-                )}
+                <Button
+                  variant="emerald"
+                  size="sm"
+                  leftIcon={<PlusCircle className="w-4 h-4" />}
+                  onClick={() => setIsWalkInOpen(true)}
+                >
+                  Ingreso Directo
+                </Button>
 
                 <Button
                   variant="outline"
-                  size="md"
-                  onClick={() => setVerifiedReservation(null)}
+                  size="sm"
+                  leftIcon={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
+                  onClick={loadData}
                 >
-                  Cerrar
+                  Actualizar
                 </Button>
               </div>
             </div>
-          </div>
-        )}
-      </div>
 
-      {/* Active Stays & Movements Table */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="font-extrabold text-navy-900 text-lg">
-              Registro en Vivo de Movimientos & Cobros
-            </h3>
-            <p className="text-slate-400 text-xs">
-              Listado en tiempo real de vehículos ingresados, egresos, medios de pago y caja.
-            </p>
-          </div>
-          <span className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
-            {filteredReservations.length} movimientos registrados
-          </span>
-        </div>
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              
+              {/* Autos actualmente dentro */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 block">Vehículos Adentro</span>
+                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                    {checkedInList.length}
+                  </span>
+                  <span className="text-[11px] font-bold text-teal-600 flex items-center gap-1 mt-0.5">
+                    <ArrowDownRight className="w-3.5 h-3.5" /> En estadía activa
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                  <Car className="w-6 h-6" />
+                </div>
+              </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100">
-                <th className="py-3 px-4">Código / Patente</th>
-                <th className="py-3 px-4">Conductor</th>
-                <th className="py-3 px-4">Estacionamiento & Plaza</th>
-                <th className="py-3 px-4">Ingreso (Entrada)</th>
-                <th className="py-3 px-4">Egreso (Salida)</th>
-                <th className="py-3 px-4">Monto & Medio de Pago</th>
-                <th className="py-3 px-4">Estado</th>
-                <th className="py-3 px-4 text-right">Acción Operativa</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-              {filteredReservations.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400">
-                    No hay registros de movimientos para este estacionamiento.
-                  </td>
-                </tr>
-              ) : (
-                filteredReservations.map((res) => {
-                  const isInside = res.check_in_time && !res.check_out_time;
-                  return (
-                    <tr key={res.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4">
-                        <span className="font-mono font-bold text-navy-900 block text-sm">
-                          {res.vehicle_plate}
+              {/* Egresos completados */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 block">Egresos Registrados</span>
+                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                    {checkedOutToday.length}
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
+                    <ArrowUpRight className="w-3.5 h-3.5" /> Salidas exitosas
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+              </div>
+
+              {/* Recaudación Total en Caja */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 block">Recaudación / Caja</span>
+                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                    ${totalMoneyCollected.toLocaleString('es-AR')}
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
+                    <DollarSign className="w-3.5 h-3.5" /> Ingresos de dinero
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+
+              {/* Reservas Pendientes de Ingreso */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 block">Por Ingresar (Hoy)</span>
+                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                    {filteredReservations.filter((r) => r.status === 'confirmed' && !r.check_in_time).length}
+                  </span>
+                  <span className="text-[11px] font-bold text-indigo-600 flex items-center gap-1 mt-0.5">
+                    <Clock className="w-3.5 h-3.5" /> Con reserva confirmada
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Clock className="w-6 h-6" />
+                </div>
+              </div>
+
+            </div>
+
+            {/* QR Scanner & Code Validation Station */}
+            <div className="bg-gradient-to-r from-navy-950 via-navy-900 to-teal-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="p-2 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                    <ScanLine className="w-5 h-5 animate-pulse" />
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                    Terminal de Escaneo de Códigos QR
+                  </h2>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+                  Abre la cámara en tu teléfono o tablet para escanear en tiempo real el pase QR del conductor, o tipea manualmente el código (ej: <code>PK-892401</code>).
+                </p>
+
+                {/* Primary Action Row: Camera Button + Manual input */}
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                  <Button
+                    type="button"
+                    variant="emerald"
+                    onClick={() => setIsCameraScannerOpen(true)}
+                    className="px-6 py-3.5 text-sm font-bold shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <span>Abrir Cámara Escáner</span>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-emerald-700/60 rounded-full ml-1">
+                      Tablet / Móvil
+                    </span>
+                  </Button>
+
+                  <div className="text-slate-400 text-xs font-semibold text-center sm:text-left">
+                    o escribe el código:
+                  </div>
+
+                  <form onSubmit={handleVerifyQr} className="flex-1 flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Ej: PK-892401..."
+                        value={qrCodeInput}
+                        onChange={(e) => setQrCodeInput(e.target.value.toUpperCase())}
+                        className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl pl-10 pr-3 py-3 text-white placeholder-slate-400 font-mono text-sm font-bold focus:outline-none focus:ring-2 focus:ring-teal-400"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      isLoading={verifying}
+                      className="px-4 text-xs font-bold text-white border-white/30 hover:bg-white/10"
+                    >
+                      Validar
+                    </Button>
+                  </form>
+                </div>
+
+                {/* Quick Demo Code helper buttons */}
+                <div className="flex items-center gap-2 mt-4 text-xs text-slate-400 flex-wrap">
+                  <span>Probar rápido con reservas registradas:</span>
+                  {filteredReservations.slice(0, 3).map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => verifyCode(r.booking_code)}
+                      className="font-mono bg-white/10 hover:bg-white/20 text-teal-300 px-2 py-0.5 rounded-lg border border-white/10 transition-colors"
+                    >
+                      {r.booking_code} ({r.vehicle_plate})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Verified QR Detail Box */}
+              {verifiedReservation && (
+                <div className="mt-6 pt-6 border-t border-white/15 bg-white/5 p-5 rounded-2xl border border-white/10 animate-fade-in">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono font-black text-xl text-amber-300">
+                          #{verifiedReservation.booking_code}
                         </span>
-                        <span className="font-mono text-[11px] text-slate-400">
-                          {res.booking_code}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-slate-900 block">{res.user_name}</span>
-                        <span className="text-[11px] text-slate-400">{res.user_email}</span>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="font-semibold text-slate-900 block">{res.parking_name}</span>
-                        <span className="text-[11px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md">
-                          Plaza {res.space_code}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        {res.check_in_time ? (
-                          <div className="flex items-center gap-1.5 text-teal-700 font-bold">
-                            <ArrowDownRight className="w-3.5 h-3.5" />
-                            {new Date(res.check_in_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 italic">Pendiente (Reserva {res.start_time.slice(0, 5)}hs)</span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        {res.check_out_time ? (
-                          <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                            {new Date(res.check_out_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
-                          </div>
-                        ) : isInside ? (
-                          <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                            Adentro ahora
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="text-sm font-black text-navy-900 block">
-                          ${Number(res.total_price).toLocaleString('es-AR')}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                          {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500" /> : <Banknote className="w-3 h-3 text-emerald-600" />}
-                          {res.payment_method || 'Efectivo'}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <Badge variant={res.status as any}>
-                          {res.status_display}
+                        <Badge variant={verifiedReservation.status as any}>
+                          {verifiedReservation.status_display}
                         </Badge>
-                      </td>
-
-                      <td className="py-3 px-4 text-right">
-                        {!res.check_in_time && res.status === 'confirmed' && (
-                          <button
-                            onClick={() => handleCheckIn(res)}
-                            className="px-3 py-1.5 rounded-xl font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 transition-colors"
-                          >
-                            Entrada
-                          </button>
-                        )}
-
-                        {isInside && (
-                          <button
-                            onClick={() => setCheckoutTarget(res)}
-                            className="px-3 py-1.5 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-colors"
-                          >
-                            Salida & Cobro
-                          </button>
-                        )}
-
-                        {res.status === 'completed' && (
-                          <span className="text-[11px] font-bold text-slate-400">
-                            ✓ Finalizado
+                        {verifiedReservation.check_in_time && !verifiedReservation.check_out_time && (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                            Adentro
                           </span>
                         )}
-                      </td>
-                    </tr>
-                  );
-                })
+                      </div>
+                      <h4 className="font-bold text-white text-base">
+                        {verifiedReservation.user_name} • Vehículo: <span className="font-mono text-emerald-400">{verifiedReservation.vehicle_plate}</span>
+                      </h4>
+                      <p className="text-xs text-slate-300 mt-1">
+                        Estacionamiento: <strong>{verifiedReservation.parking_name}</strong> | Plaza: <strong className="text-teal-300">{verifiedReservation.space_code}</strong> | Horario: {verifiedReservation.start_time.slice(0, 5)} - {verifiedReservation.end_time.slice(0, 5)} hs | Total: <strong>${Number(verifiedReservation.total_price).toLocaleString('es-AR')}</strong>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                      {!verifiedReservation.check_in_time && (
+                        <Button
+                          variant="emerald"
+                          size="md"
+                          onClick={() => handleCheckIn(verifiedReservation)}
+                          leftIcon={<ArrowDownRight className="w-4 h-4" />}
+                        >
+                          Registrar Ingreso
+                        </Button>
+                      )}
+
+                      {verifiedReservation.check_in_time && !verifiedReservation.check_out_time && (
+                        <Button
+                          variant="primary"
+                          size="md"
+                          onClick={() => setCheckoutTarget(verifiedReservation)}
+                          leftIcon={<ArrowUpRight className="w-4 h-4" />}
+                        >
+                          Registrar Egreso & Cobro
+                        </Button>
+                      )}
+
+                      <Button
+                        variant="outline"
+                        size="md"
+                        onClick={() => setVerifiedReservation(null)}
+                      >
+                        Cerrar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Active Stays & Movements Table */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-extrabold text-navy-900 text-lg">
+                    Registro en Vivo de Movimientos & Cobros
+                  </h3>
+                  <p className="text-slate-400 text-xs">
+                    Listado en tiempo real de vehículos ingresados, egresos, medios de pago y caja diaria.
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
+                  {filteredReservations.length} movimientos registrados
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100">
+                      <th className="py-3 px-4">Código / Patente</th>
+                      <th className="py-3 px-4">Conductor</th>
+                      <th className="py-3 px-4">Estacionamiento & Plaza</th>
+                      <th className="py-3 px-4">Ingreso (Entrada)</th>
+                      <th className="py-3 px-4">Egreso (Salida)</th>
+                      <th className="py-3 px-4">Monto & Medio de Pago</th>
+                      <th className="py-3 px-4">Estado</th>
+                      <th className="py-3 px-4 text-right">Acción Operativa</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {filteredReservations.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-10 text-center text-slate-400">
+                          No hay registros de movimientos para este estacionamiento.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredReservations.map((res) => {
+                        const isInside = res.check_in_time && !res.check_out_time;
+                        return (
+                          <tr key={res.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-3 px-4">
+                              <span className="font-mono font-bold text-navy-900 block text-sm">
+                                {res.vehicle_plate}
+                              </span>
+                              <span className="font-mono text-[11px] text-slate-400">
+                                {res.booking_code}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <span className="font-bold text-slate-900 block">{res.user_name}</span>
+                              <span className="text-[11px] text-slate-400">{res.user_email}</span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <span className="font-semibold text-slate-900 block">{res.parking_name}</span>
+                              <span className="text-[11px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md">
+                                Plaza {res.space_code}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              {res.check_in_time ? (
+                                <div className="flex items-center gap-1.5 text-teal-700 font-bold">
+                                  <ArrowDownRight className="w-3.5 h-3.5" />
+                                  {new Date(res.check_in_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 italic">Pendiente (Reserva {res.start_time.slice(0, 5)}hs)</span>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-4">
+                              {res.check_out_time ? (
+                                <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                                  <ArrowUpRight className="w-3.5 h-3.5" />
+                                  {new Date(res.check_out_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                                </div>
+                              ) : isInside ? (
+                                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  Adentro ahora
+                                </span>
+                              ) : (
+                                <span className="text-slate-400">-</span>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <span className="text-sm font-black text-navy-900 block">
+                                ${Number(res.total_price).toLocaleString('es-AR')}
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500" /> : <Banknote className="w-3 h-3 text-emerald-600" />}
+                                {res.payment_method || 'Efectivo'}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <Badge variant={res.status as any}>
+                                {res.status_display}
+                              </Badge>
+                            </td>
+
+                            <td className="py-3 px-4 text-right">
+                              {!res.check_in_time && res.status === 'confirmed' && (
+                                <button
+                                  onClick={() => handleCheckIn(res)}
+                                  className="px-3 py-1.5 rounded-xl font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 transition-colors"
+                                >
+                                  Entrada
+                                </button>
+                              )}
+
+                              {isInside && (
+                                <button
+                                  onClick={() => setCheckoutTarget(res)}
+                                  className="px-3 py-1.5 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-colors"
+                                >
+                                  Salida & Cobro
+                                </button>
+                              )}
+
+                              {res.status === 'completed' && (
+                                <span className="text-[11px] font-bold text-slate-400">
+                                  ✓ Finalizado
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
         </div>
+
       </div>
+
+      {/* Modal: Fullscreen Camera QR Scanner */}
+      {isCameraScannerOpen && (
+        <Modal
+          isOpen={isCameraScannerOpen}
+          onClose={() => setIsCameraScannerOpen(false)}
+          title="Escáner QR con Cámara (Tablet o Teléfono)"
+          maxWidth="md"
+        >
+          <div className="p-4 sm:p-6 space-y-4">
+            <CameraQrScanner
+              onScanSuccess={handleCameraScanSuccess}
+              onClose={() => setIsCameraScannerOpen(false)}
+              autoCloseOnSuccess={true}
+            />
+          </div>
+        </Modal>
+      )}
 
       {/* Modal: Salida y Cobro (Check-Out) */}
       {checkoutTarget && (

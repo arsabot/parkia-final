@@ -64,27 +64,46 @@ class MeView(views.APIView):
 
 class DemoLoginView(views.APIView):
     """
-    Endpoint rápido para loguearse con perfiles demo preconfigurados (Conductor / Administrador).
+    Endpoint rápido para loguearse con perfiles demo preconfigurados:
+    - 'admin': Super Administrador de la plataforma (Ariel)
+    - 'owner': Dueño / Operador de Estacionamiento (Control de accesos, QR, plazas, caja)
+    - 'driver': Conductor (Búsqueda, reserva, pase QR)
     """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         role = request.data.get('role', 'driver')
-        email = 'admin@parkia.com' if role == 'admin' else 'conductor@parkia.com'
-        
+        if role == 'admin':
+            email = 'admin@parkia.com'
+            first_name = 'Ariel'
+            last_name = 'Super Admin'
+            user_role = User.Role.ADMIN
+        elif role == 'owner':
+            email = 'dueno@parkia.com'
+            first_name = 'Roberto'
+            last_name = 'Garaje Central'
+            user_role = User.Role.OWNER
+        else:
+            email = 'conductor@parkia.com'
+            first_name = 'Carlos'
+            last_name = 'Conductor'
+            user_role = User.Role.DRIVER
+
         user = User.objects.filter(email=email).first()
         if not user:
-            # Create user if seed hasn't run yet
-            first_name = 'Admin' if role == 'admin' else 'Carlos'
-            last_name = 'Parkia' if role == 'admin' else 'Conductor'
             user = User.objects.create_user(
                 email=email,
                 password='password123',
                 first_name=first_name,
                 last_name=last_name,
-                role=User.Role.ADMIN if role == 'admin' else User.Role.DRIVER,
+                role=user_role,
                 phone='+54 9 11 5555-0199'
             )
+        else:
+            # Asegurar que el rol corresponda
+            if user.role != user_role:
+                user.role = user_role
+                user.save()
 
         tokens = get_tokens_for_user(user)
         user_data = UserSerializer(user).data

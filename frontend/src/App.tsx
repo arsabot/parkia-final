@@ -23,7 +23,7 @@ import { AdminSpacesPage } from './pages/admin/AdminSpacesPage';
 import { AdminReservationsPage } from './pages/admin/AdminReservationsPage';
 import { AdminGatePage } from './pages/admin/AdminGatePage';
 
-// Protected Route for Admin Role
+// Protected Route for Admin or Owner Roles
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
@@ -38,6 +38,27 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   if (!user || !isAdmin) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Protected Route strictly for Super Admin (Ariel - Alta/Baja de Estacionamientos)
+const SuperAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading, isSuperAdmin } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
+      </div>
+    );
+  }
+
+  if (!user || !isSuperAdmin) {
+    // If garage owner, send to operator gate
+    return <Navigate to="/admin/gate" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -127,9 +148,9 @@ export const App: React.FC = () => {
                 <Route
                   path="/admin/parkings"
                   element={
-                    <AdminRoute>
+                    <SuperAdminRoute>
                       <AdminParkingsPage />
-                    </AdminRoute>
+                    </SuperAdminRoute>
                   }
                 />
                 <Route

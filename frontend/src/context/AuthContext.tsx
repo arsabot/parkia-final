@@ -6,6 +6,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isOwner: boolean;
   isDriver: boolean;
   loading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<AuthResponse>;
@@ -83,7 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = user?.role === 'admin';
+  const isSuperAdmin = user?.role === 'admin';
+  const isOwner = user?.role === 'owner';
+  const isAdmin = user?.role === 'admin' || user?.role === 'owner';
   const isDriver = user?.role === 'driver';
   const isAuthenticated = !!user;
 
@@ -93,6 +97,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isAuthenticated,
         isAdmin,
+        isSuperAdmin,
+        isOwner,
         isDriver,
         loading,
         login,

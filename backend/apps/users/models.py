@@ -31,7 +31,8 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser):
     class Role(models.TextChoices):
         DRIVER = 'driver', 'Conductor'
-        ADMIN = 'admin', 'Administrador'
+        ADMIN = 'admin', 'Super Administrador (Plataforma)'
+        OWNER = 'owner', 'Dueño de Estacionamiento (Operador)'
 
     username = None
     email = models.EmailField('Correo electrónico', unique=True)
@@ -61,5 +62,13 @@ class User(AbstractUser):
         return f"{self.get_full_name()} ({self.email}) - {self.get_role_display()}"
 
     @property
-    def is_admin_role(self):
+    def is_super_admin(self):
         return self.role == self.Role.ADMIN or self.is_superuser
+
+    @property
+    def is_owner_role(self):
+        return self.role == self.Role.OWNER
+
+    @property
+    def is_admin_role(self):
+        return self.role in [self.Role.ADMIN, self.Role.OWNER] or self.is_superuser
