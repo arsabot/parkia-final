@@ -10,7 +10,6 @@ import {
   XCircle, 
   RefreshCw 
 } from 'lucide-react';
-import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
@@ -108,10 +107,7 @@ export const AdminReservationsPage: React.FC = () => {
           </Button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          <AdminSidebar />
-
-          <div className="flex-1 space-y-6">
+        <div className="space-y-6">
             
             {/* Filter controls */}
             <div className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm space-y-4">
@@ -152,7 +148,7 @@ export const AdminReservationsPage: React.FC = () => {
                   <span className="text-xs font-bold text-slate-600">Estacionamiento:</span>
                   {isOwner && parkings.length <= 1 ? (
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-300" />
                       <span>{parkings[0]?.name || 'Tu Garaje'}</span>
                     </div>
                   ) : (
@@ -171,10 +167,80 @@ export const AdminReservationsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+            {/* Tablet Portrait & Mobile Cards List (<lg) */}
+            <div className="lg:hidden divide-y divide-slate-100 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+              {loading ? (
+                <div className="py-12 text-center text-slate-400 text-sm">
+                  Cargando reservas...
+                </div>
+              ) : reservations.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-sm">
+                  No se encontraron reservas con los filtros aplicados.
+                </div>
+              ) : (
+                reservations.map((res) => (
+                  <div key={res.id} className="p-4 sm:p-5 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-brand-600 text-sm sm:text-base">
+                            {res.booking_code}
+                          </span>
+                          <span className="font-mono font-bold text-navy-900 text-sm sm:text-base">
+                            {res.vehicle_plate}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">{res.user_name || 'Conductor'}</p>
+                        <span className="text-xs text-teal-700 font-bold bg-teal-50 border border-teal-200/60 px-2.5 py-0.5 rounded-md inline-block mt-1">
+                          {res.parking_name} • Plaza {res.space_code}
+                        </span>
+                      </div>
+                      <Badge variant={res.status as any}>{res.status_display}</Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl text-xs border border-slate-100">
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-bold uppercase">Fecha y Horario</span>
+                        <span className="font-bold text-slate-900">{res.date}</span>
+                        <span className="text-slate-500 ml-1">({res.start_time.slice(0, 5)} - {res.end_time.slice(0, 5)}hs)</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-slate-400 block text-[10px] font-bold uppercase">Monto</span>
+                        <span className="font-black text-slate-900 text-sm sm:text-base">
+                          ${Number(res.total_price).toLocaleString('es-AR')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {res.status === 'confirmed' && (
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-50">
+                        <button
+                          type="button"
+                          onClick={() => handleChangeStatus(res.id, 'completed')}
+                          className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs sm:text-sm transition-colors cursor-pointer inline-flex items-center gap-1.5 border border-emerald-200"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                          <span>Finalizar Reserva</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleChangeStatus(res.id, 'cancelled')}
+                          className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold text-xs sm:text-sm transition-colors cursor-pointer inline-flex items-center gap-1.5 border border-rose-200"
+                        >
+                          <XCircle className="w-4 h-4 text-rose-600" aria-hidden="true" />
+                          <span>Cancelar</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table (>=lg) */}
+            <div className="hidden lg:block bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[850px] text-left text-xs">
                   <thead className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                     <tr>
                       <th className="py-4 px-4">Código</th>
@@ -234,22 +300,26 @@ export const AdminReservationsPage: React.FC = () => {
                             <Badge variant={res.status as any}>{res.status_display}</Badge>
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
+                            <div className="flex items-center justify-end gap-1.5">
                               {res.status === 'confirmed' && (
                                 <>
                                   <button
+                                    type="button"
                                     onClick={() => handleChangeStatus(res.id, 'completed')}
-                                    className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] transition-colors"
+                                    className="px-3 py-1.5 min-h-[36px] rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs transition-colors cursor-pointer inline-flex items-center gap-1"
                                     title="Marcar como finalizada al salir"
                                   >
-                                    Finalizar
+                                    <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                    <span>Finalizar</span>
                                   </button>
                                   <button
+                                    type="button"
                                     onClick={() => handleChangeStatus(res.id, 'cancelled')}
-                                    className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition-colors"
+                                    className="px-3 py-1.5 min-h-[36px] rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors cursor-pointer inline-flex items-center gap-1"
                                     title="Cancelar reserva"
                                   >
-                                    Cancelar
+                                    <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                                    <span>Cancelar</span>
                                   </button>
                                 </>
                               )}
@@ -265,8 +335,6 @@ export const AdminReservationsPage: React.FC = () => {
 
           </div>
         </div>
-
       </div>
-    </div>
   );
 };

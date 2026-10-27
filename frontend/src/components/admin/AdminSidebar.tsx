@@ -55,14 +55,16 @@ export const AdminSidebar: React.FC = () => {
       </div>
 
       {/* Role explanation pill */}
-      <div className="mb-3 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500 font-medium leading-relaxed">
+      <div className="mb-3 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600 font-medium leading-relaxed">
         {isSuperAdmin ? (
-          <span>
-            👑 <strong>Ariel:</strong> Alta, baja y control total de estacionamientos.
+          <span className="flex items-center gap-1.5">
+            <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+            <span><strong>Ariel:</strong> Alta, baja y control total de la red.</span>
           </span>
         ) : (
-          <span>
-            🏢 <strong>Dueño:</strong> Escáner QR de garita, plazas vacantes y caja.
+          <span className="flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-teal-600 shrink-0" aria-hidden="true" />
+            <span><strong>Dueño:</strong> Escáner QR de garita, plazas y caja.</span>
           </span>
         )}
       </div>
@@ -76,15 +78,15 @@ export const AdminSidebar: React.FC = () => {
               to={link.to}
               end={link.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer ${
                   isActive
                     ? 'bg-navy-900 text-white shadow-md shadow-navy-950/20'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-navy-900'
                 }`
               }
             >
-              <Icon className="w-4 h-4 shrink-0 text-emerald-400" />
-              {link.label}
+              <Icon className="w-4 h-4 shrink-0 text-emerald-400" aria-hidden="true" />
+              <span>{link.label}</span>
             </NavLink>
           );
         })}

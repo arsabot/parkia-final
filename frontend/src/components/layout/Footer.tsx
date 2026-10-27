@@ -5,7 +5,7 @@ import { ParkingCircle, ShieldCheck, Zap, Smartphone, Heart } from 'lucide-react
 export const Footer: React.FC = () => {
   return (
     <footer className="bg-slate-950 text-slate-400 pt-16 pb-12 border-t border-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-900">
           
           {/* Brand Col */}
@@ -25,7 +25,7 @@ export const Footer: React.FC = () => {
               La plataforma líder para encontrar, comparar y reservar lugares de estacionamiento en tiempo real antes de salir.
             </p>
             <div className="flex items-center gap-3 text-xs text-emerald-400 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-500/30" />
               100% Plazas aseguradas y confirmación inmediata
             </div>
           </div>

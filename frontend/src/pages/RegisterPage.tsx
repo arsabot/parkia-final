@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User as UserIcon, Phone, ParkingCircle, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, Phone, ParkingCircle, ArrowRight, Car, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
+import { Input } from '../components/common/Input';
 import { UserRole } from '../types';
 
 export const RegisterPage: React.FC = () => {
@@ -92,137 +93,106 @@ export const RegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRole('driver')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
                     role === 'driver'
-                      ? 'bg-brand-50 border-brand-500 text-brand-700'
+                      ? 'bg-brand-50 border-brand-500 text-brand-700 shadow-sm'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  🚗 Conductor
+                  <Car className="w-4 h-4 text-brand-600" aria-hidden="true" />
+                  <span>Conductor</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('admin')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
-                    role === 'admin'
-                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                  onClick={() => setRole('owner')}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
+                    role === 'owner' || role === 'admin'
+                      ? 'bg-teal-50 border-teal-500 text-teal-800 shadow-sm'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  🏢 Dueño de Garage
+                  <Building2 className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                  <span>Dueño de Garaje</span>
                 </button>
               </div>
             </div>
 
             {/* Name and Last Name */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Carlos"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Apellido
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Méndez"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
+              <Input
+                label="Nombre"
+                required
+                autoComplete="given-name"
+                placeholder="Carlos"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <Input
+                label="Apellido"
+                required
+                autoComplete="family-name"
+                placeholder="Méndez"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
             </div>
 
             {/* Email */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Correo Electrónico
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  required
-                  placeholder="carlos@ejemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-            </div>
+            <Input
+              type="email"
+              label="Correo Electrónico"
+              required
+              autoComplete="email"
+              placeholder="carlos@ejemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              leftIcon={<Mail className="w-4 h-4" />}
+            />
 
             {/* Phone */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Teléfono / WhatsApp (Opcional)
-              </label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="tel"
-                  placeholder="+54 9 11 1234-5678"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-            </div>
+            <Input
+              type="tel"
+              label="Teléfono / WhatsApp (Opcional)"
+              autoComplete="tel"
+              placeholder="+54 9 11 1234-5678"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              leftIcon={<Phone className="w-4 h-4" />}
+            />
 
             {/* Password */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Contraseña
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  required
-                  placeholder="Mínimo 6 caracteres"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-            </div>
+            <Input
+              type="password"
+              label="Contraseña"
+              required
+              autoComplete="new-password"
+              placeholder="Mínimo 6 caracteres"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              leftIcon={<Lock className="w-4 h-4" />}
+            />
 
             {/* Password confirmation */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Confirmar Contraseña
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  required
-                  placeholder="Repite la contraseña"
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-            </div>
+            <Input
+              type="password"
+              label="Confirmar Contraseña"
+              required
+              autoComplete="new-password"
+              placeholder="Repite la contraseña"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              leftIcon={<Lock className="w-4 h-4" />}
+            />
 
             <Button
               type="submit"
               variant="primary"
               isLoading={loading}
-              className="w-full py-3 text-sm font-bold shadow-lg shadow-brand-500/25 mt-2"
+              fullWidth
+              className="mt-2"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Registrarse Ahora
+              Crear Cuenta
             </Button>
           </form>
 

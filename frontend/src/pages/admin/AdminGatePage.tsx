@@ -24,7 +24,6 @@ import { Reservation, Parking } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
-import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { CameraQrScanner } from '../../components/common/CameraQrScanner';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
@@ -205,13 +204,8 @@ export const AdminGatePage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Role-tailored Sidebar */}
-          <AdminSidebar />
-
-          {/* Main Operations Area */}
-          <div className="flex-1 space-y-8 animate-fade-in">
+        {/* Main Operations Area */}
+        <div className="space-y-8 animate-fade-in">
             
             {/* Header and Controls */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -496,10 +490,117 @@ export const AdminGatePage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+              {/* Tablet Portrait & Mobile Cards List (<lg) - Full visibility of actions and status */}
+              <div className="lg:hidden divide-y divide-slate-100">
+                {filteredReservations.length === 0 ? (
+                  <div className="py-10 text-center text-slate-400 text-sm">
+                    No hay registros de movimientos para este estacionamiento.
+                  </div>
+                ) : (
+                  filteredReservations.map((res) => {
+                    const isInside = res.check_in_time && !res.check_out_time;
+                    return (
+                      <div key={res.id} className="p-4 sm:p-5 space-y-3 bg-white hover:bg-slate-50/50 transition-colors">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono font-black text-navy-900 text-base sm:text-lg tracking-wide">
+                                {res.vehicle_plate}
+                              </span>
+                              <span className="font-mono text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md font-semibold">
+                                {res.booking_code}
+                              </span>
+                            </div>
+                            <p className="text-sm font-bold text-slate-800">{res.user_name}</p>
+                            <span className="text-xs text-teal-700 font-bold bg-teal-50 border border-teal-200/80 px-2.5 py-0.5 rounded-lg inline-block">
+                              {res.parking_name} • Plaza {res.space_code}
+                            </span>
+                          </div>
+                          <Badge variant={res.status as any}>
+                            {res.status_display}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl text-xs border border-slate-100">
+                          <div>
+                            <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Entrada</span>
+                            {res.check_in_time ? (
+                              <span className="font-bold text-teal-700 inline-flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                                <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
+                                {new Date(res.check_in_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 italic mt-0.5 block whitespace-nowrap">Pendiente ({res.start_time.slice(0, 5)}hs)</span>
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Salida</span>
+                            {res.check_out_time ? (
+                              <span className="font-bold text-emerald-700 inline-flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                                <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                                {new Date(res.check_out_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
+                              </span>
+                            ) : isInside ? (
+                              <span className="inline-flex items-center gap-1.5 mt-0.5 font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md text-[11px] whitespace-nowrap shadow-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                                Adentro ahora
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 mt-0.5 block">-</span>
+                            )}
+                          </div>
+                          <div className="col-span-2 sm:col-span-1">
+                            <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Cobro & Pago</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-sm font-black text-navy-900">
+                                ${Number(res.total_price).toLocaleString('es-AR')}
+                              </span>
+                              <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-slate-500">
+                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500 shrink-0" /> : <Banknote className="w-3 h-3 text-emerald-600 shrink-0" />}
+                                {res.payment_method || 'Efectivo'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                          {!res.check_in_time && res.status === 'confirmed' && (
+                            <button
+                              onClick={() => handleCheckIn(res)}
+                              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                            >
+                              <ArrowDownRight className="w-4 h-4 text-teal-600" />
+                              <span>Registrar Entrada</span>
+                            </button>
+                          )}
+
+                          {isInside && (
+                            <button
+                              onClick={() => setCheckoutTarget(res)}
+                              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                            >
+                              <ArrowUpRight className="w-4 h-4 text-emerald-100" />
+                              <span>Salida & Cobro Final</span>
+                            </button>
+                          )}
+
+                          {res.status === 'completed' && (
+                            <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Movimiento Finalizado
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Desktop Wide Table (>=lg) */}
+              <div className="hidden lg:block overflow-x-auto w-full">
+                <table className="w-full min-w-[960px] text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100">
+                    <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100 whitespace-nowrap">
                       <th className="py-3 px-4">Código / Patente</th>
                       <th className="py-3 px-4">Conductor</th>
                       <th className="py-3 px-4">Estacionamiento & Plaza</th>
@@ -522,7 +623,7 @@ export const AdminGatePage: React.FC = () => {
                         const isInside = res.check_in_time && !res.check_out_time;
                         return (
                           <tr key={res.id} className="hover:bg-slate-50/70 transition-colors">
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 whitespace-nowrap">
                               <span className="font-mono font-bold text-navy-900 block text-sm">
                                 {res.vehicle_plate}
                               </span>
@@ -531,37 +632,38 @@ export const AdminGatePage: React.FC = () => {
                               </span>
                             </td>
 
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 whitespace-nowrap">
                               <span className="font-bold text-slate-900 block">{res.user_name}</span>
                               <span className="text-[11px] text-slate-400">{res.user_email}</span>
                             </td>
 
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 whitespace-nowrap">
                               <span className="font-semibold text-slate-900 block">{res.parking_name}</span>
                               <span className="text-[11px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md">
                                 Plaza {res.space_code}
                               </span>
                             </td>
 
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 whitespace-nowrap">
                               {res.check_in_time ? (
-                                <div className="flex items-center gap-1.5 text-teal-700 font-bold">
-                                  <ArrowDownRight className="w-3.5 h-3.5" />
-                                  {new Date(res.check_in_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                                <div className="inline-flex items-center gap-1.5 text-teal-700 font-bold whitespace-nowrap">
+                                  <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
+                                  {new Date(res.check_in_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
                                 </div>
                               ) : (
-                                <span className="text-slate-400 italic">Pendiente (Reserva {res.start_time.slice(0, 5)}hs)</span>
+                                <span className="text-slate-400 italic whitespace-nowrap">Pendiente (Reserva {res.start_time.slice(0, 5)}hs)</span>
                               )}
                             </td>
 
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 whitespace-nowrap">
                               {res.check_out_time ? (
-                                <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
-                                  <ArrowUpRight className="w-3.5 h-3.5" />
-                                  {new Date(res.check_out_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                                <div className="inline-flex items-center gap-1.5 text-emerald-700 font-bold whitespace-nowrap">
+                                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                                  {new Date(res.check_out_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
                                 </div>
                               ) : isInside ? (
-                                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap shadow-xs">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
                                   Adentro ahora
                                 </span>
                               ) : (
@@ -569,23 +671,23 @@ export const AdminGatePage: React.FC = () => {
                               )}
                             </td>
 
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 whitespace-nowrap">
                               <span className="text-sm font-black text-navy-900 block">
                                 ${Number(res.total_price).toLocaleString('es-AR')}
                               </span>
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500" /> : <Banknote className="w-3 h-3 text-emerald-600" />}
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 whitespace-nowrap">
+                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500 shrink-0" /> : <Banknote className="w-3 h-3 text-emerald-600 shrink-0" />}
                                 {res.payment_method || 'Efectivo'}
                               </span>
                             </td>
 
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 whitespace-nowrap">
                               <Badge variant={res.status as any}>
                                 {res.status_display}
                               </Badge>
                             </td>
 
-                            <td className="py-3 px-4 text-right">
+                            <td className="py-3 px-4 text-right whitespace-nowrap">
                               {!res.check_in_time && res.status === 'confirmed' && (
                                 <button
                                   onClick={() => handleCheckIn(res)}
@@ -622,8 +724,6 @@ export const AdminGatePage: React.FC = () => {
           </div>
         </div>
 
-      </div>
-
       {/* Modal: Fullscreen Camera QR Scanner */}
       {isCameraScannerOpen && (
         <Modal
@@ -650,7 +750,7 @@ export const AdminGatePage: React.FC = () => {
           title={`Registrar Egreso y Cobro • ${checkoutTarget.vehicle_plate}`}
           maxWidth="md"
         >
-          <div className="p-6 space-y-5">
+          <div className="space-y-5">
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-500">Conductor:</span>
@@ -736,23 +836,24 @@ export const AdminGatePage: React.FC = () => {
           title="Registrar Ingreso Directo (Sin Reserva Previa)"
           maxWidth="md"
         >
-          <form onSubmit={handleCreateWalkIn} className="p-6 space-y-4">
+          <form onSubmit={handleCreateWalkIn} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="walkin-garage-select" className="block text-xs font-bold text-slate-700 mb-1">
                 Estacionamiento Destino:
               </label>
               {isOwner && parkings.length <= 1 ? (
-                <div className="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 flex items-center justify-between">
-                  <span>🏢 {parkings[0]?.name || 'Tu Estacionamiento'}</span>
+                <div className="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 flex items-center justify-between min-h-[44px]">
+                  <span>{parkings[0]?.name || 'Tu Estacionamiento'}</span>
                   <span className="text-emerald-700 font-extrabold">
                     ${Number(parkings[0]?.price_per_hour || 0).toLocaleString('es-AR')}/h
                   </span>
                 </div>
               ) : (
                 <select
+                  id="walkin-garage-select"
                   value={walkInParkingId}
                   onChange={(e) => setWalkInParkingId(Number(e.target.value))}
-                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 >
                   {parkings.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -765,76 +866,81 @@ export const AdminGatePage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-plate" className="block text-xs font-bold text-slate-700 mb-1">
                   Patente / Matrícula: *
                 </label>
                 <input
+                  id="walkin-plate"
                   type="text"
                   required
                   placeholder="Ej: AB123CD"
                   value={walkInPlate}
                   onChange={(e) => setWalkInPlate(e.target.value.toUpperCase())}
-                  className="w-full text-xs font-mono font-bold uppercase bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs font-mono font-bold uppercase bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-model" className="block text-xs font-bold text-slate-700 mb-1">
                   Modelo / Marca:
                 </label>
                 <input
+                  id="walkin-model"
                   type="text"
                   placeholder="Ej: Toyota Corolla"
                   value={walkInModel}
                   onChange={(e) => setWalkInModel(e.target.value)}
-                  className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-hours" className="block text-xs font-bold text-slate-700 mb-1">
                   Horas Estimadas:
                 </label>
                 <input
+                  id="walkin-hours"
                   type="number"
                   min="0.5"
                   step="0.5"
                   value={walkInHours}
                   onChange={(e) => setWalkInHours(Math.max(0.5, parseFloat(e.target.value) || 1))}
-                  className="w-full text-xs font-bold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs font-bold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-method" className="block text-xs font-bold text-slate-700 mb-1">
                   Medio de Pago:
                 </label>
                 <select
+                  id="walkin-method"
                   value={walkInMethod}
                   onChange={(e) => setWalkInMethod(e.target.value)}
-                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 >
-                  <option value="Efectivo">💵 Efectivo</option>
-                  <option value="Mercado Pago">📱 Mercado Pago (QR)</option>
-                  <option value="Tarjeta Débito">💳 Débito</option>
-                  <option value="Tarjeta Crédito">💳 Crédito</option>
-                  <option value="Transferencia">🏦 Transferencia</option>
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Mercado Pago">Mercado Pago (QR)</option>
+                  <option value="Tarjeta Débito">Débito</option>
+                  <option value="Tarjeta Crédito">Crédito</option>
+                  <option value="Transferencia">Transferencia</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="walkin-notes" className="block text-xs font-bold text-slate-700 mb-1">
                 Observaciones:
               </label>
               <input
+                id="walkin-notes"
                 type="text"
                 placeholder="Ej: Ingreso por barrera norte..."
                 value={walkInNotes}
                 onChange={(e) => setWalkInNotes(e.target.value)}
-                className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
               />
             </div>
 

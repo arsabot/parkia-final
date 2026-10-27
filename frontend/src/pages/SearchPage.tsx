@@ -122,7 +122,7 @@ export const SearchPage: React.FC = () => {
       
       {/* Top Search Bar & Controls */}
       <div className="bg-white border-b border-slate-200 sticky top-16 sm:top-20 z-30 px-4 sm:px-6 lg:px-8 py-3.5 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="max-w-7xl xl:max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           
           {/* Search form */}
           <form onSubmit={handleSearchSubmit} className="flex-1 w-full flex items-center gap-2">
@@ -137,18 +137,25 @@ export const SearchPage: React.FC = () => {
               />
             </div>
 
-            <Button type="submit" variant="primary" size="md" className="shrink-0">
-              <Search className="w-4 h-4" />
+            <Button 
+              type="submit" 
+              variant="primary" 
+              size="md" 
+              className="shrink-0"
+              aria-label="Buscar estacionamientos"
+            >
+              <Search className="w-4 h-4" aria-hidden="true" />
             </Button>
 
             <button
               type="button"
               onClick={handleUseMyLocation}
               disabled={isLocating}
-              className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors flex items-center gap-1.5 text-xs font-bold shrink-0"
+              className="min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors flex items-center gap-1.5 text-xs font-bold shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shadow-sm"
               title="Centrar en mi ubicación"
+              aria-label="Usar mi ubicación actual para encontrar estacionamientos cercanos"
             >
-              <Navigation className={`w-4 h-4 text-brand-600 ${isLocating ? 'animate-spin' : ''}`} />
+              <Navigation className={`w-4 h-4 text-brand-600 ${isLocating ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span className="hidden sm:inline">Mi ubicación</span>
             </button>
           </form>
@@ -157,43 +164,47 @@ export const SearchPage: React.FC = () => {
           <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
             <button
               onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-              className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-sm"
+              className="lg:hidden flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              aria-expanded={mobileFilterOpen}
+              aria-label="Abrir filtros de búsqueda"
             >
-              <SlidersHorizontal className="w-4 h-4 text-brand-600" />
-              Filtros
+              <SlidersHorizontal className="w-4 h-4 text-brand-600" aria-hidden="true" />
+              <span>Filtros</span>
             </button>
 
             {/* Mobile View Switcher (List vs Map) */}
-            <div className="lg:hidden flex items-center bg-slate-100 p-1 rounded-xl">
+            <div className="lg:hidden flex items-center bg-slate-100 p-1 rounded-xl" role="group" aria-label="Vista de resultados">
               <button
                 onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  viewMode === 'list' || viewMode === 'split' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                aria-pressed={viewMode === 'list' || viewMode === 'split'}
+                className={`flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                  viewMode === 'list' || viewMode === 'split' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <List className="w-3.5 h-3.5" />
-                Lista
+                <List className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Lista</span>
               </button>
               <button
                 onClick={() => setViewMode('map')}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  viewMode === 'map' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                aria-pressed={viewMode === 'map'}
+                className={`flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                  viewMode === 'map' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <MapIcon className="w-3.5 h-3.5" />
-                Mapa
+                <MapIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Mapa</span>
               </button>
             </div>
 
-            <div className="hidden lg:block text-xs font-semibold text-slate-500">
-              Mostrando <strong className="text-slate-900">{parkings.length}</strong> estacionamientos
+            <div className="hidden lg:block text-xs font-semibold text-slate-600">
+              Mostrando <strong className="text-navy-900 font-extrabold">{parkings.length}</strong> estacionamientos
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+      <div className="max-w-7xl xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
         
         {/* Mobile Filter Drawer */}
         {mobileFilterOpen && (
@@ -219,11 +230,11 @@ export const SearchPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Center Column: Results List (5 cols on xl, or 8 cols without map) */}
+          {/* Center Column: Results List (6 cols on 2xl, 5 on xl, or 8 cols without map) */}
           <div
-            className={`space-y-4 ${
+            className={`space-y-4 min-w-0 ${
               viewMode === 'map' ? 'hidden lg:block' : 'block'
-            } lg:col-span-8 xl:col-span-5`}
+            } lg:col-span-8 xl:col-span-5 2xl:col-span-5`}
           >
             {loading ? (
               <>
@@ -252,11 +263,11 @@ export const SearchPage: React.FC = () => {
             )}
           </div>
 
-          {/* Right Column: Sticky Interactive Leaflet Map (4 cols on xl, or full on mobile map mode) */}
+          {/* Right Column: Sticky Interactive Leaflet Map (4 cols on xl) */}
           <div
             className={`h-[450px] lg:h-[calc(100vh-14rem)] sticky top-36 ${
               viewMode === 'list' ? 'hidden lg:block' : 'block'
-            } lg:col-span-8 xl:col-span-4 lg:hidden xl:block`}
+            } lg:col-span-8 xl:col-span-4 2xl:col-span-4 lg:hidden xl:block`}
           >
             <LeafletMap
               parkings={parkings}

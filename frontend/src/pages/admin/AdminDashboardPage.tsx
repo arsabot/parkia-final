@@ -25,7 +25,6 @@ import {
   Cell,
   Legend
 } from 'recharts';
-import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { KPICard } from '../../components/admin/KPICard';
 import { Badge } from '../../components/common/Badge';
 import { adminService } from '../../services/adminService';
@@ -54,16 +53,13 @@ export const AdminDashboardPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <AdminSidebar />
-            <div className="flex-1 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-32 bg-white rounded-3xl animate-pulse" />
-                ))}
-              </div>
-              <div className="h-80 bg-white rounded-3xl animate-pulse" />
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-32 bg-white rounded-3xl animate-pulse" />
+              ))}
             </div>
+            <div className="h-80 bg-white rounded-3xl animate-pulse" />
           </div>
         </div>
       </div>
@@ -86,13 +82,8 @@ export const AdminDashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Sidebar */}
-          <AdminSidebar />
-
-          {/* Main Dashboard Area */}
-          <div className="flex-1 space-y-8">
+        {/* Main Dashboard Area */}
+        <div className="space-y-8">
             
             {/* KPI Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -291,15 +282,51 @@ export const AdminDashboardPage: React.FC = () => {
 
             </div>
 
-            {/* Recent Reservations Table */}
+            {/* Recent Reservations: Cards on <lg, Table on >=lg */}
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-900 text-base">Últimas Reservas Registradas</h3>
                 <span className="text-xs text-slate-400">Total: {recent_reservations.length}</span>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              {/* Tablet Portrait & Mobile Cards List (<lg) */}
+              <div className="lg:hidden divide-y divide-slate-100">
+                {recent_reservations.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-6 text-center">No hay reservas registradas.</p>
+                ) : (
+                  recent_reservations.map((res) => (
+                    <div key={res.id} className="py-3.5 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="font-mono font-bold text-brand-600 text-xs sm:text-sm block">
+                            {res.booking_code}
+                          </span>
+                          <span className="font-bold text-slate-900 text-sm block">
+                            {res.user_name || res.user_email}
+                          </span>
+                          <span className="text-xs text-teal-700 font-semibold block mt-0.5">
+                            {res.parking_name} • Plaza {res.space_code}
+                          </span>
+                        </div>
+                        <Badge variant={res.status as any}>{res.status_display}</Badge>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl text-xs">
+                        <span className="text-slate-500 font-medium">
+                          {res.date} ({res.start_time.slice(0, 5)} hs)
+                        </span>
+                        <span className="font-black text-slate-900 text-sm">
+                          ${Number(res.total_price).toLocaleString('es-AR')}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table (>=lg) */}
+              <div className="hidden lg:block overflow-x-auto w-full">
+                <table className="w-full min-w-[700px] text-left text-xs">
                   <thead className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
                     <tr>
                       <th className="py-3 px-3">Código</th>
@@ -341,10 +368,7 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
 
           </div>
-
         </div>
-
       </div>
-    </div>
   );
 };

@@ -53,7 +53,7 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
       }`}
     >
       {/* Image & Badges */}
-      <div className="relative w-full sm:w-56 h-48 sm:h-auto rounded-2xl overflow-hidden shrink-0 bg-slate-100">
+      <div className="relative w-full sm:w-44 md:w-48 lg:w-44 xl:w-48 2xl:w-52 h-44 sm:h-auto rounded-2xl overflow-hidden shrink-0 bg-slate-100">
         <img
           src={parking.image_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=500'}
           alt={parking.name}
@@ -67,20 +67,22 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
             e.stopPropagation();
             toggleFavorite(parking.id);
           }}
-          className="absolute top-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-md text-slate-700 hover:text-rose-500 shadow-md transition-all hover:scale-110 active:scale-90"
+          className="absolute top-3 right-3 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-white/95 backdrop-blur-md text-slate-700 hover:text-rose-500 shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          aria-label={favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
           title={favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
         >
           <Heart
-            className={`w-4 h-4 transition-colors ${
+            className={`w-4.5 h-4.5 transition-colors ${
               favorited ? 'fill-rose-500 text-rose-500' : ''
             }`}
+            aria-hidden="true"
           />
         </button>
 
         {/* 24 Hours / Hours Badge */}
         <div className="absolute bottom-3 left-3">
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur-md text-white border border-white/20">
-            <Clock className="w-3 h-3 text-brand-400" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-navy-950/85 backdrop-blur-md text-white border border-white/20">
+            <Clock className="w-3.5 h-3.5 text-brand-300" aria-hidden="true" />
             {parking.is_24_hours
               ? 'Abierto 24hs'
               : `${parking.opening_time ? parking.opening_time.slice(0, 5) : '08:00'} - ${parking.closing_time ? parking.closing_time.slice(0, 5) : '22:00'}`}
@@ -106,12 +108,12 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
 
           {/* Title */}
           <Link to={`/parking/${parking.id}`} className="block">
-            <h3 className="text-lg font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1 mb-1">
+            <h3 className="text-lg font-extrabold text-navy-900 group-hover:text-brand-600 transition-colors line-clamp-1 mb-1">
               {parking.name}
             </h3>
           </Link>
 
-          <p className="text-xs text-slate-500 line-clamp-1 mb-3">{parking.address}</p>
+          <p className="text-xs text-slate-600 line-clamp-1 mb-3 font-medium">{parking.address}</p>
 
           {/* Rating */}
           <div className="mb-3">
@@ -129,19 +131,12 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
         </div>
 
         {/* Bottom bar: Pricing, Availability and CTA */}
-        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span className="text-[11px] text-slate-400 block font-medium">Tarifa por hora</span>
-            <span className="text-xl font-black text-slate-900">
-              {formatCurrency(parking.price_per_hour)}
-            </span>
-          </div>
-
-          {/* Availability pill */}
-          <div className="flex items-center gap-2">
-            <div className="text-right hidden sm:block">
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Tarifa por hora</span>
               <span
-                className={`text-xs font-bold inline-flex items-center gap-1 ${
+                className={`text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap ${
                   isFull
                     ? 'text-rose-600'
                     : isHighOccupancy
@@ -151,37 +146,41 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
               >
                 {isFull ? (
                   <>
-                    <AlertTriangle className="w-3.5 h-3.5" /> Completo
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Completo
                   </>
                 ) : isHighOccupancy ? (
                   <>
-                    <AlertTriangle className="w-3.5 h-3.5" /> ¡Últimos {parking.available_spaces} lugares!
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> ¡Últimos {parking.available_spaces}!
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="w-3.5 h-3.5" /> {parking.available_spaces} libres
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> {parking.available_spaces} libres
                   </>
                 )}
               </span>
             </div>
+            <span className="text-xl font-black text-navy-900 block leading-tight">
+              {formatCurrency(parking.price_per_hour)}
+            </span>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <Link to={`/parking/${parking.id}`}>
-                <Button variant="outline" size="sm">
-                  Ver detalle
-                </Button>
-              </Link>
-              {onQuickBook && !isFull && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => onQuickBook(parking)}
-                  rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                >
-                  Reservar
-                </Button>
-              )}
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link to={`/parking/${parking.id}`} className="shrink-0">
+              <Button variant="outline" size="sm" className="px-3 py-1.5 text-xs whitespace-nowrap">
+                Ver detalle
+              </Button>
+            </Link>
+            {onQuickBook && !isFull && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onQuickBook(parking)}
+                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                className="px-3.5 py-1.5 text-xs shrink-0 whitespace-nowrap"
+              >
+                Reservar
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -59,13 +59,14 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+          <label htmlFor="cancel-reason-select" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
             Motivo de cancelación
           </label>
           <select
+            id="cancel-reason-select"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 mb-2"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 mb-2 min-h-[44px]"
           >
             <option value="Cambio de itinerario / Planes cancelados">Cambio de itinerario / Planes cancelados</option>
             <option value="Encontré otro lugar más cercano">Encontré otro lugar más cercano</option>
@@ -75,11 +76,12 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
 
           {reason === 'Otro' && (
             <textarea
+              id="cancel-custom-reason"
               placeholder="Especifica el motivo..."
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
               rows={2}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           )}
         </div>

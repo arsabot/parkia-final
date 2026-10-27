@@ -36,6 +36,9 @@ export interface Parking {
   longitude: number;
   description: string;
   phone: string;
+  owner_id?: number | null;
+  owner_email?: string | null;
+  owner_name?: string | null;
   price_per_hour: number;
   price_per_day?: number;
   opening_time: string;
