@@ -375,45 +375,48 @@ export const ParkingDetailPage: React.FC = () => {
               {/* Form */}
               <form onSubmit={handleBookingSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-brand-600" />
+                  <label htmlFor="detail-booking-date" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-teal-600" aria-hidden="true" />
                     Fecha de Entrada
                   </label>
                   <input
+                    id="detail-booking-date"
                     type="date"
                     min={todayStr}
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-brand-600" />
+                    <label htmlFor="detail-booking-start" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
                       Entrada
                     </label>
                     <input
+                      id="detail-booking-start"
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-brand-600" />
+                    <label htmlFor="detail-booking-end" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
                       Salida
                     </label>
                     <input
+                      id="detail-booking-end"
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -423,12 +426,12 @@ export const ParkingDetailPage: React.FC = () => {
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <Layers className="w-3.5 h-3.5 text-brand-600" />
+                        <Layers className="w-3.5 h-3.5 text-teal-600" aria-hidden="true" />
                         Plaza asignada
                       </span>
                       <span className="text-[10px] text-emerald-600 font-semibold">Seleccionable</span>
                     </label>
-                    <div className="grid grid-cols-4 gap-1.5 max-h-28 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <div className="grid grid-cols-4 gap-1.5 max-h-28 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200" role="group" aria-label="Selección de plaza">
                       {availableSpaces.map((s) => {
                         const isSelected = selectedSpaceId === s.id;
                         const isFree = s.is_available;
@@ -438,9 +441,11 @@ export const ParkingDetailPage: React.FC = () => {
                             type="button"
                             disabled={!isFree}
                             onClick={() => setSelectedSpaceId(s.id)}
-                            className={`py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center ${
+                            aria-label={`Plaza ${s.code}, ${isFree ? (isSelected ? 'seleccionada' : 'disponible') : 'no disponible'}`}
+                            aria-pressed={isSelected}
+                            className={`py-2 px-1 min-h-[40px] rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
                               isSelected
-                                ? 'bg-brand-600 text-white shadow-md'
+                                ? 'bg-teal-600 text-white shadow-md'
                                 : isFree
                                 ? 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
                                 : 'bg-slate-200/70 text-slate-400 cursor-not-allowed line-through'
@@ -456,17 +461,18 @@ export const ParkingDetailPage: React.FC = () => {
 
                 {/* Vehicle plate */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Car className="w-4 h-4 text-brand-600" />
+                  <label htmlFor="detail-booking-plate" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Car className="w-4 h-4 text-teal-600" aria-hidden="true" />
                     Patente / Matrícula
                   </label>
                   <input
+                    id="detail-booking-plate"
                     type="text"
                     value={vehiclePlate}
                     onChange={(e) => setVehiclePlate(e.target.value)}
                     required
                     placeholder="AA 123 BB"
-                    className="w-full uppercase font-mono tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full uppercase font-mono tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                   />
                 </div>
 

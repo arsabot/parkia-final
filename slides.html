@@ -324,6 +324,17 @@
       .big-number { font-size: 2.2rem; }
       .flow-arrow { transform: rotate(90deg); margin: 6px 0; }
     }
+
+    /* Presentation export mode (no browser buttons/progress, instant slide switch) */
+    body.is-export .nav-bar,
+    body.is-export .progress-bar-container,
+    body.is-export .keyboard-hint {
+      display: none !important;
+    }
+    body.is-export .slide {
+      transition: none !important;
+      animation: none !important;
+    }
   </style>
 </head>
 <body>
@@ -371,7 +382,7 @@
           </div>
         </div>
 
-        <p style="color: var(--color-text-muted); font-size: 0.8rem; margin-top: 18px;">
+        <p class="keyboard-hint" style="color: var(--color-text-muted); font-size: 0.8rem; margin-top: 18px;">
           Presione <span class="pill-key">→</span> o <span class="pill-key">Espacio</span> para ver cómo funciona
         </p>
       </div>
@@ -849,12 +860,32 @@
   </div>
 
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const isExport = urlParams.has('export') || window.location.hash.includes('export');
+    if (isExport) {
+      document.body.classList.add('is-export');
+    }
+
     let current = 1;
     const slides = document.querySelectorAll('.slide');
     const total = slides.length;
     document.getElementById('total').textContent = total;
 
     let chartInitialized = false;
+
+    function getInitialSlide() {
+      const q = urlParams.get('slide');
+      if (q) {
+        const parsed = parseInt(q, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= total) return parsed;
+      }
+      const hashMatch = window.location.hash.match(/\d+/);
+      if (hashMatch) {
+        const parsed = parseInt(hashMatch[0], 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= total) return parsed;
+      }
+      return 1;
+    }
 
     function showSlide(n) {
       if (n < 1) n = 1;
@@ -867,6 +898,10 @@
 
       document.getElementById('current').textContent = n;
       document.getElementById('progressBar').style.width = ((n / total) * 100) + '%';
+
+      if (!isExport && window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', '#slide-' + n);
+      }
 
       // Initialize Chart when arriving at Slide 7
       if (n === 7 && !chartInitialized) {
@@ -926,6 +961,13 @@
       if (touchEndX > touchStartX + 50) prevSlide();
     }, { passive: true });
 
+    window.addEventListener('hashchange', () => {
+      if (!isExport) {
+        const target = getInitialSlide();
+        if (target !== current) showSlide(target);
+      }
+    });
+
     function initChart() {
       const ctx = document.getElementById('growthChart');
       if (!ctx) return;
@@ -960,6 +1002,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: isExport ? false : { duration: 800 },
           plugins: {
             legend: {
               labels: {
@@ -982,8 +1025,8 @@
       });
     }
 
-    // Start on first slide
-    showSlide(1);
+    // Start on requested slide or first slide
+    showSlide(getInitialSlide());
   </script>
 </body>
 </html>

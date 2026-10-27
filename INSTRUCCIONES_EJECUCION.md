@@ -102,3 +102,20 @@ source venv/bin/activate
 python manage.py test apps.users.test_users apps.parking.test_parking apps.reservations.test_reservations
 ```
 Todos los 13 tests deben pasar exitosamente.
+
+---
+
+## ☁️ Acceso desde Celulares y Dispositivos Externos (Cloudflare)
+
+- **Frontend en Cloudflare Pages:** [https://parkia.pages.dev](https://parkia.pages.dev)
+- **Túnel de Backend activo:** Conecta tu backend local Django a la web mediante Cloudflare Tunnel para que cualquier dispositivo externo pueda interactuar con la base de datos real.
+
+Para iniciar el túnel si reinicias tu equipo:
+```bash
+cloudflared tunnel --url http://127.0.0.1:8000
+```
+Y para desplegar actualizaciones del frontend:
+```bash
+cd frontend && npm run deploy
+```
+

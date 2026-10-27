@@ -1,6 +1,7 @@
 import React from 'react';
 import { SlidersHorizontal, RotateCcw, DollarSign, MapPin, Sparkles } from 'lucide-react';
 import { SearchFilters } from '../../types';
+import { Select } from '../common/Select';
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -50,36 +51,33 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-6">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-5 h-5 text-brand-600" />
-          <h3 className="font-bold text-slate-900 text-base">Filtros y Orden</h3>
+          <SlidersHorizontal className="w-5 h-5 text-brand-600" aria-hidden="true" />
+          <h3 className="font-extrabold text-navy-900 text-base">Filtros y Orden</h3>
         </div>
         <button
           onClick={onReset}
-          className="text-xs font-semibold text-slate-500 hover:text-brand-600 flex items-center gap-1 transition-colors"
+          className="text-xs font-bold text-slate-500 hover:text-brand-600 flex items-center gap-1 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg p-1"
+          aria-label="Restablecer todos los filtros"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
           Limpiar
         </button>
       </div>
 
       <div className="space-y-6">
         {/* Sort By */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-            Ordenar por
-          </label>
-          <select
-            value={filters.sort_by || 'recommended'}
-            onChange={handleSortChange}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
-          >
-            <option value="recommended">Recomendados</option>
-            <option value="closest">Más cercano</option>
-            <option value="price_asc">Menor precio</option>
-            <option value="price_desc">Mayor precio</option>
-            <option value="rating_desc">Mejor valoración</option>
-          </select>
-        </div>
+        <Select
+          label="Ordenar por"
+          value={filters.sort_by || 'recommended'}
+          onChange={handleSortChange}
+          options={[
+            { value: 'recommended', label: 'Recomendados' },
+            { value: 'closest', label: 'Más cercano' },
+            { value: 'price_asc', label: 'Menor precio' },
+            { value: 'price_desc', label: 'Mayor precio' },
+            { value: 'rating_desc', label: 'Mejor valoración' },
+          ]}
+        />
 
         {/* Max Price Slider */}
         <div>

@@ -51,11 +51,11 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
             <img
               src="/logo-icon.png"
               alt="PARKIA"
@@ -71,44 +71,44 @@ export const Navbar: React.FC = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
+          {/* Navigation Links (Visible on Tablet md+ and Desktop) */}
+          <nav className="hidden md:flex items-center gap-1 xl:gap-1.5">
             {!isAdmin ? (
               <>
                 <Link
                   to="/search"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/search')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <Compass className="w-4 h-4" />
-                  Buscar
+                  <Compass className="w-4 h-4 shrink-0" />
+                  <span>Buscar</span>
                 </Link>
 
                 <Link
                   to="/my-reservations"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/my-reservations')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <CalendarCheck className="w-4 h-4" />
-                  Mis Reservas
+                  <CalendarCheck className="w-4 h-4 shrink-0" />
+                  <span><span className="hidden xl:inline">Mis </span>Reservas</span>
                 </Link>
 
                 <Link
                   to="/favorites"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/favorites')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <Bookmark className="w-4 h-4" />
-                  Favoritos
+                  <Bookmark className="w-4 h-4 shrink-0" />
+                  <span>Favoritos</span>
                 </Link>
               </>
             ) : isSuperAdmin ? (
@@ -116,62 +116,62 @@ export const Navbar: React.FC = () => {
               <>
                 <Link
                   to="/admin"
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
+                  <LayoutDashboard className="w-4 h-4 shrink-0" />
+                  <span>Dashboard</span>
                 </Link>
 
                 <Link
                   to="/admin/parkings"
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
                     isActive('/admin/parkings')
                       ? 'bg-amber-50 text-amber-800 border border-amber-200'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <Crown className="w-4 h-4 text-amber-500" />
-                  Alta/Baja Garajes
+                  <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span><span className="hidden xl:inline">Alta/Baja </span>Garajes</span>
                 </Link>
 
                 <Link
                   to="/admin/gate"
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/gate')
                       ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <ScanLine className="w-4 h-4 text-teal-600" />
-                  Control Accesos & QR
+                  <ScanLine className="w-4 h-4 text-teal-600 shrink-0" />
+                  <span>Control QR</span>
                 </Link>
 
                 <Link
                   to="/admin/spaces"
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/spaces')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <Grid className="w-4 h-4" />
-                  Plazas
+                  <Grid className="w-4 h-4 shrink-0" />
+                  <span>Plazas</span>
                 </Link>
 
                 <Link
                   to="/admin/reservations"
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/reservations')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <CalendarCheck className="w-4 h-4" />
-                  Reservas
+                  <CalendarCheck className="w-4 h-4 shrink-0" />
+                  <span>Reservas</span>
                 </Link>
               </>
             ) : (
@@ -179,52 +179,52 @@ export const Navbar: React.FC = () => {
               <>
                 <Link
                   to="/admin/gate"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
                     isActive('/admin/gate')
                       ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <ScanLine className="w-4 h-4 text-teal-600" />
-                  Cámara QR & Garita
+                  <ScanLine className="w-4 h-4 text-teal-600 shrink-0" />
+                  <span>Cámara QR<span className="hidden xl:inline"> & Garita</span></span>
                 </Link>
 
                 <Link
                   to="/admin/spaces"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
                     isActive('/admin/spaces')
                       ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <Grid className="w-4 h-4 text-emerald-600" />
-                  Plazas Vacantes en Vivo
+                  <Grid className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Plazas<span className="hidden xl:inline"> Vacantes</span></span>
                 </Link>
 
                 <Link
                   to="/admin/reservations"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/reservations')
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <CalendarCheck className="w-4 h-4" />
-                  Caja & Turnos
+                  <CalendarCheck className="w-4 h-4 shrink-0" />
+                  <span>Caja<span className="hidden xl:inline"> & Turnos</span></span>
                 </Link>
               </>
             )}
           </nav>
 
           {/* User / Auth Actions */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3">
             {!isAuthenticated ? (
               <div className="flex items-center gap-2">
                 {/* Demo Logins for fast testing */}
                 <div className="hidden xl:flex items-center gap-1.5 mr-2">
                   <button
                     onClick={() => handleQuickDemo('driver')}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors flex items-center gap-1"
+                    className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors flex items-center gap-1 cursor-pointer"
                     title="Entrar rápido como conductor demo"
                   >
                     <Sparkles className="w-3 h-3 text-brand-600" />
@@ -232,7 +232,7 @@ export const Navbar: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleQuickDemo('owner')}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold transition-colors flex items-center gap-1 border border-teal-200"
+                    className="text-xs px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold transition-colors flex items-center gap-1 border border-teal-200 cursor-pointer"
                     title="Entrar rápido como Dueño de Estacionamiento (Roberto Garaje Central)"
                   >
                     <Building2 className="w-3 h-3 text-teal-600" />
@@ -240,7 +240,7 @@ export const Navbar: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleQuickDemo('admin')}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition-colors flex items-center gap-1 border border-amber-200"
+                    className="text-xs px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition-colors flex items-center gap-1 border border-amber-200 cursor-pointer"
                     title="Entrar rápido como Super Admin Ariel (Alta/Baja de Garajes)"
                   >
                     <Crown className="w-3 h-3 text-amber-600" />
@@ -262,11 +262,15 @@ export const Navbar: React.FC = () => {
             ) : (
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-3 p-1.5 pl-3 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all focus:outline-none"
+                  aria-expanded={userDropdownOpen}
+                  aria-haspopup="true"
+                  aria-label="Menú de usuario"
+                  className="flex items-center gap-2 lg:gap-3 p-1.5 lg:pl-3 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
                 >
-                  <div className="text-left">
-                    <p className="text-xs font-bold text-slate-900 leading-tight">
+                  <div className="text-left hidden lg:block max-w-[120px] xl:max-w-none">
+                    <p className="text-xs font-bold text-slate-900 leading-tight truncate">
                       {user?.first_name} {user?.last_name}
                     </p>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block ${
@@ -283,7 +287,7 @@ export const Navbar: React.FC = () => {
                         : '🚗 Conductor'}
                     </span>
                   </div>
-                  <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner ${
+                  <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 ${
                     isSuperAdmin
                       ? 'bg-amber-100 text-amber-800'
                       : isOwner
@@ -429,11 +433,14 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Toggle Button */}
+          {/* Mobile Menu Toggle Button (Visible only on mobile <md) */}
           <div className="flex md:hidden items-center gap-2">
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -441,7 +448,7 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (Only for mobile <md) */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-6 space-y-3 animate-fade-in shadow-lg">
           <nav className="flex flex-col gap-1">

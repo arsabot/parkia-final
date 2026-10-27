@@ -164,45 +164,48 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         {/* Date & Time selection */}
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-brand-600" />
+            <label htmlFor="booking-modal-date" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-teal-600" aria-hidden="true" />
               Fecha de Reserva
             </label>
             <input
+              id="booking-modal-date"
               type="date"
               min={todayStr}
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-brand-600" />
+              <label htmlFor="booking-modal-start" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
                 Hora Entrada
               </label>
               <input
+                id="booking-modal-start"
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 required
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-brand-600" />
+              <label htmlFor="booking-modal-end" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
                 Hora Salida
               </label>
               <input
+                id="booking-modal-end"
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 required
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
               />
             </div>
           </div>
@@ -213,14 +216,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-brand-600" />
+                <Layers className="w-4 h-4 text-teal-600" aria-hidden="true" />
                 Elegir Plaza / Espacio
               </span>
               <span className="text-[11px] text-slate-400 font-medium lowercase">
                 (verde = disponible)
               </span>
             </label>
-            <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200" role="group" aria-label="Selección de plaza">
               {availableSpaces.map((s) => {
                 const isSelected = selectedSpaceId === s.id;
                 const isFree = s.is_available;
@@ -231,9 +234,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     type="button"
                     disabled={!isFree}
                     onClick={() => setSelectedSpaceId(s.id)}
-                    className={`py-2 px-1 rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center ${
+                    aria-label={`Plaza ${s.code}, ${s.floor}, ${isFree ? (isSelected ? 'seleccionada' : 'disponible') : 'no disponible'}`}
+                    aria-pressed={isSelected}
+                    className={`py-2 px-1 min-h-[44px] rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center cursor-pointer ${
                       isSelected
-                        ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30 scale-105 ring-2 ring-brand-400'
+                        ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30 scale-105 ring-2 ring-teal-400'
                         : isFree
                         ? 'bg-white text-emerald-700 border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50'
                         : 'bg-slate-200/70 text-slate-400 cursor-not-allowed line-through'
@@ -253,29 +258,31 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         {/* Vehicle Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Car className="w-4 h-4 text-brand-600" />
+            <label htmlFor="booking-modal-plate" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <Car className="w-4 h-4 text-teal-600" aria-hidden="true" />
               Patente / Matrícula
             </label>
             <input
+              id="booking-modal-plate"
               type="text"
               placeholder="Ej: AA 123 BB"
               value={vehiclePlate}
               onChange={(e) => setVehiclePlate(e.target.value)}
               required
-              className="w-full uppercase font-mono tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full uppercase font-mono tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label htmlFor="booking-modal-model" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Vehículo (Opcional)
             </label>
             <input
+              id="booking-modal-model"
               type="text"
               placeholder="Ej: Toyota Corolla"
               value={vehicleModel}
               onChange={(e) => setVehicleModel(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
             />
           </div>
         </div>

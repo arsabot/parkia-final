@@ -143,4 +143,9 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.pages.dev',
+    'https://*.trycloudflare.com',
+]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

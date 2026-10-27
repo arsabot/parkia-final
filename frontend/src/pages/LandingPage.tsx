@@ -74,17 +74,17 @@ export const LandingPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       
       {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-32 bg-gradient-to-b from-brand-950 via-slate-900 to-slate-900 text-white">
+      <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-32 bg-gradient-to-b from-navy-950 via-slate-900 to-navy-900 text-white">
         
         {/* Glow decorative blobs */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-brand-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-teal-500/15 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-10 right-10 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
             
             {/* Pill badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold text-brand-300 mb-6 shadow-inner animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold text-teal-300 mb-6 shadow-inner animate-fade-in">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>La plataforma #1 en reservas de estacionamiento inteligente</span>
             </div>
@@ -101,16 +101,22 @@ export const LandingPage: React.FC = () => {
             {/* Search Box Card */}
             <form
               onSubmit={handleSearchSubmit}
+              role="search"
+              aria-label="Búsqueda de estacionamientos"
               className="bg-white/95 backdrop-blur-xl p-3 sm:p-4 rounded-3xl shadow-2xl border border-white/20 max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-3 text-slate-900"
             >
               <div className="flex-1 flex items-center gap-3 px-3 w-full">
-                <MapPin className="w-5 h-5 text-brand-600 shrink-0" />
+                <MapPin className="w-5 h-5 text-teal-600 shrink-0" aria-hidden="true" />
+                <label htmlFor="hero-search-input" className="sr-only">
+                  ¿A dónde vas?
+                </label>
                 <input
+                  id="hero-search-input"
                   type="text"
                   placeholder="¿A dónde vas? (Ej: Obelisco, Palermo, Recoleta...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none"
+                  className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none min-h-[44px]"
                 />
               </div>
 
@@ -119,17 +125,18 @@ export const LandingPage: React.FC = () => {
                   type="button"
                   onClick={handleUseLocation}
                   disabled={isLocating}
-                  className="p-3 sm:p-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors shrink-0 flex items-center justify-center font-semibold text-xs gap-1.5 w-full sm:w-auto"
+                  className="p-3 sm:p-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors shrink-0 flex items-center justify-center font-semibold text-xs gap-1.5 w-full sm:w-auto min-h-[44px] cursor-pointer"
                   title="Usar mi ubicación actual"
+                  aria-label="Usar mi ubicación actual"
                 >
-                  <Navigation className={`w-4 h-4 text-brand-600 ${isLocating ? 'animate-spin' : ''}`} />
+                  <Navigation className={`w-4 h-4 text-teal-600 ${isLocating ? 'animate-spin' : ''}`} aria-hidden="true" />
                   <span className="sm:hidden">Cerca de mí</span>
                 </button>
 
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full sm:w-auto px-6 py-3.5 text-sm font-bold shadow-lg shadow-brand-600/30"
+                  className="w-full sm:w-auto px-6 py-3.5 text-sm font-bold shadow-lg shadow-brand-600/30 min-h-[44px]"
                   rightIcon={<Search className="w-4 h-4" />}
                 >
                   Buscar
@@ -184,7 +191,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm hover:shadow-md transition-all text-center relative group">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
               2
             </div>
             <h3 className="text-lg font-bold text-slate-900 mb-2">Elige fecha y plaza</h3>
@@ -279,11 +286,11 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Visual Showcase Box */}
-          <div className="bg-gradient-to-tr from-brand-900 via-indigo-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
+          <div className="bg-gradient-to-tr from-navy-950 via-navy-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden border border-white/10">
             <div className="relative z-10 space-y-6">
-              <div className="flex items-center gap-3 text-brand-300 text-xs font-bold uppercase">
+              <div className="flex items-center gap-3 text-teal-300 text-xs font-bold uppercase">
                 <Car className="w-5 h-5 text-emerald-400" />
-                <span>Ticket Digital Instantáneo</span>
+                <span>Ticket Digital Instantáneo & Pase QR</span>
               </div>
 
               <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -306,7 +313,7 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <Link to="/search">
-                <Button variant="emerald" className="w-full py-3.5 font-bold shadow-lg shadow-emerald-600/30">
+                <Button variant="emerald" className="w-full py-3.5 font-bold shadow-lg shadow-emerald-600/30 min-h-[44px]">
                   Explorar Estacionamientos Ahora
                 </Button>
               </Link>
@@ -320,7 +327,7 @@ export const LandingPage: React.FC = () => {
       <section id="beneficios-b2b" className="py-20 bg-slate-900 text-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950 px-3 py-1 rounded-full border border-indigo-800">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-400 bg-navy-950 px-3 py-1 rounded-full border border-teal-800/60">
               Para Propietarios de Garages
             </span>
             <h2 className="text-3xl sm:text-4xl font-black text-white mt-3">
@@ -338,20 +345,20 @@ export const LandingPage: React.FC = () => {
               <p className="text-xs text-slate-400">Reduce plazas vacías en horarios valle con reservas anticipadas.</p>
             </div>
             <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <Building2 className="w-8 h-8 text-brand-400 mx-auto mb-3" />
+              <Building2 className="w-8 h-8 text-teal-400 mx-auto mb-3" />
               <h4 className="font-bold text-white mb-1">Panel de Control en Vivo</h4>
               <p className="text-xs text-slate-400">Modifica tarifas, horarios y estados de plazas (A01, B02) con 1 click.</p>
             </div>
             <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <ShieldCheck className="w-8 h-8 text-indigo-400 mx-auto mb-3" />
+              <ShieldCheck className="w-8 h-8 text-teal-400 mx-auto mb-3" />
               <h4 className="font-bold text-white mb-1">Sin Inversión en Hardware</h4>
-              <p className="text-xs text-slate-400">No necesitas sensores caros. Funciona directo desde la app web.</p>
+              <p className="text-xs text-slate-400">No necesitas sensores caros. Funciona directo desde la app web o móvil.</p>
             </div>
           </div>
 
           <div className="text-center">
             <Link to="/admin">
-              <Button variant="primary" size="lg" className="px-8 font-bold">
+              <Button variant="primary" size="lg" className="px-8 font-bold min-h-[44px]">
                 Acceder al Panel de Administración
               </Button>
             </Link>
