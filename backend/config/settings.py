@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.reservations',
     'apps.reviews',
     'apps.admin_stats',
+    'apps.claims',
 ]
 
 MIDDLEWARE = [
@@ -120,6 +121,7 @@ REST_FRAMEWORK = {
     'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
     'DATE_FORMAT': '%Y-%m-%d',
     'TIME_FORMAT': '%H:%M',
+    'DEFAULT_THROTTLE_RATES': {'claims_create': '20/hour'},
 }
 
 # SimpleJWT Configuration
