@@ -21,7 +21,8 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminParkingsPage } from './pages/admin/AdminParkingsPage';
 import { AdminSpacesPage } from './pages/admin/AdminSpacesPage';
 import { AdminReservationsPage } from './pages/admin/AdminReservationsPage';
-import { AdminGatePage } from './pages/admin/AdminGatePage';
+import { AdminGatePage } from './pages/admin/AdminGatePage'
+import { ChatWidget } from './components/common/ChatWidget';
 
 // Protected Route for Admin or Owner Roles
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -84,12 +85,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
+    const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+      return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 };

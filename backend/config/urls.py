@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/reservations/', include('apps.reservations.urls')),
     path('api/reviews/', include('apps.reviews.urls')),
     path('api/admin/', include('apps.admin_stats.urls')),
+    path('api/claims/', include('apps.claims.urls')),
 ]
 
 if settings.DEBUG:
