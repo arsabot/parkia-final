@@ -1,4 +1,14 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+const getApiBaseUrl = (): string => {
+  // En desarrollo local (localhost / 127.0.0.1), usar el backend local si no se fuerza la API remota
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+    !import.meta.env.VITE_FORCE_REMOTE_API
+  ) {
+    return 'http://127.0.0.1:8000/api';
+  }
+  return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+};
 
 class ApiClient {
   private getToken(): string | null {
@@ -16,14 +26,25 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
     const config: RequestInit = {
       ...options,
       headers,
     };
 
-    const response = await fetch(url, config);
+    let response: Response;
+    try {
+      response = await fetch(url, config);
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        throw new Error(
+          'No se pudo conectar con el servidor backend (Failed to fetch). Verifica que el servicio esté activo.'
+        );
+      }
+      throw err;
+    }
 
     // Handle 401 (Unauthorized)
     if (response.status === 401) {
