@@ -15,6 +15,8 @@ import { MyReservationsPage } from './pages/MyReservationsPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
@@ -85,8 +87,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-    const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-      return (
+const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1">{children}</main>
@@ -111,6 +113,8 @@ export const App: React.FC = () => {
                 <Route path="/booking/confirmation/:id" element={<BookingConfirmationPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 {/* Driver Protected Routes */}
                 <Route

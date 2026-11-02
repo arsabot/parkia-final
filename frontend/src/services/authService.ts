@@ -40,6 +40,23 @@ export const authService = {
     return user;
   },
 
+  async requestPasswordReset(email: string): Promise<{ message: string; dev_reset_url?: string }> {
+    return api.post<{ message: string; dev_reset_url?: string }>('/auth/password-reset/', { email });
+  },
+
+  async validateResetToken(uid: string, token: string): Promise<{ valid: boolean; email?: string; message?: string }> {
+    return api.post<{ valid: boolean; email?: string; message?: string }>('/auth/password-reset/validate/', { uid, token });
+  },
+
+  async confirmPasswordReset(data: {
+    uid: string;
+    token: string;
+    password: string;
+    password_confirmation: string;
+  }): Promise<{ message: string }> {
+    return api.post<{ message: string }>('/auth/password-reset/confirm/', data);
+  },
+
   logout(): void {
     localStorage.removeItem('parkia_token');
     localStorage.removeItem('parkia_refresh');
