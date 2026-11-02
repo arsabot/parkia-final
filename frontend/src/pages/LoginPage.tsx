@@ -150,16 +150,26 @@ export const LoginPage: React.FC = () => {
               leftIcon={<Mail className="w-4 h-4" />}
             />
 
-            <Input
-              type="password"
-              label="Contraseña"
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4" />}
-            />
+            <div>
+              <Input
+                type="password"
+                label="Contraseña"
+                required
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                leftIcon={<Lock className="w-4 h-4" />}
+              />
+              <div className="flex justify-end mt-1.5">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline transition-colors"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+            </div>
 
             <Button
               type="submit"
