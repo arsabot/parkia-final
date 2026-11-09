@@ -54,3 +54,7 @@ frontend/.env
 .idea/
 *.swp
 *.swo
+
+# Bases de datos locales
+*.sqlite3
+*.sqlite3-journal
