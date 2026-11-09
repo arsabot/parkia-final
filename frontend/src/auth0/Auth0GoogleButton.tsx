@@ -4,12 +4,23 @@ import { api } from '../services/api';
 import { Button } from '../components/common/Button';
 import { auth0Enabled } from './Auth0Setup';
 
-// Marca que estamos volviendo de Google (para no entrar solo cada vez que alguien abre /login).
+// Marca que estamos volviendo de Google y desde qué página salimos ('register' o 'login').
 const PENDING = 'parkia_auth0_pending';
+// Tipo de cuenta elegido en "Registrarse". Se guarda porque al ir a Google se sale de la página.
+const ROLE = 'parkia_auth0_role';
+
+type SignupRole = 'driver' | 'owner';
 
 type ParkiaAuthResponse = {
+  created: boolean;
   user: { role: string };
   tokens: { access: string; refresh: string };
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  driver: 'Conductor',
+  owner: 'Dueño de Garaje',
+  admin: 'Administrador',
 };
 
 const GoogleLogo = () => (
@@ -21,28 +32,46 @@ const GoogleLogo = () => (
   </svg>
 );
 
-function GoogleButton() {
-  const { loginWithRedirect, isAuthenticated, isLoading, getAccessTokenSilently, logout } = useAuth0();
+// Guarda la sesión de Parkia y manda a cada rol a su pantalla.
+function saveSessionAndGo(res: ParkiaAuthResponse) {
+  localStorage.setItem('parkia_token', res.tokens.access);
+  localStorage.setItem('parkia_refresh', res.tokens.refresh);
+  localStorage.setItem('parkia_user', JSON.stringify(res.user));
+  const destino = res.user.role === 'admin' ? '/admin' : res.user.role === 'owner' ? '/admin/gate' : '/search';
+  window.location.href = destino;
+}
+
+function GoogleButton({ role }: { role?: SignupRole }) {
+  const { loginWithRedirect, isAuthenticated, isLoading, getAccessTokenSilently, logout, error: auth0Error } = useAuth0();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [existing, setExisting] = useState<ParkiaAuthResponse | null>(null);
+  const shownError = error || (auth0Error ? 'No se pudo entrar con Google. Probá de nuevo.' : '');
   const started = useRef(false);
 
   useEffect(() => {
     if (isLoading || !isAuthenticated || started.current || !sessionStorage.getItem(PENDING)) return;
     started.current = true;
+    const fromRegister = sessionStorage.getItem(PENDING) === 'register';
+    const savedRole: SignupRole = sessionStorage.getItem(ROLE) === 'owner' ? 'owner' : 'driver';
     sessionStorage.removeItem(PENDING);
+    sessionStorage.removeItem(ROLE);
     setBusy(true);
 
     (async () => {
       try {
         // 1. Pedimos a Auth0 el token que prueba que la persona entró con Google.
         const token = await getAccessTokenSilently();
-        // 2. Django lo verifica y nos da la sesión normal de Parkia (la misma que usa el resto de la app).
-        const res = await api.post<ParkiaAuthResponse>('/auth/auth0/', { token });
-        localStorage.setItem('parkia_token', res.tokens.access);
-        localStorage.setItem('parkia_refresh', res.tokens.refresh);
-        localStorage.setItem('parkia_user', JSON.stringify(res.user));
-        window.location.href = '/search';
+        // 2. Django lo verifica y nos da la sesión normal de Parkia.
+        //    El rol solo se usa si la cuenta es nueva; una cuenta existente conserva el suyo.
+        const res = await api.post<ParkiaAuthResponse>('/auth/auth0/', { token, role: savedRole });
+        if (fromRegister && !res.created) {
+          // Quiso registrarse pero ese email ya tenía cuenta: avisamos en vez de entrar sin decir nada.
+          setExisting(res);
+          setBusy(false);
+          return;
+        }
+        saveSessionAndGo(res);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'No se pudo entrar con Google.');
         setBusy(false);
@@ -55,18 +84,32 @@ function GoogleButton() {
 
   const start = () => {
     setError('');
-    sessionStorage.setItem(PENDING, '1');
+    setExisting(null);
+    sessionStorage.setItem(PENDING, role ? 'register' : 'login');
+    sessionStorage.setItem(ROLE, role ?? 'driver');
     loginWithRedirect({ authorizationParams: { connection: 'google-oauth2' } });
   };
 
   return (
     <div className="mb-6 space-y-2">
-      <Button type="button" variant="outline" fullWidth isLoading={busy} onClick={start} leftIcon={<GoogleLogo />}>
-        Continuar con Google
-      </Button>
-      {error && (
+      {existing ? (
+        <div role="status" className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+          <p className="text-sm font-semibold text-amber-900">
+            Ya tenés una cuenta registrada con este mail, como {ROLE_LABEL[existing.user.role] ?? existing.user.role}.
+          </p>
+          <p className="text-xs text-amber-800">Iniciá sesión para seguir.</p>
+          <Button type="button" variant="primary" fullWidth onClick={() => saveSessionAndGo(existing)}>
+            Iniciar sesión
+          </Button>
+        </div>
+      ) : (
+        <Button type="button" variant="outline" fullWidth isLoading={busy} onClick={start} leftIcon={<GoogleLogo />}>
+          Continuar con Google
+        </Button>
+      )}
+      {shownError && (
         <p role="alert" className="text-center text-xs font-semibold text-rose-600">
-          {error}
+          {shownError}
         </p>
       )}
     </div>
@@ -74,6 +117,7 @@ function GoogleButton() {
 }
 
 // Si no hay .env.local con Auth0, el botón no aparece y la página queda igual que antes.
-export function Auth0GoogleButton() {
-  return auth0Enabled ? <GoogleButton /> : null;
+// En "Registrarse" se pasa el rol elegido; en "Iniciar sesión", no.
+export function Auth0GoogleButton({ role }: { role?: SignupRole }) {
+  return auth0Enabled ? <GoogleButton role={role} /> : null;
 }

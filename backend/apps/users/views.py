@@ -285,6 +285,7 @@ class Auth0LoginView(views.APIView):
             user = User.objects.create_user(
                 email=email,
                 password=None,  # entra solo con Google: no tiene contraseña en Parkia
+                role=User.Role.OWNER if request.data.get('role') == 'owner' else User.Role.DRIVER,
                 first_name=profile.get('given_name') or email.split('@')[0],
                 last_name=profile.get('family_name') or '',
             )
