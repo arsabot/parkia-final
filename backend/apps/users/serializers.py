@@ -1,5 +1,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from rest_framework import serializers
@@ -48,6 +50,11 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['password'] != data['password_confirmation']:
             raise serializers.ValidationError({'password_confirmation': 'Las contraseñas no coinciden.'})
+        candidate = User(email=data.get('email', ''), first_name=data.get('first_name', ''), last_name=data.get('last_name', ''))
+        try:
+            validate_password(data['password'], user=candidate)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({'password': list(exc.messages)})
         return data
 
     def create(self, validated_data):
@@ -139,5 +146,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         if not default_token_generator.check_token(user, token):
             raise serializers.ValidationError({'token': 'El enlace ha expirado o ya fue utilizado.'})
 
+        try:
+            validate_password(data['password'], user=user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({'password': list(exc.messages)})
         data['user'] = user
         return data

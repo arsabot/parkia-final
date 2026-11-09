@@ -29,8 +29,8 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      error('La contraseña debe tener al menos 6 caracteres.');
+    if (password.length < 8) {
+      error('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
 
@@ -166,7 +166,7 @@ export const RegisterPage: React.FC = () => {
               label="Contraseña"
               required
               autoComplete="new-password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               leftIcon={<Lock className="w-4 h-4" />}
