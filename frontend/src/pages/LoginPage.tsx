@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { UserRole } from '../types';
+import { Auth0GoogleButton } from '../auth0/Auth0GoogleButton';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -128,11 +129,11 @@ export const LoginPage: React.FC = () => {
               </button>
             </div>
           </div>
-
+          <Auth0GoogleButton />
           <div className="relative flex py-2 items-center mb-6">
             <div className="flex-grow border-t border-slate-200" />
             <span className="flex-shrink mx-3 text-slate-400 text-xs uppercase tracking-wider font-semibold">
-              O con tus credenciales
+              O con tu email
             </span>
             <div className="flex-grow border-t border-slate-200" />
           </div>
