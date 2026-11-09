@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, Sparkles, Building2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -13,12 +13,18 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
 
-  const { login, demoLogin } = useAuth();
+  const { login, demoLogin, user } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/search';
+  
+  // Si ya hay sesión, no tiene sentido mostrar el login: va directo a su pantalla.
+  if (user) {
+    const destino = user.role === 'admin' ? '/admin' : user.role === 'owner' ? '/admin/gate' : from;
+    return <Navigate to={destino} replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
