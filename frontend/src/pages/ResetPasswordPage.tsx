@@ -61,8 +61,8 @@ export const ResetPasswordPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      error('La contraseña debe tener al menos 6 caracteres');
+    if (password.length < 8) {
+      error('La contraseña debe tener al menos 8 caracteres');
       return;
     }
 
@@ -183,11 +183,11 @@ export const ResetPasswordPage: React.FC = () => {
                 type="password"
                 label="Nueva Contraseña"
                 required
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 leftIcon={<Lock className="w-4 h-4" />}
-                hint="Debe contener al menos 6 caracteres"
+                hint="Debe contener al menos 8 caracteres"
               />
 
               <Input
