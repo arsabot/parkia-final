@@ -157,3 +157,6 @@ EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.Em
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'PARKIA <no-reply@parkia.com>')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
+# Auth0 (botón "Continuar con Google")
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN', '')
+AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE', '')
