@@ -136,6 +136,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 'error': f'Este código QR pertenece al estacionamiento "{reservation.parking.name}". Solo puedes validar reservas de tu propio estacionamiento asignado.'
             }, status=status.HTTP_403_FORBIDDEN)
 
+        if reservation.status == Reservation.Status.PENDING or reservation.payment_status == 'pending':
+            return Response({
+                'error': 'La reserva se encuentra pendiente de pago. Debe abonarse antes de ingresar.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         return Response({
             'valid': True,
             'message': 'Código QR validado exitosamente.',
