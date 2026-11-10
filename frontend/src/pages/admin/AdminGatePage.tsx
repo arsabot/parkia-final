@@ -201,7 +201,7 @@ export const AdminGatePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark py-8 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Operations Area */}
@@ -211,17 +211,17 @@ export const AdminGatePage: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-teal-600 uppercase tracking-widest">
+                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest">
                     Módulo de Operación y Garita
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
                     {isSuperAdmin ? 'Super Admin' : 'Panel de Dueño'}
                   </span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-navy-900 dark:text-white tracking-tight">
                   Control de Accesos, Cámara QR & Caja
                 </h1>
-                <p className="text-slate-500 text-sm">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
                   Utiliza la cámara de tu tablet o teléfono para validar pases QR, registrar entradas/salidas y controlar la recaudación en tiempo real.
                 </p>
               </div>
@@ -229,10 +229,10 @@ export const AdminGatePage: React.FC = () => {
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 {/* Parking selector filter */}
                 {isOwner && parkings.length <= 1 ? (
-                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-900 shadow-sm">
+                  <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-900 dark:text-emerald-200 shadow-sm">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Garaje: <strong>{parkings[0]?.name || 'Tu Garaje'}</strong></span>
-                    <span className="text-[10px] bg-emerald-200/60 text-emerald-800 px-1.5 py-0.5 rounded-md font-extrabold uppercase">
+                    <span className="text-[10px] bg-emerald-200/60 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-md font-extrabold uppercase">
                       Asignado
                     </span>
                   </div>
@@ -240,7 +240,7 @@ export const AdminGatePage: React.FC = () => {
                   <select
                     value={selectedParkingId}
                     onChange={(e) => setSelectedParkingId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                    className="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+                    className="text-xs font-semibold bg-white dark:bg-parkia-card-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2.5 text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
                   >
                     {!isOwner && <option value="all">Todos los Estacionamientos</option>}
                     {parkings.map((p) => (
@@ -275,65 +275,65 @@ export const AdminGatePage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Autos actualmente dentro */}
-              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+              <div className="bg-white dark:bg-parkia-card-dark p-5 rounded-3xl border border-slate-100 dark:border-parkia-line-dark shadow-sm flex items-center justify-between transition-colors">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 block">Vehículos Adentro</span>
-                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Vehículos Adentro</span>
+                  <span className="text-2xl font-black text-navy-900 dark:text-white mt-1 block">
                     {checkedInList.length}
                   </span>
-                  <span className="text-[11px] font-bold text-teal-600 flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] font-bold text-teal-600 dark:text-teal-400 flex items-center gap-1 mt-0.5">
                     <ArrowDownRight className="w-3.5 h-3.5" /> En estadía activa
                   </span>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center">
                   <Car className="w-6 h-6" />
                 </div>
               </div>
 
               {/* Egresos completados */}
-              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+              <div className="bg-white dark:bg-parkia-card-dark p-5 rounded-3xl border border-slate-100 dark:border-parkia-line-dark shadow-sm flex items-center justify-between transition-colors">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 block">Egresos Registrados</span>
-                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Egresos Registrados</span>
+                  <span className="text-2xl font-black text-navy-900 dark:text-white mt-1 block">
                     {checkedOutToday.length}
                   </span>
-                  <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
                     <ArrowUpRight className="w-3.5 h-3.5" /> Salidas exitosas
                   </span>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
               </div>
 
               {/* Recaudación Total en Caja */}
-              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+              <div className="bg-white dark:bg-parkia-card-dark p-5 rounded-3xl border border-slate-100 dark:border-parkia-line-dark shadow-sm flex items-center justify-between transition-colors">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 block">Recaudación / Caja</span>
-                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Recaudación / Caja</span>
+                  <span className="text-2xl font-black text-navy-900 dark:text-white mt-1 block">
                     ${totalMoneyCollected.toLocaleString('es-AR')}
                   </span>
-                  <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
                     <DollarSign className="w-3.5 h-3.5" /> Ingresos de dinero
                   </span>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                   <DollarSign className="w-6 h-6" />
                 </div>
               </div>
 
               {/* Reservas Pendientes de Ingreso */}
-              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+              <div className="bg-white dark:bg-parkia-card-dark p-5 rounded-3xl border border-slate-100 dark:border-parkia-line-dark shadow-sm flex items-center justify-between transition-colors">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 block">Por Ingresar (Hoy)</span>
-                  <span className="text-2xl font-black text-navy-900 mt-1 block">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Por Ingresar (Hoy)</span>
+                  <span className="text-2xl font-black text-navy-900 dark:text-white mt-1 block">
                     {filteredReservations.filter((r) => r.status === 'confirmed' && !r.check_in_time).length}
                   </span>
-                  <span className="text-[11px] font-bold text-indigo-600 flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mt-0.5">
                     <Clock className="w-3.5 h-3.5" /> Con reserva confirmada
                   </span>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                   <Clock className="w-6 h-6" />
                 </div>
               </div>
@@ -475,23 +475,23 @@ export const AdminGatePage: React.FC = () => {
             </div>
 
             {/* Active Stays & Movements Table */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark shadow-sm overflow-hidden transition-colors">
+              <div className="p-6 border-b border-slate-100 dark:border-parkia-line-dark flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-extrabold text-navy-900 text-lg">
+                  <h3 className="font-extrabold text-navy-900 dark:text-white text-lg">
                     Registro en Vivo de Movimientos & Cobros
                   </h3>
-                  <p className="text-slate-400 text-xs">
+                  <p className="text-slate-400 dark:text-slate-400 text-xs">
                     Listado en tiempo real de vehículos ingresados, egresos, medios de pago y caja diaria.
                   </p>
                 </div>
-                <span className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-300 bg-slate-50 dark:bg-parkia-navy/60 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-parkia-line-dark">
                   {filteredReservations.length} movimientos registrados
                 </span>
               </div>
 
               {/* Tablet Portrait & Mobile Cards List (<lg) - Full visibility of actions and status */}
-              <div className="lg:hidden divide-y divide-slate-100">
+              <div className="lg:hidden divide-y divide-slate-100 dark:divide-parkia-line-dark">
                 {filteredReservations.length === 0 ? (
                   <div className="py-10 text-center text-slate-400 text-sm">
                     No hay registros de movimientos para este estacionamiento.
@@ -500,19 +500,19 @@ export const AdminGatePage: React.FC = () => {
                   filteredReservations.map((res) => {
                     const isInside = res.check_in_time && !res.check_out_time;
                     return (
-                      <div key={res.id} className="p-4 sm:p-5 space-y-3 bg-white hover:bg-slate-50/50 transition-colors">
+                      <div key={res.id} className="p-4 sm:p-5 space-y-3 bg-white dark:bg-parkia-card-dark hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-mono font-black text-navy-900 text-base sm:text-lg tracking-wide">
+                              <span className="font-mono font-black text-navy-900 dark:text-white text-base sm:text-lg tracking-wide">
                                 {res.vehicle_plate}
                               </span>
-                              <span className="font-mono text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md font-semibold">
+                              <span className="font-mono text-xs text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md font-semibold">
                                 {res.booking_code}
                               </span>
                             </div>
-                            <p className="text-sm font-bold text-slate-800">{res.user_name}</p>
-                            <span className="text-xs text-teal-700 font-bold bg-teal-50 border border-teal-200/80 px-2.5 py-0.5 rounded-lg inline-block">
+                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{res.user_name}</p>
+                            <span className="text-xs text-teal-700 dark:text-teal-300 font-bold bg-teal-50 dark:bg-teal-950/50 border border-teal-200/80 dark:border-teal-800/60 px-2.5 py-0.5 rounded-lg inline-block">
                               {res.parking_name} • Plaza {res.space_code}
                             </span>
                           </div>
@@ -521,11 +521,11 @@ export const AdminGatePage: React.FC = () => {
                           </Badge>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl text-xs border border-slate-100">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 dark:bg-parkia-page-dark p-3 rounded-2xl text-xs border border-slate-100 dark:border-parkia-line-dark">
                           <div>
-                            <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Entrada</span>
+                            <span className="text-slate-400 dark:text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Entrada</span>
                             {res.check_in_time ? (
-                              <span className="font-bold text-teal-700 inline-flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                              <span className="font-bold text-teal-700 dark:text-teal-400 inline-flex items-center gap-1 mt-0.5 whitespace-nowrap">
                                 <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
                                 {new Date(res.check_in_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
                               </span>
@@ -534,14 +534,14 @@ export const AdminGatePage: React.FC = () => {
                             )}
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Salida</span>
+                            <span className="text-slate-400 dark:text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Salida</span>
                             {res.check_out_time ? (
-                              <span className="font-bold text-emerald-700 inline-flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                              <span className="font-bold text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1 mt-0.5 whitespace-nowrap">
                                 <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
                                 {new Date(res.check_out_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
                               </span>
                             ) : isInside ? (
-                              <span className="inline-flex items-center gap-1.5 mt-0.5 font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md text-[11px] whitespace-nowrap shadow-xs">
+                              <span className="inline-flex items-center gap-1.5 mt-0.5 font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded-md text-[11px] whitespace-nowrap shadow-xs">
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
                                 Adentro ahora
                               </span>
@@ -550,26 +550,26 @@ export const AdminGatePage: React.FC = () => {
                             )}
                           </div>
                           <div className="col-span-2 sm:col-span-1">
-                            <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Cobro & Pago</span>
+                            <span className="text-slate-400 dark:text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Cobro & Pago</span>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-sm font-black text-navy-900">
+                              <span className="text-sm font-black text-navy-900 dark:text-white">
                                 ${Number(res.total_price).toLocaleString('es-AR')}
                               </span>
-                              <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-slate-500">
-                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500 shrink-0" /> : <Banknote className="w-3 h-3 text-emerald-600 shrink-0" />}
+                              <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500 shrink-0" /> : <Banknote className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                                 {res.payment_method || 'Efectivo'}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-parkia-line-dark">
                           {!res.check_in_time && res.status === 'confirmed' && (
                             <button
                               onClick={() => handleCheckIn(res)}
-                              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 hover:bg-teal-100 dark:hover:bg-teal-900/60 border border-teal-200 dark:border-teal-800/60 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                             >
-                              <ArrowDownRight className="w-4 h-4 text-teal-600" />
+                              <ArrowDownRight className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                               <span>Registrar Entrada</span>
                             </button>
                           )}
@@ -577,7 +577,7 @@ export const AdminGatePage: React.FC = () => {
                           {isInside && (
                             <button
                               onClick={() => setCheckoutTarget(res)}
-                              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                             >
                               <ArrowUpRight className="w-4 h-4 text-emerald-100" />
                               <span>Salida & Cobro Final</span>
@@ -600,7 +600,7 @@ export const AdminGatePage: React.FC = () => {
               <div className="hidden lg:block overflow-x-auto w-full">
                 <table className="w-full min-w-[960px] text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100 whitespace-nowrap">
+                    <tr className="bg-slate-50 dark:bg-parkia-navy/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold border-b border-slate-100 dark:border-parkia-line-dark whitespace-nowrap">
                       <th className="py-3 px-4">Código / Patente</th>
                       <th className="py-3 px-4">Conductor</th>
                       <th className="py-3 px-4">Estacionamiento & Plaza</th>
@@ -611,7 +611,7 @@ export const AdminGatePage: React.FC = () => {
                       <th className="py-3 px-4 text-right">Acción Operativa</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  <tbody className="divide-y divide-slate-100 dark:divide-parkia-line-dark font-medium text-slate-700 dark:text-slate-300">
                     {filteredReservations.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="py-10 text-center text-slate-400">
@@ -622,9 +622,9 @@ export const AdminGatePage: React.FC = () => {
                       filteredReservations.map((res) => {
                         const isInside = res.check_in_time && !res.check_out_time;
                         return (
-                          <tr key={res.id} className="hover:bg-slate-50/70 transition-colors">
+                          <tr key={res.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                             <td className="py-3 px-4 whitespace-nowrap">
-                              <span className="font-mono font-bold text-navy-900 block text-sm">
+                              <span className="font-mono font-bold text-navy-900 dark:text-white block text-sm">
                                 {res.vehicle_plate}
                               </span>
                               <span className="font-mono text-[11px] text-slate-400">
@@ -633,20 +633,20 @@ export const AdminGatePage: React.FC = () => {
                             </td>
 
                             <td className="py-3 px-4 whitespace-nowrap">
-                              <span className="font-bold text-slate-900 block">{res.user_name}</span>
+                              <span className="font-bold text-slate-900 dark:text-white block">{res.user_name}</span>
                               <span className="text-[11px] text-slate-400">{res.user_email}</span>
                             </td>
 
                             <td className="py-3 px-4 whitespace-nowrap">
-                              <span className="font-semibold text-slate-900 block">{res.parking_name}</span>
-                              <span className="text-[11px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md">
+                              <span className="font-semibold text-slate-900 dark:text-slate-200 block">{res.parking_name}</span>
+                              <span className="text-[11px] font-bold text-teal-600 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-md">
                                 Plaza {res.space_code}
                               </span>
                             </td>
 
                             <td className="py-3 px-4 whitespace-nowrap">
                               {res.check_in_time ? (
-                                <div className="inline-flex items-center gap-1.5 text-teal-700 font-bold whitespace-nowrap">
+                                <div className="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 font-bold whitespace-nowrap">
                                   <ArrowDownRight className="w-3.5 h-3.5 shrink-0" />
                                   {new Date(res.check_in_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
                                 </div>
@@ -657,12 +657,12 @@ export const AdminGatePage: React.FC = () => {
 
                             <td className="py-3 px-4 whitespace-nowrap">
                               {res.check_out_time ? (
-                                <div className="inline-flex items-center gap-1.5 text-emerald-700 font-bold whitespace-nowrap">
+                                <div className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold whitespace-nowrap">
                                   <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
                                   {new Date(res.check_out_time).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} hs
                                 </div>
                               ) : isInside ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap shadow-xs">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 whitespace-nowrap shadow-xs">
                                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
                                   Adentro ahora
                                 </span>
@@ -672,11 +672,11 @@ export const AdminGatePage: React.FC = () => {
                             </td>
 
                             <td className="py-3 px-4 whitespace-nowrap">
-                              <span className="text-sm font-black text-navy-900 block">
+                              <span className="text-sm font-black text-navy-900 dark:text-white block">
                                 ${Number(res.total_price).toLocaleString('es-AR')}
                               </span>
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 whitespace-nowrap">
-                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500 shrink-0" /> : <Banknote className="w-3 h-3 text-emerald-600 shrink-0" />}
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                {res.payment_method === 'Mercado Pago' ? <CreditCard className="w-3 h-3 text-sky-500 shrink-0" /> : <Banknote className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                                 {res.payment_method || 'Efectivo'}
                               </span>
                             </td>
@@ -691,7 +691,7 @@ export const AdminGatePage: React.FC = () => {
                               {!res.check_in_time && res.status === 'confirmed' && (
                                 <button
                                   onClick={() => handleCheckIn(res)}
-                                  className="px-3 py-1.5 rounded-xl font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 transition-colors"
+                                  className="px-3 py-1.5 rounded-xl font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer"
                                 >
                                   Entrada
                                 </button>
@@ -700,7 +700,7 @@ export const AdminGatePage: React.FC = () => {
                               {isInside && (
                                 <button
                                   onClick={() => setCheckoutTarget(res)}
-                                  className="px-3 py-1.5 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-colors"
+                                  className="px-3 py-1.5 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-colors cursor-pointer"
                                 >
                                   Salida & Cobro
                                 </button>
@@ -751,39 +751,39 @@ export const AdminGatePage: React.FC = () => {
           maxWidth="md"
         >
           <div className="space-y-5">
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
+            <div className="p-4 bg-slate-50 dark:bg-parkia-page-dark rounded-2xl border border-slate-200/80 dark:border-parkia-line-dark space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-500">Conductor:</span>
-                <strong className="text-slate-900">{checkoutTarget.user_name}</strong>
+                <span className="text-slate-500 dark:text-slate-400">Conductor:</span>
+                <strong className="text-slate-900 dark:text-white">{checkoutTarget.user_name}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Estacionamiento:</span>
-                <strong className="text-slate-900">{checkoutTarget.parking_name}</strong>
+                <span className="text-slate-500 dark:text-slate-400">Estacionamiento:</span>
+                <strong className="text-slate-900 dark:text-white">{checkoutTarget.parking_name}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Plaza:</span>
-                <strong className="text-teal-700 font-bold">{checkoutTarget.space_code}</strong>
+                <span className="text-slate-500 dark:text-slate-400">Plaza:</span>
+                <strong className="text-teal-700 dark:text-teal-400 font-bold">{checkoutTarget.space_code}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Duración Estancia:</span>
-                <strong className="text-slate-900">{checkoutTarget.total_hours} Horas</strong>
+                <span className="text-slate-500 dark:text-slate-400">Duración Estancia:</span>
+                <strong className="text-slate-900 dark:text-white">{checkoutTarget.total_hours} Horas</strong>
               </div>
-              <div className="flex justify-between pt-2 border-t border-slate-200 text-sm">
-                <span className="font-bold text-slate-900">Total a Cobrar:</span>
-                <span className="font-black text-xl text-emerald-600">
+              <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-parkia-line-dark text-sm">
+                <span className="font-bold text-slate-900 dark:text-white">Total a Cobrar:</span>
+                <span className="font-black text-xl text-emerald-600 dark:text-emerald-400">
                   ${Number(checkoutTarget.total_price).toLocaleString('es-AR')}
                 </span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 Método de Cobro en Garita:
               </label>
               <select
                 value={checkoutMethod}
                 onChange={(e) => setCheckoutMethod(e.target.value)}
-                className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2.5 text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="Efectivo">Efectivo</option>
                 <option value="Mercado Pago">Mercado Pago (QR Garita)</option>
@@ -794,7 +794,7 @@ export const AdminGatePage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 Notas del Operador (Opcional):
               </label>
               <input
@@ -802,11 +802,11 @@ export const AdminGatePage: React.FC = () => {
                 placeholder="Ej: Cobrado ticket sin incidencias..."
                 value={checkoutNotes}
                 onChange={(e) => setCheckoutNotes(e.target.value)}
-                className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-parkia-line-dark">
               <Button
                 variant="outline"
                 size="md"
@@ -838,13 +838,13 @@ export const AdminGatePage: React.FC = () => {
         >
           <form onSubmit={handleCreateWalkIn} className="space-y-4">
             <div>
-              <label htmlFor="walkin-garage-select" className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="walkin-garage-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Estacionamiento Destino:
               </label>
               {isOwner && parkings.length <= 1 ? (
-                <div className="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 flex items-center justify-between min-h-[44px]">
+                <div className="w-full text-xs font-bold bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2.5 text-slate-800 dark:text-slate-200 flex items-center justify-between min-h-[44px]">
                   <span>{parkings[0]?.name || 'Tu Estacionamiento'}</span>
-                  <span className="text-emerald-700 font-extrabold">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">
                     ${Number(parkings[0]?.price_per_hour || 0).toLocaleString('es-AR')}/h
                   </span>
                 </div>
@@ -853,7 +853,7 @@ export const AdminGatePage: React.FC = () => {
                   id="walkin-garage-select"
                   value={walkInParkingId}
                   onChange={(e) => setWalkInParkingId(Number(e.target.value))}
-                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2.5 text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 >
                   {parkings.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -866,7 +866,7 @@ export const AdminGatePage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="walkin-plate" className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-plate" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Patente / Matrícula: *
                 </label>
                 <input
@@ -876,12 +876,12 @@ export const AdminGatePage: React.FC = () => {
                   placeholder="Ej: AB123CD"
                   value={walkInPlate}
                   onChange={(e) => setWalkInPlate(e.target.value.toUpperCase())}
-                  className="w-full text-xs font-mono font-bold uppercase bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                  className="w-full text-xs font-mono font-bold uppercase bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 />
               </div>
 
               <div>
-                <label htmlFor="walkin-model" className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-model" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Modelo / Marca:
                 </label>
                 <input
@@ -890,14 +890,14 @@ export const AdminGatePage: React.FC = () => {
                   placeholder="Ej: Toyota Corolla"
                   value={walkInModel}
                   onChange={(e) => setWalkInModel(e.target.value)}
-                  className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                  className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="walkin-hours" className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-hours" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Horas Estimadas:
                 </label>
                 <input
@@ -907,19 +907,19 @@ export const AdminGatePage: React.FC = () => {
                   step="0.5"
                   value={walkInHours}
                   onChange={(e) => setWalkInHours(Math.max(0.5, parseFloat(e.target.value) || 1))}
-                  className="w-full text-xs font-bold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                  className="w-full text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 />
               </div>
 
               <div>
-                <label htmlFor="walkin-method" className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="walkin-method" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Medio de Pago:
                 </label>
                 <select
                   id="walkin-method"
                   value={walkInMethod}
                   onChange={(e) => setWalkInMethod(e.target.value)}
-                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2.5 text-navy-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                 >
                   <option value="Efectivo">Efectivo</option>
                   <option value="Mercado Pago">Mercado Pago (QR)</option>
@@ -931,7 +931,7 @@ export const AdminGatePage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="walkin-notes" className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="walkin-notes" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Observaciones:
               </label>
               <input
@@ -940,11 +940,11 @@ export const AdminGatePage: React.FC = () => {
                 placeholder="Ej: Ingreso por barrera norte..."
                 value={walkInNotes}
                 onChange={(e) => setWalkInNotes(e.target.value)}
-                className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-parkia-line-dark">
               <Button
                 type="button"
                 variant="outline"

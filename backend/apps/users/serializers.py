@@ -27,6 +27,9 @@ class UserSerializer(serializers.ModelSerializer):
             'roles',
             'phone',
             'avatar_url',
+            'cud_number',
+            'cud_verified',
+            'cud_expiration',
             'created_at'
         ]
         read_only_fields = ['id', 'created_at', 'full_name']
@@ -38,13 +41,17 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     password_confirmation = serializers.CharField(write_only=True, min_length=6)
-    # Al registrarse solo se puede elegir ser conductor o dueño.
-    # Los roles 'admin' y 'disabled' los asigna únicamente un administrador.
+    # Al registrarse se puede elegir ser conductor o dueño.
+    # Además se puede solicitar el rol 'disabled' (acceso a plazas accesibles) mediante CUD.
     role = serializers.ChoiceField(
         choices=[User.Role.DRIVER, User.Role.OWNER],
         required=False,
         default=User.Role.DRIVER,
     )
+    has_disability_permit = serializers.BooleanField(required=False, default=False)
+    cud_number = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    cud_dni = serializers.CharField(required=False, allow_blank=True, max_length=20)
+    cud_expiration = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -55,23 +62,59 @@ class RegisterSerializer(serializers.ModelSerializer):
             'password',
             'password_confirmation',
             'role',
-            'phone'
+            'phone',
+            'has_disability_permit',
+            'cud_number',
+            'cud_dni',
+            'cud_expiration',
         ]
 
     def validate(self, data):
         if data['password'] != data['password_confirmation']:
             raise serializers.ValidationError({'password_confirmation': 'Las contraseñas no coinciden.'})
+
+        if data.get('has_disability_permit'):
+            cud_num = (data.get('cud_number') or '').strip()
+            if not cud_num:
+                raise serializers.ValidationError({
+                    'cud_number': 'El número de CUD es obligatorio para solicitar acceso a plazas accesibles.'
+                })
+            if len(cud_num) < 6:
+                raise serializers.ValidationError({
+                    'cud_number': 'El número de CUD debe contener al menos 6 caracteres o dígitos.'
+                })
+
+            exp = data.get('cud_expiration')
+            if exp:
+                import datetime
+                if exp < datetime.date.today():
+                    raise serializers.ValidationError({
+                        'cud_expiration': 'El certificado CUD ingresado está vencido.'
+                    })
         return data
 
     def create(self, validated_data):
+        has_disability_permit = validated_data.pop('has_disability_permit', False)
+        cud_number = validated_data.pop('cud_number', None)
+        cud_dni = validated_data.pop('cud_dni', None)
+        cud_expiration = validated_data.pop('cud_expiration', None)
         validated_data.pop('password_confirmation')
+
+        extra_roles = []
+        if has_disability_permit and cud_number:
+            extra_roles.append('disabled')
+
         user = User.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             role=validated_data.get('role', User.Role.DRIVER),
-            phone=validated_data.get('phone', '')
+            roles=extra_roles,
+            phone=validated_data.get('phone', ''),
+            cud_number=cud_number.strip() if cud_number else None,
+            cud_verified=bool(has_disability_permit and cud_number),
+            cud_expiration=cud_expiration,
         )
         return user
 

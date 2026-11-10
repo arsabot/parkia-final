@@ -14,10 +14,10 @@ class UserRoleInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'first_name', 'last_name', 'roles_list')
-    list_filter = ('roles',)
-    search_fields = ('email', 'first_name', 'last_name')
-    fields = ('email', 'first_name', 'last_name', 'phone', 'is_active')
+    list_display = ('email', 'first_name', 'last_name', 'roles_list', 'cud_verified', 'cud_number')
+    list_filter = ('roles', 'cud_verified')
+    search_fields = ('email', 'first_name', 'last_name', 'cud_number')
+    fields = ('email', 'first_name', 'last_name', 'phone', 'cud_number', 'cud_verified', 'cud_expiration', 'is_active')
     inlines = [UserRoleInline]
 
     @admin.display(description='Roles')

@@ -80,6 +80,9 @@ class User(AbstractUser):
         blank=True,
         verbose_name='Roles',
     )
+    cud_number = models.CharField('Número de CUD', max_length=50, blank=True, null=True)
+    cud_verified = models.BooleanField('CUD Verificado', default=False)
+    cud_expiration = models.DateField('Fecha de vencimiento del CUD', blank=True, null=True)
     created_at = models.DateTimeField('Fecha de registro', auto_now_add=True)
 
     objects = CustomUserManager()

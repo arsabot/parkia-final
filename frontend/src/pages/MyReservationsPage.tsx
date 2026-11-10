@@ -74,15 +74,15 @@ export const MyReservationsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark py-10 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Mis Reservas
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Gestiona tus plazas de estacionamiento reservadas y revisa tu historial.
           </p>
         </div>
@@ -172,23 +172,23 @@ export const MyReservationsPage: React.FC = () => {
         )}
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-parkia-line-dark pb-3">
           <button
             onClick={() => setActiveTab('active')}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'active'
                 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             Activas ({activeReservations.length})
           </button>
           <button
             onClick={() => setActiveTab('past')}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'past'
                 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             Historial ({pastReservations.length})
@@ -198,8 +198,8 @@ export const MyReservationsPage: React.FC = () => {
         {/* List of Reservations */}
         {loading ? (
           <div className="space-y-4">
-            <div className="h-32 bg-white rounded-3xl animate-pulse" />
-            <div className="h-32 bg-white rounded-3xl animate-pulse" />
+            <div className="h-32 bg-white dark:bg-parkia-card-dark rounded-3xl animate-pulse" />
+            <div className="h-32 bg-white dark:bg-parkia-card-dark rounded-3xl animate-pulse" />
           </div>
         ) : displayedList.length === 0 ? (
           <EmptyState
@@ -214,46 +214,46 @@ export const MyReservationsPage: React.FC = () => {
             {displayedList.map((res) => (
               <div
                 key={res.id}
-                className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between gap-5"
+                className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between gap-5"
               >
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                       #{res.booking_code}
                     </span>
                     <Badge variant={res.status as any}>{res.status_display}</Badge>
                   </div>
 
-                  <h4 className="text-lg font-bold text-slate-900">{res.parking_name}</h4>
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-brand-600" />
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-white">{res.parking_name}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                     {res.parking_address}, {res.parking_city}
                   </p>
 
-                  <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-700 pt-2">
+                  <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-700 dark:text-slate-300 pt-2">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-brand-600" />
+                      <Calendar className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       {res.date}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-brand-600" />
+                      <Clock className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       {res.start_time.slice(0, 5)} - {res.end_time.slice(0, 5)} hs
                     </span>
                     <span className="flex items-center gap-1">
-                      <Layers className="w-3.5 h-3.5 text-brand-600" />
+                      <Layers className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       Plaza: <strong>{res.space_code}</strong>
                     </span>
                     <span className="flex items-center gap-1">
-                      <Car className="w-3.5 h-3.5 text-brand-600" />
+                      <Car className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       {res.vehicle_plate}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 shrink-0">
+                <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-parkia-line-dark shrink-0">
                   <div className="text-left sm:text-right">
                     <span className="text-[11px] text-slate-400 font-medium block">Total</span>
-                    <span className="text-lg font-black text-slate-900">
+                    <span className="text-lg font-black text-slate-900 dark:text-white">
                       ${Number(res.total_price).toLocaleString('es-AR')}
                     </span>
                   </div>
