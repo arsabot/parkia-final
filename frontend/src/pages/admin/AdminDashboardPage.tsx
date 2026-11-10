@@ -8,7 +8,8 @@ import {
   Clock, 
   ShieldCheck, 
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  Star
 } from 'lucide-react';
 import {
   AreaChart,
@@ -216,7 +217,9 @@ export const AdminDashboardPage: React.FC = () => {
                         <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
                           <span>{p.reservations_count} reservas</span>
                           <span>•</span>
-                          <span>{p.rating}★ de valoración</span>
+                          <span className="inline-flex items-center gap-1">
+                            {p.rating} <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline" /> de valoración
+                          </span>
                         </div>
                       </div>
 

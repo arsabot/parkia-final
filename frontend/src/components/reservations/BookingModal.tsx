@@ -6,7 +6,6 @@ import {
   Car, 
   CheckCircle2, 
   AlertCircle, 
-  Sparkles, 
   Info,
   DollarSign,
   Layers
@@ -144,7 +143,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       onClose={onClose}
       title={
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-brand-600" />
+          <Calendar className="w-5 h-5 text-brand-600" />
           <span>Reservar lugar en {parking.name}</span>
         </div>
       }

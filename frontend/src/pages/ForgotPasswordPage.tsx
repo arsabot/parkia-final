@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, ArrowLeft, Send, CheckCircle2, Sparkles, ExternalLink } from 'lucide-react';
+import { Mail, ArrowLeft, Send, CheckCircle2, Info, Terminal, ExternalLink } from 'lucide-react';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
@@ -120,15 +120,16 @@ export const ForgotPasswordPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs text-slate-600 text-left">
-                💡 <strong>Consejo:</strong> Revisa también tu carpeta de correo no deseado o <em>Spam</em> si no lo ves en unos minutos.
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs text-slate-600 text-left flex items-start gap-2">
+                <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                <span><strong>Consejo:</strong> Revisa también tu carpeta de correo no deseado o <em>Spam</em> si no lo ves en unos minutos.</span>
               </div>
 
               {/* Dev Mode Shortcut Box */}
               {devResetUrl && (
                 <div className="p-4 bg-brand-50/80 rounded-2xl border border-brand-200/80 text-left space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-brand-900">
-                    <Sparkles className="w-4 h-4 text-brand-600" />
+                    <Terminal className="w-4 h-4 text-brand-600" />
                     <span>Modo Desarrollo / Pruebas Locales</span>
                   </div>
                   <p className="text-xs text-brand-700">

@@ -5,7 +5,7 @@ import {
   Warehouse, 
   Accessibility, 
   Clock, 
-  Sparkles, 
+  Droplets, 
   KeyRound 
 } from 'lucide-react';
 
@@ -21,7 +21,7 @@ export const AmenityBadge: React.FC<AmenityBadgeProps> = ({ type, size = 'sm' })
     ev: { icon: Zap, label: 'Carga EV', color: 'bg-amber-50 text-amber-700 border-amber-200' },
     disabled: { icon: Accessibility, label: 'Accesible', color: 'bg-purple-50 text-purple-700 border-purple-200' },
     '24hours': { icon: Clock, label: '24 Horas', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-    wash: { icon: Sparkles, label: 'Lavadero', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+    wash: { icon: Droplets, label: 'Lavadero', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
     valet: { icon: KeyRound, label: 'Valet Parking', color: 'bg-rose-50 text-rose-700 border-rose-200' },
   };
 

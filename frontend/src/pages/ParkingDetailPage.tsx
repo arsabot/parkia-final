@@ -10,7 +10,7 @@ import {
   Zap, 
   Warehouse, 
   Accessibility, 
-  Sparkles, 
+  Droplets, 
   Calendar, 
   ArrowLeft,
   CheckCircle2,
@@ -328,7 +328,7 @@ export const ParkingDetailPage: React.FC = () => {
                 )}
                 {parking.has_car_wash && (
                   <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/70 flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-cyan-600" />
+                    <Droplets className="w-5 h-5 text-cyan-600" />
                     <div>
                       <h5 className="text-xs font-bold text-slate-900">Lavadero</h5>
                       <span className="text-[10px] text-slate-500">Servicio opcional</span>
@@ -507,8 +507,9 @@ export const ParkingDetailPage: React.FC = () => {
                   Reservar Lugar Ahora
                 </Button>
 
-                <p className="text-center text-[11px] text-slate-400 font-medium">
-                  ✓ Cancelación gratuita • Confirmación instantánea
+                <p className="text-center text-[11px] text-slate-400 font-medium inline-flex items-center justify-center gap-1.5 w-full">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>Cancelación gratuita • Confirmación instantánea</span>
                 </p>
               </form>
             </div>
