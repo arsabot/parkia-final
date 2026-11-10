@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'axes',
 
     # Local apps
     'apps.users',
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -126,6 +128,17 @@ REST_FRAMEWORK = {
     'TIME_FORMAT': '%H:%M',
     'DEFAULT_THROTTLE_RATES': {'claims_create': '20/hour'},
 }
+
+# Bloqueo de intentos fallidos de login (django-axes)
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = [['username', 'ip_address']]
+AXES_RESET_ON_SUCCESS = True
+AXES_USERNAME_CALLABLE = 'apps.users.axes_utils.axes_username'
 
 # SimpleJWT Configuration
 SIMPLE_JWT = {

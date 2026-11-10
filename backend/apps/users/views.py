@@ -46,8 +46,12 @@ class LoginView(views.APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
+        serializer = LoginSerializer(data=request.data, context={'request': request})
+        valid = serializer.is_valid()
+        if getattr(request, 'axes_locked_out', False):
+            return Response({'message': 'Demasiados intentos fallidos. Esperá 15 minutos y probá de nuevo.'},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS)
+        if valid:
             user = serializer.validated_data['user']
             tokens = get_tokens_for_user(user)
             user_data = UserSerializer(user).data
