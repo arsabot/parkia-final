@@ -29,13 +29,16 @@ import { AmenityBadge } from '../components/parking/AmenityBadge';
 import { LeafletMap } from '../components/map/LeafletMap';
 import { Button } from '../components/common/Button';
 import { Skeleton } from '../components/common/Skeleton';
+import { SpaceGrid, defaultSpace } from '../components/reservations/SpaceGrid';
 import confetti from 'canvas-confetti';
 
 export const ParkingDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  // Solo quien tiene la credencial verificada por un admin puede elegir plazas accesibles
+  const hasPermit = Boolean(user?.roles?.includes('disabled'));
   const { toast, success, error } = useToast();
 
   const [parking, setParking] = useState<Parking | null>(null);
@@ -102,7 +105,7 @@ export const ParkingDetailPage: React.FC = () => {
         setDurationHours(res.duration_hours || 1.0);
         setEstimatedPrice(res.estimated_price || Number(parking.price_per_hour));
 
-        const firstFree = res.spaces.find((s) => s.is_available);
+        const firstFree = defaultSpace(res.spaces || []);
         if (firstFree && !selectedSpaceId) {
           setSelectedSpaceId(firstFree.id);
         }
@@ -422,40 +425,23 @@ export const ParkingDetailPage: React.FC = () => {
                 </div>
 
                 {/* Space Picker */}
+                {/* Space Selector */}
                 {availableSpaces.length > 0 && (
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <Layers className="w-3.5 h-3.5 text-teal-600" aria-hidden="true" />
+                        <Layers className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
                         Plaza asignada
                       </span>
-                      <span className="text-[10px] text-emerald-600 font-semibold">Seleccionable</span>
                     </label>
-                    <div className="grid grid-cols-4 gap-1.5 max-h-28 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200" role="group" aria-label="Selección de plaza">
-                      {availableSpaces.map((s) => {
-                        const isSelected = selectedSpaceId === s.id;
-                        const isFree = s.is_available;
-                        return (
-                          <button
-                            key={s.id}
-                            type="button"
-                            disabled={!isFree}
-                            onClick={() => setSelectedSpaceId(s.id)}
-                            aria-label={`Plaza ${s.code}, ${isFree ? (isSelected ? 'seleccionada' : 'disponible') : 'no disponible'}`}
-                            aria-pressed={isSelected}
-                            className={`py-2 px-1 min-h-[40px] rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
-                              isSelected
-                                ? 'bg-teal-600 text-white shadow-md'
-                                : isFree
-                                ? 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
-                                : 'bg-slate-200/70 text-slate-400 cursor-not-allowed line-through'
-                            }`}
-                          >
-                            {s.code}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <SpaceGrid
+                      spaces={availableSpaces}
+                      selectedId={selectedSpaceId}
+                      onSelect={setSelectedSpaceId}
+                      hasPermit={hasPermit}
+                      gridClassName="grid-cols-4 max-h-36"
+                      showFloor={false}
+                    />
                   </div>
                 )}
 

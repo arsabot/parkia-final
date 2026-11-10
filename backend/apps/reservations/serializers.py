@@ -3,6 +3,7 @@ from decimal import Decimal
 from rest_framework import serializers
 from apps.parking.models import Parking, ParkingSpace
 from apps.parking.serializers import ParkingListSerializer, ParkingSpaceSerializer
+from apps.users.models import User
 from apps.users.serializers import UserSerializer
 from .models import Reservation
 
@@ -136,6 +137,12 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     'space': f'El espacio {space.code} ya está reservado para esa franja horaria. Por favor elige otro espacio.'
                 })
+
+            # 6. Plazas accesibles: solo para usuarios con credencial verificada
+            if space.space_type == ParkingSpace.SpaceType.DISABLED and not self._tiene_rol_disabled():
+                raise serializers.ValidationError({
+                    'space': f'El espacio {space.code} es una plaza accesible, reservada para personas con credencial de discapacidad verificada.'
+                })
         else:
             # Autoasignar un espacio libre
             occupied_space_ids = overlapping_reservations.values_list('space_id', flat=True)
@@ -145,10 +152,16 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
                 status=ParkingSpace.Status.MAINTENANCE
             ).order_by('code')
 
-            chosen_space = available_spaces.first()
+            # Primero se ofrecen las plazas comunes. Una accesible solo se asigna
+            # si no queda otra y el usuario tiene credencial verificada.
+            standard_spaces = available_spaces.exclude(space_type=ParkingSpace.SpaceType.DISABLED)
+            chosen_space = standard_spaces.first()
+            if not chosen_space and self._tiene_rol_disabled():
+                chosen_space = available_spaces.first()
             if not chosen_space:
-                # Si el estacionamiento no tiene plazas creadas aún, comprobar por capacidad
-                if overlapping_reservations.count() >= parking.capacity:
+                # Hay plazas cargadas pero ninguna sirve (ej.: solo quedan accesibles
+                # y el usuario no tiene credencial), o se llenó la capacidad
+                if parking.spaces.exists() or overlapping_reservations.count() >= parking.capacity:
                     raise serializers.ValidationError('No hay espacios disponibles para la franja horaria seleccionada.')
             else:
                 data['space'] = chosen_space
@@ -159,6 +172,12 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
         data['total_price'] = total_price
 
         return data
+
+    def _tiene_rol_disabled(self):
+        """El usuario tiene el rol 'disabled' (credencial verificada por un admin)."""
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        return bool(user and user.is_authenticated and user.has_role(User.Role.DISABLED))
 
     def create(self, validated_data):
         from django.utils import timezone

@@ -20,7 +20,8 @@ import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { parkingService } from '../../services/parkingService';
-import { Parking, ParkingSpace, SpaceStatus } from '../../types';
+import { Parking, ParkingSpace, SpaceStatus, SpaceType } from '../../types';
+import { AccessibleSign } from '../../components/reservations/SpaceGrid';
 
 export const AdminSpacesPage: React.FC = () => {
   const { isSuperAdmin, isOwner } = useAuth();
@@ -81,6 +82,23 @@ export const AdminSpacesPage: React.FC = () => {
       setIsStatusModalOpen(false);
     } catch (err: any) {
       error(err.message || 'Error al cambiar estado');
+    }
+  };
+
+  const handleChangeType = async (spaceType: SpaceType) => {
+    if (!selectedSpace || selectedSpace.space_type === spaceType) return;
+    try {
+      const updated = await parkingService.updateSpaceType(selectedSpace.id, spaceType);
+      setSpaces((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      // La ventana queda abierta para poder cambiar también el estado
+      setSelectedSpace(updated);
+      success(
+        spaceType === 'disabled'
+          ? `Plaza ${selectedSpace.code} marcada como accesible`
+          : `Plaza ${selectedSpace.code} marcada como común`
+      );
+    } catch (err: any) {
+      error(err.message || 'Error al cambiar el tipo de plaza');
     }
   };
 
@@ -293,7 +311,12 @@ export const AdminSpacesPage: React.FC = () => {
                           isAvailable ? 'text-emerald-600' : isOccupied ? 'text-rose-600' : isReserved ? 'text-amber-600' : 'text-slate-400'
                         }`} />
                         <span className="font-extrabold text-sm tracking-wider">{space.code}</span>
-                        <span className="text-[10px] font-semibold opacity-75">{space.floor}</span>
+                        <span className="text-[10px] font-semibold opacity-75 flex items-center gap-1">
+                          {space.space_type === 'disabled' && (
+                            <AccessibleSign className="w-4 h-4" fondo="text-plaza-simbolo" figura="text-plaza-simbolo-figura" />
+                          )}
+                          {space.floor}
+                        </span>
                       </button>
                     );
                   })}
@@ -309,11 +332,55 @@ export const AdminSpacesPage: React.FC = () => {
         <Modal
           isOpen={isStatusModalOpen}
           onClose={() => setIsStatusModalOpen(false)}
-          title={`Plaza ${selectedSpace.code} (${selectedSpace.floor})`}
+          title={`Plaza ${selectedSpace.code} (${selectedSpace.floor})${selectedSpace.space_type === 'disabled' ? ' · Accesible' : ''}`}
           maxWidth="sm"
         >
           <div className="space-y-4">
-            <p className="text-xs text-slate-500">
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Tipo de plaza</p>
+              <div className="grid grid-cols-1 gap-2" role="radiogroup" aria-label="Tipo de plaza">
+                <button
+                  type="button"
+                  role="radio"
+                  onClick={() => handleChangeType('standard')}
+                  aria-checked={selectedSpace.space_type !== 'disabled'}
+                  className={`w-full p-3 min-h-[44px] rounded-xl border bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm text-left flex items-center justify-between cursor-pointer transition-colors ${
+                    selectedSpace.space_type !== 'disabled' ? 'border-slate-400 dark:border-slate-500 ring-2 ring-slate-300 dark:ring-slate-600' : 'border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Car className="w-4 h-4 text-slate-500 shrink-0" aria-hidden="true" />
+                    <span>Común</span>
+                  </span>
+                  {selectedSpace.space_type !== 'disabled'
+                    ? <Check className="w-4 h-4 text-slate-600 dark:text-slate-300" aria-hidden="true" />
+                    : <span className="w-3 h-3 rounded-full border-2 border-slate-300 dark:border-slate-600" />}
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  onClick={() => handleChangeType('disabled')}
+                  aria-checked={selectedSpace.space_type === 'disabled'}
+                  className={`w-full p-3 min-h-[44px] rounded-xl border bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-200 font-bold text-sm text-left flex items-center justify-between cursor-pointer transition-colors ${
+                    selectedSpace.space_type === 'disabled' ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-blue-200 dark:border-blue-900/60'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <AccessibleSign className="w-4 h-4 shrink-0" fondo="text-plaza-simbolo" figura="text-plaza-simbolo-figura" />
+                    <span>Accesible (personas con discapacidad)</span>
+                  </span>
+                  {selectedSpace.space_type === 'disabled'
+                    ? <Check className="w-4 h-4 text-blue-700 dark:text-blue-300" aria-hidden="true" />
+                    : <span className="w-3 h-3 rounded-full bg-parkia-blue" />}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Las plazas accesibles solo las pueden reservar personas con credencial de discapacidad verificada.
+              </p>
+            </div>
+
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider pt-2 border-t border-slate-100 dark:border-slate-800">Estado</p>
+            <p className="text-xs text-slate-500 -mt-2">
               Selecciona el nuevo estado operativo para esta plaza:
             </p>
 

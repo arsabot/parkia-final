@@ -1,7 +1,5 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from rest_framework import serializers
@@ -11,6 +9,11 @@ from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
+    # Rol principal (driver, owner o admin), calculado desde la tabla UserRole
+    role = serializers.CharField(read_only=True)
+    # Todos los roles del usuario, por ejemplo ['driver', 'disabled'].
+    # 'disabled' habilita las plazas accesibles y solo lo asigna un administrador.
+    roles = serializers.ListField(source='role_codes', child=serializers.CharField(), read_only=True)
 
     class Meta:
         model = User
@@ -21,11 +24,12 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'full_name',
             'role',
+            'roles',
             'phone',
             'avatar_url',
             'created_at'
         ]
-        read_only_fields = ['id', 'role', 'created_at', 'full_name']
+        read_only_fields = ['id', 'created_at', 'full_name']
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.email
@@ -34,7 +38,13 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     password_confirmation = serializers.CharField(write_only=True, min_length=6)
-    role = serializers.ChoiceField(choices=[User.Role.DRIVER, User.Role.OWNER], default=User.Role.DRIVER)
+    # Al registrarse solo se puede elegir ser conductor o dueño.
+    # Los roles 'admin' y 'disabled' los asigna únicamente un administrador.
+    role = serializers.ChoiceField(
+        choices=[User.Role.DRIVER, User.Role.OWNER],
+        required=False,
+        default=User.Role.DRIVER,
+    )
 
     class Meta:
         model = User
@@ -51,22 +61,16 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['password'] != data['password_confirmation']:
             raise serializers.ValidationError({'password_confirmation': 'Las contraseñas no coinciden.'})
-        candidate = User(email=data.get('email', ''), first_name=data.get('first_name', ''), last_name=data.get('last_name', ''))
-        try:
-            validate_password(data['password'], user=candidate)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError({'password': list(exc.messages)})
         return data
 
     def create(self, validated_data):
         validated_data.pop('password_confirmation')
-        role = validated_data.get('role', User.Role.DRIVER)
         user = User.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            role=role,
+            role=validated_data.get('role', User.Role.DRIVER),
             phone=validated_data.get('phone', '')
         )
         return user
@@ -147,9 +151,5 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         if not default_token_generator.check_token(user, token):
             raise serializers.ValidationError({'token': 'El enlace ha expirado o ya fue utilizado.'})
 
-        try:
-            validate_password(data['password'], user=user)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError({'password': list(exc.messages)})
         data['user'] = user
         return data
