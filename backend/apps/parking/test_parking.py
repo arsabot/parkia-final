@@ -97,3 +97,43 @@ class ParkingTests(TestCase):
         }
         res = self.client.post('/api/parking/', payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class SpaceTypeTests(TestCase):
+    """El admin o el dueño pueden marcar una plaza como accesible; un conductor no."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        from apps.users.models import User
+        self.client = APIClient()
+        self.owner = User.objects.create_user(email='dueno_t@test.com', password='x12345678', first_name='D', last_name='T', role=User.Role.OWNER)
+        self.other_owner = User.objects.create_user(email='otro_t@test.com', password='x12345678', first_name='O', last_name='T', role=User.Role.OWNER)
+        self.driver = User.objects.create_user(email='cond_t@test.com', password='x12345678', first_name='C', last_name='T', role=User.Role.DRIVER)
+        self.parking = Parking.objects.create(
+            name='Garaje Tipo', address='Calle 1', city='CABA', latitude=-34.6, longitude=-58.4,
+            price_per_hour=1000, opening_time='08:00', closing_time='22:00', capacity=2, is_active=True, owner=self.owner
+        )
+        self.space = ParkingSpace.objects.create(parking=self.parking, code='A01')
+        self.url = f'/api/parking/spaces/{self.space.id}/set_type/'
+
+    def test_dueno_marca_plaza_accesible(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.patch(self.url, {'space_type': 'disabled'}, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.space.refresh_from_db()
+        self.assertEqual(self.space.space_type, ParkingSpace.SpaceType.DISABLED)
+
+    def test_conductor_no_puede_cambiar_tipo(self):
+        self.client.force_authenticate(user=self.driver)
+        response = self.client.patch(self.url, {'space_type': 'disabled'}, format='json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_otro_dueno_no_puede_cambiar_tipo(self):
+        self.client.force_authenticate(user=self.other_owner)
+        response = self.client.patch(self.url, {'space_type': 'disabled'}, format='json')
+        self.assertIn(response.status_code, (403, 404))
+
+    def test_tipo_invalido(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.patch(self.url, {'space_type': 'vip'}, format='json')
+        self.assertEqual(response.status_code, 400)

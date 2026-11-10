@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Parking, ParkingSpace, SearchFilters, SpaceStatus } from '../types';
+import { Parking, ParkingSpace, SearchFilters, SpaceStatus, SpaceType } from '../types';
 
 export const parkingService = {
   async getParkings(filters?: SearchFilters): Promise<Parking[]> {
@@ -45,5 +45,10 @@ export const parkingService = {
 
   async updateSpaceStatus(spaceId: number, status: SpaceStatus): Promise<ParkingSpace> {
     return api.patch<ParkingSpace>(`/parking/spaces/${spaceId}/set_status/`, { status });
+  },
+
+  // Marca una plaza como común ('standard') o accesible ('disabled')
+  async updateSpaceType(spaceId: number, spaceType: SpaceType): Promise<ParkingSpace> {
+    return api.patch<ParkingSpace>(`/parking/spaces/${spaceId}/set_type/`, { space_type: spaceType });
   },
 };

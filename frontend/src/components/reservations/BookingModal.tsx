@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { SpaceGrid, defaultSpace } from './SpaceGrid';
 import confetti from 'canvas-confetti';
 
 interface BookingModalProps {
@@ -31,7 +32,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   parking,
   onSuccess,
 }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  // Solo quien tiene la credencial verificada por un admin puede elegir plazas accesibles
+  const hasPermit = Boolean(user?.roles?.includes('disabled'));
   const { toast, success, error } = useToast();
   const navigate = useNavigate();
 
@@ -77,7 +80,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         setEstimatedPrice(res.estimated_price || Number(parking.price_per_hour));
 
         // Auto select first available space if none chosen
-        const firstFree = res.spaces.find((s) => s.is_available);
+        const firstFree = defaultSpace(res.spaces || []);
         if (firstFree && !selectedSpaceId) {
           setSelectedSpaceId(firstFree.id);
         }
@@ -213,44 +216,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         {/* Space Selector Visual Grid */}
         {availableSpaces.length > 0 && (
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                <Layers className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
                 Elegir Plaza / Espacio
               </span>
-              <span className="text-[11px] text-slate-400 font-medium lowercase">
-                (verde = disponible)
-              </span>
             </label>
-            <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200" role="group" aria-label="Selección de plaza">
-              {availableSpaces.map((s) => {
-                const isSelected = selectedSpaceId === s.id;
-                const isFree = s.is_available;
-
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    disabled={!isFree}
-                    onClick={() => setSelectedSpaceId(s.id)}
-                    aria-label={`Plaza ${s.code}, ${s.floor}, ${isFree ? (isSelected ? 'seleccionada' : 'disponible') : 'no disponible'}`}
-                    aria-pressed={isSelected}
-                    className={`py-2 px-1 min-h-[44px] rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center cursor-pointer ${
-                      isSelected
-                        ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30 scale-105 ring-2 ring-teal-400'
-                        : isFree
-                        ? 'bg-white text-emerald-700 border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50'
-                        : 'bg-slate-200/70 text-slate-400 cursor-not-allowed line-through'
-                    }`}
-                  >
-                    <span>{s.code}</span>
-                    <span className="text-[9px] opacity-80 font-normal">
-                      {s.floor === 'Planta Baja' ? 'PB' : 'P1'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <SpaceGrid
+              spaces={availableSpaces}
+              selectedId={selectedSpaceId}
+              onSelect={setSelectedSpaceId}
+              hasPermit={hasPermit}
+            />
           </div>
         )}
 
