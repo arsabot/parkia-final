@@ -30,6 +30,9 @@ import { LeafletMap } from '../components/map/LeafletMap';
 import { Button } from '../components/common/Button';
 import { Skeleton } from '../components/common/Skeleton';
 import { SpaceGrid, defaultSpace } from '../components/reservations/SpaceGrid';
+import { AccessibleSpotCard } from '../components/reservations/AccessibleSpotCard';
+import { PaymentMethodSelector } from '../components/reservations/PaymentMethodSelector';
+import { PaymentCheckoutModal, PaymentMethod } from '../components/reservations/PaymentCheckoutModal';
 import confetti from 'canvas-confetti';
 
 export const ParkingDetailPage: React.FC = () => {
@@ -53,6 +56,11 @@ export const ParkingDetailPage: React.FC = () => {
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | undefined>(undefined);
   const [vehiclePlate, setVehiclePlate] = useState<string>('AA123BB');
   const [vehicleModel, setVehicleModel] = useState<string>('');
+  const [isAccessibleRequested, setIsAccessibleRequested] = useState<boolean>(hasPermit);
+
+  // Payment state
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('Mercado Pago');
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
   
   // Real time availability & price
   const [isChecking, setIsChecking] = useState<boolean>(false);
@@ -81,6 +89,13 @@ export const ParkingDetailPage: React.FC = () => {
     fetchDetail();
   }, [id, navigate]);
 
+  // Sync accessible request if user permit changes
+  useEffect(() => {
+    if (hasPermit) {
+      setIsAccessibleRequested(true);
+    }
+  }, [hasPermit]);
+
   // Check dynamic availability when date/time changes
   useEffect(() => {
     if (!parking) return;
@@ -101,11 +116,21 @@ export const ParkingDetailPage: React.FC = () => {
           end_time: endTime,
         });
 
-        setAvailableSpaces(res.spaces || []);
+        const spaces = res.spaces || [];
+        setAvailableSpaces(spaces);
         setDurationHours(res.duration_hours || 1.0);
         setEstimatedPrice(res.estimated_price || Number(parking.price_per_hour));
 
-        const firstFree = defaultSpace(res.spaces || []);
+        // Auto select space respecting accessible preference
+        if (isAccessibleRequested) {
+          const accSpace = spaces.find((s: any) => (s.space_type === 'disabled' || s.is_accessible) && s.is_available);
+          if (accSpace) {
+            setSelectedSpaceId(accSpace.id);
+            return;
+          }
+        }
+
+        const firstFree = defaultSpace(spaces);
         if (firstFree && !selectedSpaceId) {
           setSelectedSpaceId(firstFree.id);
         }
@@ -118,9 +143,25 @@ export const ParkingDetailPage: React.FC = () => {
 
     const timer = setTimeout(checkSlots, 300);
     return () => clearTimeout(timer);
-  }, [parking, date, startTime, endTime]);
+  }, [parking, date, startTime, endTime, isAccessibleRequested]);
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
+  // Handle accessible spot toggle
+  const handleAccessibleChange = (checked: boolean) => {
+    setIsAccessibleRequested(checked);
+    if (checked) {
+      const accSpace = availableSpaces.find((s: any) => (s.space_type === 'disabled' || s.is_accessible) && s.is_available);
+      if (accSpace) {
+        setSelectedSpaceId(accSpace.id);
+      }
+    } else {
+      const stdSpace = availableSpaces.find((s: any) => s.space_type !== 'disabled' && !s.is_accessible && s.is_available);
+      if (stdSpace) {
+        setSelectedSpaceId(stdSpace.id);
+      }
+    }
+  };
+
+  const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isAuthenticated) {
@@ -131,6 +172,19 @@ export const ParkingDetailPage: React.FC = () => {
 
     if (!parking || validationError) return;
 
+    if (selectedMethod === 'Efectivo') {
+      createReservationAndFinish('Efectivo', 'pending', 'confirmed');
+    } else {
+      setIsCheckoutOpen(true);
+    }
+  };
+
+  const createReservationAndFinish = async (
+    method: PaymentMethod,
+    paymentStatus: 'paid' | 'pending',
+    reservationStatus: 'confirmed' | 'pending' = 'confirmed'
+  ) => {
+    if (!parking) return;
     try {
       setIsSubmitting(true);
       const res = await reservationService.createReservation({
@@ -141,6 +195,9 @@ export const ParkingDetailPage: React.FC = () => {
         date,
         start_time: startTime,
         end_time: endTime,
+        payment_method: method,
+        payment_status: paymentStatus,
+        status: reservationStatus,
       });
 
       confetti({
@@ -149,7 +206,12 @@ export const ParkingDetailPage: React.FC = () => {
         origin: { y: 0.6 },
       });
 
-      success('¡Reserva confirmada con éxito!');
+      if (paymentStatus === 'paid') {
+        success('¡Pago acreditado y reserva confirmada!');
+      } else {
+        success('¡Reserva confirmada con éxito! Abonás en garita al ingresar.');
+      }
+
       navigate(`/booking/confirmation/${res.reservation.id}`, { state: { reservation: res.reservation } });
     } catch (err: any) {
       error(err.message || 'No se pudo completar la reserva.');
@@ -359,18 +421,18 @@ export const ParkingDetailPage: React.FC = () => {
 
           {/* Right Column: Sticky Booking Card Form */}
           <div className="lg:col-span-5 xl:col-span-4">
-            <div className="sticky top-28 bg-white rounded-3xl border-2 border-brand-500/30 p-6 sm:p-7 shadow-xl shadow-brand-500/5">
+            <div className="sticky top-28 bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-200 dark:border-parkia-line-dark p-6 sm:p-7 shadow-xl shadow-slate-900/5 transition-colors">
               
               {/* Header */}
-              <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-5">
+              <div className="flex items-center justify-between pb-5 border-b border-slate-100 dark:border-parkia-line-dark mb-5">
                 <div>
                   <span className="text-xs text-slate-400 font-medium block">Tarifa Oficial</span>
-                  <span className="text-2xl font-black text-slate-900">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white">
                     ${Number(parking.price_per_hour).toLocaleString('es-AR')}
                     <span className="text-xs text-slate-500 font-normal"> / hora</span>
                   </span>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                   {parking.available_spaces} lugares libres
                 </span>
               </div>
@@ -378,8 +440,8 @@ export const ParkingDetailPage: React.FC = () => {
               {/* Form */}
               <form onSubmit={handleBookingSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="detail-booking-date" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                  <label htmlFor="detail-booking-date" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
                     Fecha de Entrada
                   </label>
                   <input
@@ -389,14 +451,14 @@ export const ParkingDetailPage: React.FC = () => {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                    className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="detail-booking-start" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                    <label htmlFor="detail-booking-start" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
                       Entrada
                     </label>
                     <input
@@ -405,12 +467,12 @@ export const ParkingDetailPage: React.FC = () => {
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                      className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                     />
                   </div>
                   <div>
-                    <label htmlFor="detail-booking-end" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                    <label htmlFor="detail-booking-end" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
                       Salida
                     </label>
                     <input
@@ -419,13 +481,19 @@ export const ParkingDetailPage: React.FC = () => {
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                      className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
                     />
                   </div>
                 </div>
 
+                {/* Accessible spot request card */}
+                <AccessibleSpotCard
+                  checked={isAccessibleRequested}
+                  onChange={handleAccessibleChange}
+                  hasPermit={hasPermit}
+                />
+
                 {/* Space Picker */}
-                {/* Space Selector */}
                 {availableSpaces.length > 0 && (
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
@@ -445,38 +513,63 @@ export const ParkingDetailPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Vehicle plate */}
-                <div>
-                  <label htmlFor="detail-booking-plate" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Car className="w-4 h-4 text-teal-600" aria-hidden="true" />
-                    Patente / Matrícula
-                  </label>
-                  <input
-                    id="detail-booking-plate"
-                    type="text"
-                    value={vehiclePlate}
-                    onChange={(e) => setVehiclePlate(e.target.value)}
-                    required
-                    placeholder="AA 123 BB"
-                    className="w-full uppercase font-mono tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                {/* Vehicle plate & model */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label htmlFor="detail-booking-plate" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Car className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+                      Patente
+                    </label>
+                    <input
+                      id="detail-booking-plate"
+                      type="text"
+                      value={vehiclePlate}
+                      onChange={(e) => setVehiclePlate(e.target.value)}
+                      required
+                      placeholder="AA 123 BB"
+                      className="w-full uppercase font-mono tracking-widest bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[40px]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="detail-booking-model" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                      Vehículo
+                    </label>
+                    <input
+                      id="detail-booking-model"
+                      type="text"
+                      value={vehicleModel}
+                      onChange={(e) => setVehicleModel(e.target.value)}
+                      placeholder="Ej: Toyota Corolla"
+                      className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[40px]"
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Method Selector */}
+                <div className="pt-2 border-t border-slate-100 dark:border-parkia-line-dark">
+                  <PaymentMethodSelector
+                    selectedMethod={selectedMethod}
+                    onSelectMethod={setSelectedMethod}
                   />
                 </div>
 
                 {validationError && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 shrink-0" />
                     <span>{validationError}</span>
                   </div>
                 )}
 
                 {/* Pricing Summary */}
-                <div className="p-4 bg-slate-900 rounded-2xl text-white space-y-2 mt-4">
+                <div className="p-4 bg-slate-900 dark:bg-parkia-page-dark border border-slate-800 dark:border-parkia-line-dark rounded-2xl text-white space-y-2 mt-4">
                   <div className="flex justify-between text-xs text-slate-400">
-                    <span>Tiempo estimado:</span>
-                    <strong className="text-white">{durationHours.toFixed(1)} hs</strong>
+                    <span>Duración ({durationHours.toFixed(1)} hs):</span>
+                    <strong className="text-white font-medium">{selectedMethod}</strong>
                   </div>
-                  <div className="flex justify-between items-center text-sm border-t border-slate-800 pt-2">
-                    <span className="font-semibold">Total a pagar:</span>
+                  <div className="flex justify-between items-center text-sm border-t border-slate-800 dark:border-parkia-line-dark pt-2">
+                    <span className="font-semibold">
+                      {selectedMethod === 'Efectivo' ? 'Abonás en garita:' : 'Total a pagar:'}
+                    </span>
                     <span className="text-xl font-black text-emerald-400">
                       ${estimatedPrice.toLocaleString('es-AR')}
                     </span>
@@ -490,10 +583,10 @@ export const ParkingDetailPage: React.FC = () => {
                   disabled={!!validationError}
                   className="w-full py-3.5 font-bold text-base shadow-lg shadow-emerald-600/25"
                 >
-                  Reservar Lugar Ahora
+                  {selectedMethod === 'Efectivo' ? 'Confirmar Reserva' : 'Pagar y Reservar'}
                 </Button>
 
-                <p className="text-center text-[11px] text-slate-400 font-medium inline-flex items-center justify-center gap-1.5 w-full">
+                <p className="text-center text-[11px] text-slate-500 dark:text-slate-400 font-medium inline-flex items-center justify-center gap-1.5 w-full">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   <span>Cancelación gratuita • Confirmación instantánea</span>
                 </p>
@@ -504,6 +597,22 @@ export const ParkingDetailPage: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Interactive Payment Checkout Modal */}
+      {parking && (
+        <PaymentCheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          method={selectedMethod}
+          amount={estimatedPrice}
+          parkingName={parking.name}
+          durationHours={durationHours}
+          onPaymentSuccess={async (details) => {
+            await createReservationAndFinish(details.method, details.status, 'confirmed');
+            setIsCheckoutOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
