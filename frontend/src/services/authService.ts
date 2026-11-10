@@ -1,5 +1,7 @@
 import { api } from './api';
 import { AuthResponse, User, UserRole } from '../types';
+import { isSupabaseConfigured } from './supabaseClient';
+import { supabaseAuth } from './supabaseService';
 
 export const authService = {
   async register(data: {
@@ -15,6 +17,9 @@ export const authService = {
     cud_dni?: string;
     cud_expiration?: string;
   }): Promise<AuthResponse> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.register(data);
+    }
     const res = await api.post<AuthResponse>('/auth/register/', data);
     localStorage.setItem('parkia_token', res.tokens.access);
     localStorage.setItem('parkia_refresh', res.tokens.refresh);
@@ -34,10 +39,16 @@ export const authService = {
     symbol: string;
     accessible_parking_access: boolean;
   }> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.verifyCud(data);
+    }
     return api.post('/auth/verify-cud/', data);
   },
 
   async login(credentials: { email: string; password: string }): Promise<AuthResponse> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.login(credentials);
+    }
     const res = await api.post<AuthResponse>('/auth/login/', credentials);
     localStorage.setItem('parkia_token', res.tokens.access);
     localStorage.setItem('parkia_refresh', res.tokens.refresh);
@@ -46,6 +57,9 @@ export const authService = {
   },
 
   async demoLogin(role: UserRole = 'driver'): Promise<AuthResponse> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.demoLogin(role);
+    }
     const res = await api.post<AuthResponse>('/auth/demo-login/', { role });
     localStorage.setItem('parkia_token', res.tokens.access);
     localStorage.setItem('parkia_refresh', res.tokens.refresh);
@@ -54,6 +68,9 @@ export const authService = {
   },
 
   async getMe(): Promise<User> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.getMe();
+    }
     const user = await api.get<User>('/auth/me/');
     localStorage.setItem('parkia_user', JSON.stringify(user));
     return user;
