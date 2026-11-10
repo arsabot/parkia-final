@@ -26,6 +26,7 @@ import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
 import { EmptyState } from '../components/common/EmptyState';
 import { Modal } from '../components/common/Modal';
+import { Pagination } from '../components/common/Pagination';
 import { QRCodeDisplay } from '../components/common/QRCodeDisplay';
 import { CancelReservationModal } from '../components/reservations/CancelReservationModal';
 import { PaymentCheckoutModal, PaymentMethod } from '../components/reservations/PaymentCheckoutModal';
@@ -43,6 +44,12 @@ export const MyReservationsPage: React.FC = () => {
   const [selectedForCancel, setSelectedForCancel] = useState<Reservation | null>(null);
   const [selectedForQr, setSelectedForQr] = useState<Reservation | null>(null);
   const [selectedForPayment, setSelectedForPayment] = useState<Reservation | null>(null);
+  const [reservationsPage, setReservationsPage] = useState<number>(1);
+  const [reservationsPageSize, setReservationsPageSize] = useState<number>(5);
+
+  useEffect(() => {
+    setReservationsPage(1);
+  }, [activeTab]);
 
   const fetchReservations = async () => {
     try {
@@ -260,7 +267,9 @@ export const MyReservationsPage: React.FC = () => {
           />
         ) : (
           <div className="space-y-4">
-            {displayedList.map((res) => (
+            {displayedList
+              .slice((reservationsPage - 1) * reservationsPageSize, reservationsPage * reservationsPageSize)
+              .map((res) => (
               <div
                 key={res.id}
                 className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between gap-5"
@@ -362,6 +371,17 @@ export const MyReservationsPage: React.FC = () => {
                 </div>
               </div>
             ))}
+
+            {/* Controles de paginación (5, 10, 15) */}
+            <Pagination
+              currentPage={reservationsPage}
+              totalItems={displayedList.length}
+              pageSize={reservationsPageSize}
+              onPageChange={setReservationsPage}
+              onPageSizeChange={setReservationsPageSize}
+              pageSizeOptions={[5, 10, 15]}
+              itemLabel="reservas"
+            />
           </div>
         )}
 
