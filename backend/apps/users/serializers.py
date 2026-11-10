@@ -23,7 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
             'avatar_url',
             'created_at'
         ]
-        read_only_fields = ['id', 'created_at', 'full_name']
+        read_only_fields = ['id', 'role', 'created_at', 'full_name']
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.email
@@ -32,6 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     password_confirmation = serializers.CharField(write_only=True, min_length=6)
+    role = serializers.ChoiceField(choices=[User.Role.DRIVER, User.Role.OWNER], default=User.Role.DRIVER)
 
     class Meta:
         model = User
