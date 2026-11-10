@@ -24,8 +24,8 @@ class UsersAuthTests(TestCase):
             'first_name': 'Test',
             'last_name': 'Driver',
             'email': 'testdriver@parkia.com',
-            'password': 'password123',
-            'password_confirmation': 'password123',
+            'password': 'Estacion4miento!',
+            'password_confirmation': 'Estacion4miento!',
             'role': 'driver',
             'phone': '+5491100000000'
         }
