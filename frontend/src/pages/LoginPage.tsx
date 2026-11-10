@@ -19,7 +19,9 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as any)?.from?.pathname || '/search';
+  const rawFrom = (location.state as any)?.from?.pathname || '/search';
+  // Evitar redireccionar a conductores o invitados a rutas protegidas de administración
+  const from = rawFrom.startsWith('/admin') ? '/search' : rawFrom;
   
   // Si ya hay sesión, no tiene sentido mostrar el login: va directo a su pantalla.
   if (user) {
