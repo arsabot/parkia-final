@@ -13,6 +13,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
@@ -21,8 +23,6 @@ if not SECRET_KEY:
         raise ImproperlyConfigured('Falta DJANGO_SECRET_KEY en backend/.env (o usa un valor inseguro).')
 elif SECRET_KEY.startswith('django-insecure') and not DEBUG:
     raise ImproperlyConfigured('Falta DJANGO_SECRET_KEY en backend/.env (o usa un valor inseguro).')
-
-DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver,.trycloudflare.com,.pages.dev').split(',') if h.strip()]
 
