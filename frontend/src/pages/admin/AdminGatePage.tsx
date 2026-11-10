@@ -28,6 +28,7 @@ import { Reservation, Parking } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
+import { Pagination } from '../../components/common/Pagination';
 import { CameraQrScanner } from '../../components/common/CameraQrScanner';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
@@ -40,6 +41,8 @@ export const AdminGatePage: React.FC = () => {
   const [selectedParkingId, setSelectedParkingId] = useState<number | 'all'>('all');
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [gatePage, setGatePage] = useState<number>(1);
+  const [gatePageSize, setGatePageSize] = useState<number>(10);
 
   // QR Scan / Code Search state
   const [qrCodeInput, setQrCodeInput] = useState<string>('');
@@ -154,6 +157,11 @@ export const AdminGatePage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [isOwner]);
+
+  // Reset page when parking selection changes
+  useEffect(() => {
+    setGatePage(1);
+  }, [selectedParkingId]);
 
   // Filter reservations based on selected parking
   const filteredReservations = reservations.filter((r) => {
@@ -913,7 +921,9 @@ export const AdminGatePage: React.FC = () => {
                     No hay registros de movimientos para este estacionamiento.
                   </div>
                 ) : (
-                  filteredReservations.map((res) => {
+                  filteredReservations
+                    .slice((gatePage - 1) * gatePageSize, gatePage * gatePageSize)
+                    .map((res) => {
                     const isInside = res.check_in_time && !res.check_out_time;
                     return (
                       <div key={res.id} className="p-4 sm:p-5 space-y-3 bg-white dark:bg-parkia-card-dark hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
@@ -1035,7 +1045,9 @@ export const AdminGatePage: React.FC = () => {
                         </td>
                       </tr>
                     ) : (
-                      filteredReservations.map((res) => {
+                      filteredReservations
+                        .slice((gatePage - 1) * gatePageSize, gatePage * gatePageSize)
+                        .map((res) => {
                         const isInside = res.check_in_time && !res.check_out_time;
                         return (
                           <tr key={res.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
@@ -1141,6 +1153,19 @@ export const AdminGatePage: React.FC = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Controles de paginación (5, 10, 15) */}
+              <div className="p-4 sm:p-6 pt-0">
+                <Pagination
+                  currentPage={gatePage}
+                  totalItems={filteredReservations.length}
+                  pageSize={gatePageSize}
+                  onPageChange={setGatePage}
+                  onPageSizeChange={setGatePageSize}
+                  pageSizeOptions={[5, 10, 15]}
+                  itemLabel="movimientos"
+                />
               </div>
             </div>
 
