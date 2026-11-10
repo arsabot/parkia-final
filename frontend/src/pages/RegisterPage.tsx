@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Mail, User as UserIcon, Phone, ParkingCircle, ArrowRight, Car, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -8,6 +8,7 @@ import { Input } from '../components/common/Input';
 import { PasswordField } from '../components/auth/PasswordField';
 import { PasswordStrength } from '../components/auth/PasswordStrength';
 import { UserRole } from '../types';
+import { Auth0GoogleButton } from '../auth0/Auth0GoogleButton';
 
 export const RegisterPage: React.FC = () => {
   const [firstName, setFirstName] = useState('');
@@ -21,9 +22,15 @@ export const RegisterPage: React.FC = () => {
   const [shake, setShake] = useState(0);
   const mismatch = passwordConfirm.length > 0 && password !== passwordConfirm;
 
-  const { register } = useAuth();
+  const { register, user } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
+
+  // Si ya hay sesión, no tiene sentido mostrar el registro: va directo a su pantalla.
+  if (user) {
+    const destino = user.role === 'admin' ? '/admin' : user.role === 'owner' ? '/admin/gate' : '/search';
+    return <Navigate to={destino} replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +41,8 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      error('La contraseña debe tener al menos 6 caracteres.');
+    if (password.length < 8) {
+      error('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
 
@@ -87,6 +94,7 @@ export const RegisterPage: React.FC = () => {
 
         {/* Card */}
         <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Role Switcher */}
@@ -121,7 +129,7 @@ export const RegisterPage: React.FC = () => {
                 </button>
               </div>
             </div>
-
+            <Auth0GoogleButton role={role === 'owner' ? 'owner' : 'driver'} />
             {/* Name and Last Name */}
             <div className="grid grid-cols-2 gap-3">
               <Input

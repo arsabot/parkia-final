@@ -52,6 +52,7 @@ class Reservation(models.Model):
         ('Transferencia', 'Transferencia Bancaria')
     ])
     staff_notes = models.CharField('Notas del Operador', max_length=255, blank=True, default='')
+    payment_expires_at = models.DateTimeField('Vencimiento del pago', blank=True, null=True)
 
     created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
     updated_at = models.DateTimeField('Última actualización', auto_now=True)
