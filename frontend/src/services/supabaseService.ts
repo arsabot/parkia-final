@@ -645,9 +645,23 @@ export const supabaseReservations = {
   async cancelReservation(id: number, reason?: string): Promise<{ message: string; reservation: Reservation }> {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
+    // 1. Obtener la reserva para conocer el estado de pago
+    const { data: currentRes } = await supabase
+      .from('reservations')
+      .select('payment_status, total_price')
+      .eq('id', id)
+      .single();
+
+    const isPaid = currentRes?.payment_status === 'paid';
+    const newPaymentStatus = isPaid ? 'refunded' : currentRes?.payment_status || 'pending';
+
     const { data, error } = await supabase
       .from('reservations')
-      .update({ status: 'cancelled', cancellation_reason: reason || 'Cancelado por usuario' })
+      .update({
+        status: 'cancelled',
+        payment_status: newPaymentStatus,
+        cancellation_reason: reason || 'Cancelado por usuario'
+      })
       .eq('id', id)
       .select('*, parking:parkings(*), space:parking_spaces(*), user:users(*)')
       .single();
@@ -659,8 +673,12 @@ export const supabaseReservations = {
       await supabase.from('parking_spaces').update({ status: 'available' }).eq('id', data.space_id);
     }
 
+    const message = isPaid
+      ? `Reserva cancelada con éxito. Reembolso del 100% ($${Number(currentRes?.total_price || 0).toLocaleString('es-AR')}) procesado a tu cuenta.`
+      : 'Reserva cancelada correctamente.';
+
     return {
-      message: 'Reserva cancelada correctamente.',
+      message,
       reservation: (await this.getReservations()).find((r) => r.id === id)!,
     };
   },
@@ -916,6 +934,13 @@ export const supabaseAdmin = {
     const totalSpaces = spaces.length || 1;
     const occupancyRate = Math.round((occupiedSpaces / totalSpaces) * 100);
 
+    const COMMISSION_RATE = 0.15;
+    const OWNER_RATE = 0.85;
+    const platformCommission = Math.round(totalRevenue * COMMISSION_RATE);
+    const ownerNetRevenue = Math.round(totalRevenue * OWNER_RATE);
+    const todayPlatformCommission = Math.round(todayRevenue * COMMISSION_RATE);
+    const todayOwnerNetRevenue = Math.round(todayRevenue * OWNER_RATE);
+
     return {
       kpis: {
         total_reservations: reservations.length,
@@ -927,6 +952,11 @@ export const supabaseAdmin = {
         occupancy_rate: occupancyRate,
         total_revenue: totalRevenue,
         today_revenue: todayRevenue,
+        commission_rate_percentage: 15,
+        platform_commission: platformCommission,
+        owner_net_revenue: ownerNetRevenue,
+        today_platform_commission: todayPlatformCommission,
+        today_owner_net_revenue: todayOwnerNetRevenue,
       },
       charts: {
         reservations_by_day: [

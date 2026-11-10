@@ -309,12 +309,16 @@ export const AdminGatePage: React.FC = () => {
               {/* Recaudación Total en Caja */}
               <div className="bg-white dark:bg-parkia-card-dark p-5 rounded-3xl border border-slate-100 dark:border-parkia-line-dark shadow-sm flex items-center justify-between transition-colors">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Recaudación / Caja</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Recaudación Bruta</span>
                   <span className="text-2xl font-black text-navy-900 dark:text-white mt-1 block">
                     ${totalMoneyCollected.toLocaleString('es-AR')}
                   </span>
                   <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
-                    <DollarSign className="w-3.5 h-3.5" /> Ingresos de dinero
+                    {isOwner ? (
+                      <span>Neto Garaje (85%): <strong>${Math.round(totalMoneyCollected * 0.85).toLocaleString('es-AR')}</strong></span>
+                    ) : (
+                      <span>Comisión Parkia (15%): <strong>${Math.round(totalMoneyCollected * 0.15).toLocaleString('es-AR')}</strong></span>
+                    )}
                   </span>
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -682,9 +686,16 @@ export const AdminGatePage: React.FC = () => {
                             </td>
 
                             <td className="py-3 px-4 whitespace-nowrap">
-                              <Badge variant={res.status as any}>
-                                {res.status_display}
-                              </Badge>
+                              <div className="flex flex-col gap-1 items-start">
+                                <Badge variant={res.status as any}>
+                                  {res.status_display}
+                                </Badge>
+                                {res.payment_status === 'refunded' && (
+                                  <span className="text-[10px] font-extrabold uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-300 dark:border-purple-800 whitespace-nowrap">
+                                    ↩ Reembolsado
+                                  </span>
+                                )}
+                              </div>
                             </td>
 
                             <td className="py-3 px-4 text-right whitespace-nowrap">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, CheckCircle2, RotateCcw, Wallet } from 'lucide-react';
 import { Reservation } from '../../types';
 import { reservationService } from '../../services/reservationService';
 import { useToast } from '../../context/ToastContext';
@@ -26,12 +26,20 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
 
   if (!reservation) return null;
 
+  const isPaid = reservation.payment_status === 'paid';
+
   const handleCancel = async () => {
     try {
       setLoading(true);
       const finalReason = reason === 'Otro' ? customReason : reason;
       const res = await reservationService.cancelReservation(reservation.id, finalReason);
-      success('Reserva cancelada correctamente.');
+      
+      if (isPaid) {
+        success(`Reserva cancelada. Reembolso del 100% ($${Number(reservation.total_price).toLocaleString('es-AR')}) procesado a tu cuenta.`);
+      } else {
+        success('Reserva cancelada correctamente.');
+      }
+      
       onCancelled(res.reservation);
       onClose();
     } catch (err: any) {
@@ -46,7 +54,7 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex items-center gap-2 text-rose-600">
+        <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
           <AlertTriangle className="w-5 h-5" />
           <span>Cancelar Reserva #{reservation.booking_code}</span>
         </div>
@@ -57,6 +65,26 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
         <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl text-xs text-rose-900 dark:text-rose-200 leading-relaxed font-medium">
           ¿Estás seguro de que deseas cancelar tu reserva en <strong>{reservation.parking_name}</strong> para el día <strong>{reservation.date}</strong> a las <strong>{reservation.start_time.slice(0, 5)} hs</strong>?
         </div>
+
+        {/* Refund policy highlight banner */}
+        {isPaid ? (
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl space-y-2 text-xs text-emerald-900 dark:text-emerald-200 shadow-xs">
+            <div className="flex items-center gap-2 font-bold text-emerald-700 dark:text-emerald-300 text-sm">
+              <RotateCcw className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Reembolso total garantizado (100%)</span>
+            </div>
+            <p className="leading-relaxed">
+              Esta reserva fue abonada con <strong>{reservation.payment_method || 'Mercado Pago'}</strong> por un total de <strong>${Number(reservation.total_price).toLocaleString('es-AR')}</strong>.
+            </p>
+            <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/90 font-medium">
+              Al confirmar la cancelación, se liberará el lugar y el reintegro total se acreditará de forma automática a tu medio de pago original.
+            </p>
+          </div>
+        ) : (
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-parkia-line-dark rounded-2xl text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+            Esta reserva no registra pagos online completados. Tu lugar quedará liberado inmediatamente sin costo alguno.
+          </div>
+        )}
 
         <div>
           <label htmlFor="cancel-reason-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
@@ -88,7 +116,7 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
 
         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
           <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>Cancelación gratuita sin cargos de penalización.</span>
+          <span>Cancelación gratuita sin cargos ni penalidades.</span>
         </div>
 
         <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-parkia-line-dark">
@@ -100,9 +128,9 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
             variant="danger"
             isLoading={loading}
             onClick={handleCancel}
-            className="flex-1"
+            className="flex-1 font-bold"
           >
-            Confirmar Cancelación
+            {isPaid ? 'Confirmar y Reembolsar' : 'Confirmar Cancelación'}
           </Button>
         </div>
       </div>

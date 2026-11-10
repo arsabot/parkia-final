@@ -143,10 +143,18 @@ export const BookingConfirmationPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col items-end gap-1.5">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Confirmada
+                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  reservation.status === 'cancelled'
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                }`}>
+                  {reservation.status === 'cancelled' ? 'Cancelada' : 'Confirmada'}
                 </span>
-                {isPaid ? (
+                {reservation.payment_status === 'refunded' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                    ↩ Reembolsado (100%)
+                  </span>
+                ) : isPaid ? (
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#009EE3]/20 text-[#009EE3] border border-[#009EE3]/30 uppercase">
                     ✓ Pagado
                   </span>
