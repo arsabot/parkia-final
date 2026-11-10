@@ -1,6 +1,7 @@
 // Capa de datos del asistente ParkIA. Usa tu cliente `api` (token Bearer incluido).
 // Para probar la interfaz sin backend, definí VITE_CHATBOT_DEMO=true en .env.local.
 import { api } from './api';
+import { isSupabaseConfigured, supabase } from './supabaseClient';
 
 export type Claim = {
   codigo: string;
@@ -54,6 +55,20 @@ const demo: Claim[] = [
 ];
 
 export async function createClaim(data: NewClaim): Promise<{ codigo: string }> {
+  if (isSupabaseConfigured() && supabase) {
+    const code = `RC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 89999)}`;
+    await supabase.from('claims').insert({
+      code,
+      user_id: 1,
+      category: CATEGORY[data.categoria] ?? 'other',
+      reservation_ref: data.reserva === 'Sin dato' ? '' : data.reserva,
+      description: data.descripcion,
+      contact: data.contacto,
+      status: 'abierto',
+      response: DEFAULT_TEXT[0],
+    });
+    return { codigo: code };
+  }
   if (DEMO) {
     const codigo = `RC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 89999)}`;
     demo.unshift({ codigo, categoria: data.categoria, fecha: new Date().toLocaleDateString('es-AR'), estado: 0, respuesta: DEFAULT_TEXT[0] });
@@ -69,6 +84,16 @@ export async function createClaim(data: NewClaim): Promise<{ codigo: string }> {
 }
 
 export async function listClaims(): Promise<Claim[]> {
+  if (isSupabaseConfigured() && supabase) {
+    const { data: claims } = await supabase.from('claims').select('*').order('created_at', { ascending: false });
+    return (claims || []).map((c: any) => ({
+      codigo: c.code,
+      categoria: c.category,
+      fecha: new Date(c.created_at).toLocaleDateString('es-AR'),
+      estado: c.status === 'resuelto' ? 2 : c.status === 'revision' ? 1 : 0,
+      respuesta: c.response || DEFAULT_TEXT[0],
+    }));
+  }
   if (DEMO) return demo;
   const res = await api.get<ApiClaim[] | { results: ApiClaim[] }>('/claims/');
   return (Array.isArray(res) ? res : res.results).map(toClaim);
