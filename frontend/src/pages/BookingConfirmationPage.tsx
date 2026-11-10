@@ -176,7 +176,7 @@ export const BookingConfirmationPage: React.FC = () => {
                 size={190}
                 title="Pase Digital • Escanear al Ingreso / Egreso"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-3">
+              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-sm mt-3 font-medium">
                 Mostrá este código QR en la garita o terminal de acceso al llegar para validar tu ingreso automático y registrar tu estadía.
               </p>
             </div>

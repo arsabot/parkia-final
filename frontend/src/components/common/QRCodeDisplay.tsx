@@ -27,7 +27,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
       width: size,
       margin: 2,
       color: {
-        dark: '#1A2B42', // Azul Marino Oscuro de la marca
+        dark: '#0F172A', // Slate-900 para óptimo contraste en lectores ópticos
         light: '#FFFFFF'
       },
       errorCorrectionLevel: 'H'
@@ -53,34 +53,35 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   };
 
   return (
-    <div className={`flex flex-col items-center bg-white p-4 rounded-2xl border border-slate-200/80 shadow-inner ${className}`}>
+    <div className={`flex flex-col items-center bg-slate-50 dark:bg-parkia-page-dark/70 p-5 rounded-3xl border border-slate-200/90 dark:border-parkia-line-dark shadow-sm transition-colors ${className}`}>
       {title && (
-        <span className="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2 flex items-center gap-1.5">
-          <QrCode className="w-3.5 h-3.5 text-brand-600" />
+        <span className="text-xs font-black tracking-wider text-slate-800 dark:text-slate-200 uppercase mb-3 flex items-center gap-2">
+          <QrCode className="w-4 h-4 text-brand-600 dark:text-brand-400" />
           {title}
         </span>
       )}
 
-      <div className="relative p-2 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center justify-center">
+      {/* QR image container: Pure white background with quiet zone required for barcode optical sensors */}
+      <div className="relative p-3.5 bg-white rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center">
         {dataUrl ? (
           <img
             src={dataUrl}
-            alt={`QR ${value}`}
-            className="rounded-lg object-contain"
+            alt={`Código QR para la reserva ${value}`}
+            className="rounded-lg object-contain block"
             style={{ width: size, height: size }}
           />
         ) : (
           <div
-            className="flex items-center justify-center bg-slate-50 rounded-lg animate-pulse"
+            className="flex items-center justify-center bg-slate-100 rounded-lg animate-pulse"
             style={{ width: size, height: size }}
           >
-            <span className="text-xs text-slate-400 font-semibold">Generando QR...</span>
+            <span className="text-xs text-slate-500 font-semibold">Generando QR...</span>
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2 mt-3">
-        <span className="font-mono text-sm font-black text-navy-900 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/60">
+      <div className="flex items-center gap-2 mt-3.5">
+        <span className="font-mono text-base font-black text-slate-900 dark:text-white bg-white dark:bg-slate-800/90 px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 tracking-wider shadow-xs">
           {value}
         </span>
 
@@ -88,10 +89,11 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            className="p-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition-all shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             title="Copiar código al portapapeles"
+            aria-label="Copiar código al portapapeles"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
           </button>
         )}
 
@@ -99,8 +101,9 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
           <button
             type="button"
             onClick={handleDownload}
-            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            className="p-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition-all shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             title="Descargar imagen QR"
+            aria-label="Descargar imagen QR"
           >
             <Download className="w-4 h-4" />
           </button>
