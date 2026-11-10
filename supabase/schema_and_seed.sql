@@ -124,6 +124,9 @@ CREATE TABLE reservations (
     payment_status VARCHAR(20) DEFAULT 'paid',
     staff_notes VARCHAR(255) DEFAULT '',
     payment_expires_at TIMESTAMPTZ,
+    commission_rate NUMERIC(5,2) DEFAULT 15.00,
+    commission_amount NUMERIC(10,2) GENERATED ALWAYS AS (ROUND(total_price * 0.15, 2)) STORED,
+    owner_payout NUMERIC(10,2) GENERATED ALWAYS AS (ROUND(total_price * 0.85, 2)) STORED,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
