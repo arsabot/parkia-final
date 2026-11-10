@@ -293,20 +293,45 @@ export const MyReservationsPage: React.FC = () => {
           title={`Pase Digital • #${selectedForQr.booking_code}`}
           maxWidth="sm"
         >
-          <div className="p-4 text-center space-y-4">
+          <div className="text-center space-y-4">
             <QRCodeDisplay
               value={selectedForQr.booking_code}
-              size={210}
+              size={200}
               title="Escaneo en Garita / Molinete"
             />
-            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left text-xs space-y-1">
-              <div><strong>Estacionamiento:</strong> {selectedForQr.parking_name}</div>
-              <div><strong>Vehículo:</strong> {selectedForQr.vehicle_plate}</div>
-              <div><strong>Fecha y Hora:</strong> {selectedForQr.date} ({selectedForQr.start_time.slice(0, 5)} - {selectedForQr.end_time.slice(0, 5)} hs)</div>
-              <div><strong>Plaza Asignada:</strong> <span className="text-emerald-700 font-bold">{selectedForQr.space_code}</span></div>
+            
+            <div className="bg-slate-100/90 dark:bg-parkia-page-dark p-4 rounded-2xl border border-slate-200 dark:border-parkia-line-dark text-left text-xs space-y-2.5 shadow-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/80 dark:border-parkia-line-dark">
+                <span className="text-slate-600 dark:text-slate-400 font-semibold">Estacionamiento</span>
+                <span className="text-slate-900 dark:text-white font-extrabold text-right max-w-[62%] truncate">
+                  {selectedForQr.parking_name}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/80 dark:border-parkia-line-dark">
+                <span className="text-slate-600 dark:text-slate-400 font-semibold">Vehículo / Patente</span>
+                <span className="font-mono text-slate-900 dark:text-white font-extrabold px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  {selectedForQr.vehicle_plate}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/80 dark:border-parkia-line-dark">
+                <span className="text-slate-600 dark:text-slate-400 font-semibold">Fecha y Horario</span>
+                <span className="text-slate-900 dark:text-white font-bold text-right">
+                  {selectedForQr.date} • {selectedForQr.start_time.slice(0, 5)} - {selectedForQr.end_time.slice(0, 5)} hs
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center pt-0.5">
+                <span className="text-slate-600 dark:text-slate-400 font-semibold">Plaza Asignada</span>
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-extrabold border border-emerald-300 dark:border-emerald-800">
+                  {selectedForQr.space_code}
+                </span>
+              </div>
             </div>
-            <p className="text-[11px] text-slate-500">
-              Presenta este código al ingresar o salir. El operador o lector registrará automáticamente tu estadía y pago.
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+              Presentá este código al ingresar o salir. El operador o lector registrará automáticamente tu estadía y pago.
             </p>
           </div>
         </Modal>

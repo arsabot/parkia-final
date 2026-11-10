@@ -54,19 +54,19 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
       maxWidth="md"
     >
       <div className="space-y-5">
-        <div className="p-3 bg-rose-50 border border-rose-100 rounded-2xl text-xs text-rose-800 leading-relaxed">
+        <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl text-xs text-rose-900 dark:text-rose-200 leading-relaxed font-medium">
           ¿Estás seguro de que deseas cancelar tu reserva en <strong>{reservation.parking_name}</strong> para el día <strong>{reservation.date}</strong> a las <strong>{reservation.start_time.slice(0, 5)} hs</strong>?
         </div>
 
         <div>
-          <label htmlFor="cancel-reason-select" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+          <label htmlFor="cancel-reason-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
             Motivo de cancelación
           </label>
           <select
             id="cancel-reason-select"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 mb-2 min-h-[44px]"
+            className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 mb-2 min-h-[44px]"
           >
             <option value="Cambio de itinerario / Planes cancelados">Cambio de itinerario / Planes cancelados</option>
             <option value="Encontré otro lugar más cercano">Encontré otro lugar más cercano</option>
@@ -81,17 +81,17 @@ export const CancelReservationModal: React.FC<CancelReservationModalProps> = ({
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
               rows={2}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-parkia-line-dark rounded-xl p-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400"
             />
           )}
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>Cancelación gratuita sin cargos de penalización.</span>
         </div>
 
-        <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+        <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-parkia-line-dark">
           <Button type="button" variant="outline" onClick={onClose} className="flex-1">
             Volver
           </Button>
