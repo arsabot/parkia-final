@@ -13,7 +13,6 @@ import {
   X, 
   ShieldAlert,
   ParkingCircle,
-  Sparkles,
   ScanLine,
   Building2,
   Crown
@@ -227,7 +226,7 @@ export const Navbar: React.FC = () => {
                     className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors flex items-center gap-1 cursor-pointer"
                     title="Entrar rápido como conductor demo"
                   >
-                    <Sparkles className="w-3 h-3 text-brand-600" />
+                    <Car className="w-3 h-3 text-brand-600" />
                     Conductor
                   </button>
                   <button
@@ -281,10 +280,10 @@ export const Navbar: React.FC = () => {
                         : 'text-brand-600'
                     }`}>
                       {isSuperAdmin 
-                        ? '👑 Super Admin' 
+                        ? 'Super Admin' 
                         : isOwner 
-                        ? '🏢 Dueño Garaje' 
-                        : '🚗 Conductor'}
+                        ? 'Dueño Garaje' 
+                        : 'Conductor'}
                     </span>
                   </div>
                   <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 ${

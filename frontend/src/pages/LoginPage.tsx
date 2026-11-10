@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, LogIn, Sparkles, Building2, Crown } from 'lucide-react';
+import { Mail, Lock, LogIn, Car, Building2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
@@ -108,7 +108,7 @@ export const LoginPage: React.FC = () => {
                 disabled={!!demoLoading}
                 className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 hover:border-brand-500 hover:text-brand-600 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1"
               >
-                <Sparkles className="w-4 h-4 text-brand-600" />
+                <Car className="w-4 h-4 text-brand-600" />
                 <span>Conductor</span>
               </button>
               
