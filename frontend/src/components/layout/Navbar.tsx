@@ -74,8 +74,8 @@ export const Navbar: React.FC = () => {
                   to="/search"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/search')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <Compass className="w-4 h-4 shrink-0" />
@@ -86,8 +86,8 @@ export const Navbar: React.FC = () => {
                   to="/my-reservations"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/my-reservations')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <CalendarCheck className="w-4 h-4 shrink-0" />
@@ -98,8 +98,8 @@ export const Navbar: React.FC = () => {
                   to="/favorites"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/favorites')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <Bookmark className="w-4 h-4 shrink-0" />
@@ -113,8 +113,8 @@ export const Navbar: React.FC = () => {
                   to="/admin"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <LayoutDashboard className="w-4 h-4 shrink-0" />
@@ -125,8 +125,8 @@ export const Navbar: React.FC = () => {
                   to="/admin/parkings"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
                     isActive('/admin/parkings')
-                      ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/60'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <Crown className="w-4 h-4 text-amber-500 shrink-0" />
@@ -137,11 +137,11 @@ export const Navbar: React.FC = () => {
                   to="/admin/gate"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/gate')
-                      ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <ScanLine className="w-4 h-4 text-teal-600 shrink-0" />
+                  <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                   <span>Control QR</span>
                 </Link>
 
@@ -149,8 +149,8 @@ export const Navbar: React.FC = () => {
                   to="/admin/spaces"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/spaces')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <Grid className="w-4 h-4 shrink-0" />
@@ -161,8 +161,8 @@ export const Navbar: React.FC = () => {
                   to="/admin/reservations"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/reservations')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <CalendarCheck className="w-4 h-4 shrink-0" />
@@ -176,11 +176,11 @@ export const Navbar: React.FC = () => {
                   to="/admin/gate"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
                     isActive('/admin/gate')
-                      ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <ScanLine className="w-4 h-4 text-teal-600 shrink-0" />
+                  <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                   <span>Cámara QR<span className="hidden xl:inline"> & Garita</span></span>
                 </Link>
 
@@ -188,11 +188,11 @@ export const Navbar: React.FC = () => {
                   to="/admin/spaces"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
                     isActive('/admin/spaces')
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <Grid className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span>Plazas<span className="hidden xl:inline"> Vacantes</span></span>
                 </Link>
 
@@ -200,8 +200,8 @@ export const Navbar: React.FC = () => {
                   to="/admin/reservations"
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/admin/reservations')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <CalendarCheck className="w-4 h-4 shrink-0" />
@@ -273,18 +273,18 @@ export const Navbar: React.FC = () => {
                   aria-expanded={userDropdownOpen}
                   aria-haspopup="true"
                   aria-label="Menú de usuario"
-                  className="flex items-center gap-2 lg:gap-3 p-1.5 lg:pl-3 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  className="flex items-center gap-2 lg:gap-3 p-1.5 lg:pl-3 rounded-2xl border border-slate-200 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
                 >
                   <div className="text-left hidden lg:block max-w-[120px] xl:max-w-none">
-                    <p className="text-xs font-bold text-slate-900 leading-tight truncate">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                       {user?.first_name} {user?.last_name}
                     </p>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block ${
                       isSuperAdmin 
-                        ? 'text-amber-600' 
+                        ? 'text-amber-600 dark:text-amber-400' 
                         : isOwner 
-                        ? 'text-teal-600' 
-                        : 'text-brand-600'
+                        ? 'text-teal-600 dark:text-teal-400' 
+                        : 'text-brand-600 dark:text-brand-400'
                     }`}>
                       {isSuperAdmin 
                         ? 'Super Admin' 
@@ -295,10 +295,10 @@ export const Navbar: React.FC = () => {
                   </div>
                   <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 ${
                     isSuperAdmin
-                      ? 'bg-amber-100 text-amber-800'
+                      ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200'
                       : isOwner
-                      ? 'bg-teal-100 text-teal-800'
-                      : 'bg-brand-100 text-brand-700'
+                      ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
+                      : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
                   }`}>
                     {user?.first_name ? user.first_name[0] : 'U'}
                   </div>
@@ -327,15 +327,15 @@ export const Navbar: React.FC = () => {
                           <Link
                             to="/admin"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                           >
-                            <LayoutDashboard className="w-4 h-4 text-brand-600" />
+                            <LayoutDashboard className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                             Panel General
                           </Link>
                           <Link
                             to="/admin/parkings"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-amber-700 font-semibold hover:bg-amber-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-50 dark:hover:bg-slate-800"
                           >
                             <Crown className="w-4 h-4 text-amber-500" />
                             Alta y Baja de Garajes
@@ -343,9 +343,9 @@ export const Navbar: React.FC = () => {
                           <Link
                             to="/admin/gate"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                           >
-                            <ScanLine className="w-4 h-4 text-teal-600" />
+                            <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                             Cámara QR & Garita
                           </Link>
                         </>
@@ -354,25 +354,25 @@ export const Navbar: React.FC = () => {
                           <Link
                             to="/admin/gate"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-teal-800 font-bold hover:bg-teal-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-teal-800 dark:text-teal-300 font-bold hover:bg-teal-50 dark:hover:bg-slate-800"
                           >
-                            <ScanLine className="w-4 h-4 text-teal-600" />
+                            <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                             Cámara QR & Control Garita
                           </Link>
                           <Link
                             to="/admin/spaces"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                           >
-                            <Grid className="w-4 h-4 text-emerald-600" />
+                            <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                             Plazas Vacantes en Vivo
                           </Link>
                           <Link
                             to="/admin/reservations"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                           >
-                            <CalendarCheck className="w-4 h-4 text-brand-600" />
+                            <CalendarCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                             Caja & Historial
                           </Link>
                         </>
@@ -381,17 +381,17 @@ export const Navbar: React.FC = () => {
                           <Link
                             to="/my-reservations"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                           >
-                            <CalendarCheck className="w-4 h-4 text-brand-600" />
+                            <CalendarCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                             Mis Reservas
                           </Link>
                           <Link
                             to="/favorites"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                           >
-                            <Bookmark className="w-4 h-4 text-brand-600" />
+                            <Bookmark className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                             Mis Favoritos
                           </Link>
                         </>

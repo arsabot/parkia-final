@@ -10,12 +10,31 @@ export const authService = {
     password_confirmation: string;
     role?: UserRole;
     phone?: string;
+    has_disability_permit?: boolean;
+    cud_number?: string;
+    cud_dni?: string;
+    cud_expiration?: string;
   }): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>('/auth/register/', data);
     localStorage.setItem('parkia_token', res.tokens.access);
     localStorage.setItem('parkia_refresh', res.tokens.refresh);
     localStorage.setItem('parkia_user', JSON.stringify(res.user));
     return res;
+  },
+
+  async verifyCud(data: {
+    cud_number: string;
+    cud_dni?: string;
+    cud_expiration?: string;
+  }): Promise<{
+    valid: boolean;
+    message: string;
+    cud_number: string;
+    status: string;
+    symbol: string;
+    accessible_parking_access: boolean;
+  }> {
+    return api.post('/auth/verify-cud/', data);
   },
 
   async login(credentials: { email: string; password: string }): Promise<AuthResponse> {

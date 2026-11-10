@@ -10,6 +10,9 @@ export interface User {
   roles?: string[];
   phone?: string;
   avatar_url?: string;
+  cud_number?: string;
+  cud_verified?: boolean;
+  cud_expiration?: string;
   created_at: string;
 }
 

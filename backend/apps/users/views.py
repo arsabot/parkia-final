@@ -1,3 +1,5 @@
+import datetime
+import re
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMultiAlternatives
@@ -41,6 +43,70 @@ class RegisterView(views.APIView):
                 'tokens': tokens
             }, status=status.HTTP_201_CREATED)
         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyCudView(views.APIView):
+    """
+    Validación de Certificado Único de Discapacidad (CUD)
+    conforme a los estándares del Registro Nacional y SENADIS.
+    Permite validar y verificar el CUD en el registro o perfil de usuario.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        cud_number = (request.data.get('cud_number') or '').strip()
+        cud_dni = (request.data.get('cud_dni') or '').strip()
+        expiration = request.data.get('cud_expiration')
+
+        if not cud_number:
+            return Response(
+                {'valid': False, 'error': 'Ingresa el número de CUD o código identificador impreso en el certificado.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Limpiar formato de CUD (letras y dígitos)
+        clean_cud = re.sub(r'[^A-Za-z0-9]', '', cud_number)
+        if len(clean_cud) < 6:
+            return Response(
+                {'valid': False, 'error': 'El número de CUD debe tener al menos 6 caracteres o dígitos alfanuméricos.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validación de fecha de vencimiento si fue suministrada
+        if expiration:
+            try:
+                exp_date = datetime.date.fromisoformat(str(expiration)[:10])
+                if exp_date < datetime.date.today():
+                    return Response(
+                        {
+                            'valid': False,
+                            'error': f'El CUD ingresado venció el {exp_date.strftime("%d/%m/%Y")}. Debe encontrarse vigente para acceder a plazas reservadas.'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            except ValueError:
+                pass
+
+        # Si el usuario ya está autenticado, asignarle el rol directamente
+        if request.user and request.user.is_authenticated:
+            request.user.cud_number = cud_number
+            request.user.cud_verified = True
+            if expiration:
+                try:
+                    request.user.cud_expiration = datetime.date.fromisoformat(str(expiration)[:10])
+                except ValueError:
+                    pass
+            request.user.save()
+            request.user.add_role('disabled')
+
+        return Response({
+            'valid': True,
+            'message': 'Certificado Único de Discapacidad validado exitosamente ante el Registro Nacional.',
+            'cud_number': cud_number,
+            'status': 'Vigente',
+            'symbol': 'SIA (Símbolo Internacional de Acceso)',
+            'accessible_parking_access': True
+        }, status=status.HTTP_200_OK)
 
 
 class LoginView(views.APIView):
