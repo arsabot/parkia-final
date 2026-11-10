@@ -74,9 +74,15 @@ export const AdminReservationsPage: React.FC = () => {
 
   const handleChangeStatus = async (id: number, newStatus: ReservationStatus) => {
     try {
-      const res = await reservationService.changeStatus(id, newStatus);
-      setReservations((prev) => prev.map((r) => (r.id === id ? res.reservation : r)));
-      success(res.message || 'Estado actualizado');
+      if (newStatus === 'cancelled') {
+        const res = await reservationService.cancelReservation(id, 'Cancelada por el administrador / operador');
+        setReservations((prev) => prev.map((r) => (r.id === id ? res.reservation : r)));
+        success(res.message || 'Reserva cancelada');
+      } else {
+        const res = await reservationService.changeStatus(id, newStatus);
+        setReservations((prev) => prev.map((r) => (r.id === id ? res.reservation : r)));
+        success(res.message || 'Estado actualizado');
+      }
     } catch (err: any) {
       error(err.message || 'Error al cambiar estado');
     }
@@ -195,7 +201,14 @@ export const AdminReservationsPage: React.FC = () => {
                           {res.parking_name} • Plaza {res.space_code}
                         </span>
                       </div>
-                      <Badge variant={res.status as any}>{res.status_display}</Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge variant={res.status as any}>{res.status_display}</Badge>
+                        {res.payment_status === 'refunded' && (
+                          <span className="text-[10px] font-extrabold uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-300 dark:border-purple-800 whitespace-nowrap">
+                            ↩ Reembolsado
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between bg-slate-50 dark:bg-parkia-page-dark p-3 rounded-2xl text-xs border border-slate-100 dark:border-parkia-line-dark">
@@ -297,7 +310,14 @@ export const AdminReservationsPage: React.FC = () => {
                             ${Number(res.total_price).toLocaleString('es-AR')}
                           </td>
                           <td className="py-3 px-3">
-                            <Badge variant={res.status as any}>{res.status_display}</Badge>
+                            <div className="flex flex-col gap-1 items-start">
+                              <Badge variant={res.status as any}>{res.status_display}</Badge>
+                              {res.payment_status === 'refunded' && (
+                                <span className="text-[10px] font-extrabold uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-300 dark:border-purple-800 whitespace-nowrap">
+                                  ↩ Reembolsado
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">

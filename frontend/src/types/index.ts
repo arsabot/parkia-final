@@ -142,6 +142,11 @@ export interface AdminKPIs {
   occupancy_rate: number;
   total_revenue: number;
   today_revenue: number;
+  commission_rate_percentage?: number;
+  platform_commission?: number;
+  owner_net_revenue?: number;
+  today_platform_commission?: number;
+  today_owner_net_revenue?: number;
 }
 
 export interface AdminDashboardData {

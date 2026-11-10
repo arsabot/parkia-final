@@ -68,7 +68,7 @@ class ReservationSerializer(serializers.ModelSerializer):
 class ReservationCreateSerializer(serializers.ModelSerializer):
     payment_method = serializers.CharField(required=False, default='Mercado Pago')
     payment_status = serializers.CharField(required=False, default='pending')
-    status = serializers.CharField(required=False, default=Reservation.Status.CONFIRMED)
+    status = serializers.CharField(required=False, allow_null=True, default=None)
 
     class Meta:
         model = Reservation
@@ -199,10 +199,12 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
         payment_status = validated_data.get('payment_status') or 'pending'
         validated_data['payment_status'] = payment_status
 
-        if payment_status == 'paid' or payment_method == 'Efectivo':
+        if validated_data.get('status'):
+            pass
+        elif payment_status == 'paid' or payment_method == 'Efectivo':
             validated_data['status'] = Reservation.Status.CONFIRMED
         else:
-            validated_data.setdefault('status', Reservation.Status.PENDING)
+            validated_data['status'] = Reservation.Status.PENDING
 
         if not validated_data.get('payment_expires_at'):
             validated_data['payment_expires_at'] = timezone.now() + timedelta(minutes=15)
