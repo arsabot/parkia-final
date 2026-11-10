@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User as UserIcon, Phone, ParkingCircle, ArrowRight, Car, Building2 } from 'lucide-react';
+import { Mail, User as UserIcon, Phone, ParkingCircle, ArrowRight, Car, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
+import { PasswordField } from '../components/auth/PasswordField';
+import { PasswordStrength } from '../components/auth/PasswordStrength';
 import { UserRole } from '../types';
 
 export const RegisterPage: React.FC = () => {
@@ -16,6 +18,8 @@ export const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(0);
+  const mismatch = passwordConfirm.length > 0 && password !== passwordConfirm;
 
   const { register } = useAuth();
   const { success, error } = useToast();
@@ -26,6 +30,7 @@ export const RegisterPage: React.FC = () => {
 
     if (password !== passwordConfirm) {
       error('Las contraseñas no coinciden.');
+      setShake((n) => n + 1);
       return;
     }
 
@@ -161,27 +166,29 @@ export const RegisterPage: React.FC = () => {
             />
 
             {/* Password */}
-            <Input
-              type="password"
+            
+
+            {/* Password confirmation */}
+                        <PasswordField
               label="Contraseña"
               required
               autoComplete="new-password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4" />}
-            />
+            >
+              <PasswordStrength password={password} email={email} />
+            </PasswordField>
 
-            {/* Password confirmation */}
-            <Input
-              type="password"
+            <PasswordField
               label="Confirmar Contraseña"
               required
               autoComplete="new-password"
               placeholder="Repite la contraseña"
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4" />}
+              error={mismatch ? 'Las contraseñas no coinciden.' : undefined}
+              shakeSignal={shake}
             />
 
             <Button
