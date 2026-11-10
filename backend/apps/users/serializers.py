@@ -76,7 +76,7 @@ class LoginSerializer(serializers.Serializer):
         if not email or not password:
             raise serializers.ValidationError('Debe ingresar correo y contraseña.')
 
-        user = authenticate(username=email, password=password)
+        user = authenticate(request=self.context.get('request'), username=email, password=password)
         if not user:
             # Check if user exists to provide clean error
             if not User.objects.filter(email=email).exists():
