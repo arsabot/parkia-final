@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { UserRole } from '../types';
+import { Auth0GoogleButton } from '../auth0/Auth0GoogleButton';
 
 export const RegisterPage: React.FC = () => {
   const [firstName, setFirstName] = useState('');
@@ -88,6 +89,7 @@ export const RegisterPage: React.FC = () => {
 
         {/* Card */}
         <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Role Switcher */}
@@ -122,7 +124,7 @@ export const RegisterPage: React.FC = () => {
                 </button>
               </div>
             </div>
-
+            <Auth0GoogleButton role={role === 'owner' ? 'owner' : 'driver'} />
             {/* Name and Last Name */}
             <div className="grid grid-cols-2 gap-3">
               <Input

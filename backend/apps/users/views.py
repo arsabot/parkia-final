@@ -6,6 +6,7 @@ from django.utils.http import urlsafe_base64_encode
 from rest_framework import status, views, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from .auth0 import Auth0Error, verify_auth0_token
 from .models import User
 from .serializers import (
     UserSerializer,
@@ -268,3 +269,37 @@ class PasswordResetConfirmView(views.APIView):
                 'message': 'Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva clave.'
             }, status=status.HTTP_200_OK)
         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+class Auth0LoginView(views.APIView):
+    """Recibe el token de Auth0 (login con Google) y devuelve la sesión normal de Parkia."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        try:
+            profile = verify_auth0_token(request.data.get('token', ''))
+        except Auth0Error as exc:
+            return Response({'message': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = (profile.get('email') or '').strip().lower()
+        if not email or not profile.get('email_verified'):
+            return Response({'message': 'Tu cuenta de Google no tiene un email verificado.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            user = User.objects.create_user(
+                email=email,
+                password=None,  # entra solo con Google: no tiene contraseña en Parkia
+                role=User.Role.OWNER if request.data.get('role') == 'owner' else User.Role.DRIVER,
+                first_name=profile.get('given_name') or email.split('@')[0],
+                last_name=profile.get('family_name') or '',
+            )
+
+        if not user.is_active:
+            return Response({'message': 'Esta cuenta está desactivada.'}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response({
+            'message': 'Inicio de sesión exitoso.',
+            'user': UserSerializer(user).data,
+            'tokens': get_tokens_for_user(user),
+        }, status=status.HTTP_200_OK)
+    
