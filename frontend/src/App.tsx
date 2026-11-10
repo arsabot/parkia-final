@@ -40,8 +40,14 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   }
 
-  if (!user || !isAdmin) {
+  // Not logged in -> redirect to login with saved location
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Logged in but not admin/owner (e.g. driver) -> redirect to search, NEVER login to prevent redirect loop
+  if (!isAdmin) {
+    return <Navigate to="/search" replace />;
   }
 
   return <>{children}</>;
@@ -49,7 +55,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // Protected Route strictly for Super Admin (Ariel - Alta/Baja de Estacionamientos)
 const SuperAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading, isSuperAdmin } = useAuth();
+  const { user, loading, isSuperAdmin, isOwner } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -60,9 +66,13 @@ const SuperAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
     );
   }
 
-  if (!user || !isSuperAdmin) {
-    // If garage owner, send to operator gate
-    return <Navigate to="/admin/gate" state={{ from: location }} replace />;
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!isSuperAdmin) {
+    // If garage owner, send to operator gate; if driver, send to search
+    return <Navigate to={isOwner ? "/admin/gate" : "/search"} replace />;
   }
 
   return <>{children}</>;

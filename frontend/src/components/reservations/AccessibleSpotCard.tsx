@@ -50,3 +50,4 @@ export const AccessibleSpotCard: React.FC<AccessibleSpotCardProps> = ({
     </div>
   );
 };
+

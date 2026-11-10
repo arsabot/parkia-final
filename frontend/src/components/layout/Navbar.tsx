@@ -39,14 +39,23 @@ export const Navbar: React.FC = () => {
   };
 
   const handleQuickDemo = async (role: UserRole) => {
-    await demoLogin(role);
     setUserDropdownOpen(false);
+    setMobileMenuOpen(false);
+
+    // Si estamos en una ruta de administración y cambiamos a conductor, navegamos primero a /search
+    // para evitar que los guards de rutas admin reaccionen en falso o causen parpadeos
+    if (role === 'driver' && location.pathname.startsWith('/admin')) {
+      navigate('/search', { replace: true });
+    }
+
+    await demoLogin(role);
+
     if (role === 'admin') {
-      navigate('/admin');
+      navigate('/admin', { replace: true });
     } else if (role === 'owner') {
-      navigate('/admin/gate');
+      navigate('/admin/gate', { replace: true });
     } else {
-      navigate('/search');
+      navigate('/search', { replace: true });
     }
   };
 
