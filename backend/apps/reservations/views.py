@@ -166,9 +166,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 'error': f'Este código QR pertenece al estacionamiento "{reservation.parking.name}". Solo puedes validar reservas de tu propio estacionamiento asignado.'
             }, status=status.HTTP_403_FORBIDDEN)
 
-        if reservation.status == Reservation.Status.PENDING or reservation.payment_status == 'pending':
+        # Si está cancelada, informar
+        if reservation.status == Reservation.Status.CANCELLED:
             return Response({
-                'error': 'La reserva se encuentra pendiente de pago. Debe abonarse antes de ingresar.'
+                'error': f'Esta reserva fue cancelada previamente (Motivo: {reservation.cancellation_reason or "Cancelada por usuario"}). No habilitada para ingreso/egreso.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
@@ -205,6 +206,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
         payment_method = request.data.get('payment_method')
         if payment_method:
             reservation.payment_method = payment_method
+        elif not reservation.payment_method:
+            reservation.payment_method = 'Efectivo'
 
         reservation.save()
 
@@ -239,6 +242,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
         payment_method = request.data.get('payment_method')
         if payment_method:
             reservation.payment_method = payment_method
+        elif not reservation.payment_method:
+            reservation.payment_method = 'Efectivo'
 
         notes = request.data.get('notes')
         if notes:
