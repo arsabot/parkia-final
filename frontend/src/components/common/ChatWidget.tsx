@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { MessageSquare, X, Send } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
 import type { Parking } from '../../types';
@@ -341,9 +342,7 @@ export function ChatWidget() {
   return (
     <div id="pk-root">
       <button id="pk-fab" className={open ? '' : 'show'} onClick={openChat} aria-label="Abrir asistente">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
+        <MessageSquare className="w-6 h-6 text-white" />
         <em />
       </button>
       <section id="pk-chat" className={`chat${open ? '' : ' hide'}`} aria-label="Asistente Parkia">
@@ -356,10 +355,7 @@ export function ChatWidget() {
             <small>Consultas y recepción de reclamos · 24 h</small>
           </div>
           <button className="x" onClick={() => setOpen(false)} aria-label="Cerrar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <X className="w-4 h-4 text-white" />
           </button>
         </div>
         <div
@@ -397,11 +393,8 @@ export function ChatWidget() {
         </div>
         <form id="pk-f" onSubmit={onSubmit}>
           <input id="pk-t" value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí tu consulta…" autoComplete="off" aria-label="Mensaje" />
-          <button className="send" aria-label="Enviar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+          <button className="send" aria-label="Enviar" type="submit">
+            <Send className="w-4 h-4 text-white" />
           </button>
         </form>
         <div className="note">
