@@ -26,6 +26,9 @@ export const reservationService = {
     date: string;
     start_time: string;
     end_time: string;
+    payment_method?: string;
+    payment_status?: 'pending' | 'paid' | 'refunded';
+    status?: ReservationStatus;
   }): Promise<{ message: string; reservation: Reservation }> {
     if (isSupabaseConfigured()) {
       return supabaseReservations.createReservation(data);
@@ -38,6 +41,18 @@ export const reservationService = {
       return supabaseReservations.cancelReservation(id, reason);
     }
     return api.patch<{ message: string; reservation: Reservation }>(`/reservations/${id}/cancel/`, { reason });
+  },
+
+  async updatePayment(id: number | string, payment_method: string, payment_status: 'paid' | 'pending' = 'paid'): Promise<Reservation> {
+    if (isSupabaseConfigured()) {
+      return supabaseReservations.updatePayment(id, payment_method, payment_status);
+    }
+    const res = await api.patch<{ message: string; reservation: Reservation }>(`/reservations/${id}/`, {
+      payment_method,
+      payment_status,
+      status: 'confirmed',
+    });
+    return res.reservation;
   },
 
   async changeStatus(id: number, status: ReservationStatus): Promise<{ message: string; reservation: Reservation }> {

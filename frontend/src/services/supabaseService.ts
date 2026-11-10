@@ -539,6 +539,9 @@ export const supabaseReservations = {
     date: string;
     start_time: string;
     end_time: string;
+    payment_method?: string;
+    payment_status?: 'pending' | 'paid' | 'refunded';
+    status?: ReservationStatus;
   }): Promise<{ message: string; reservation: Reservation }> {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
@@ -572,6 +575,10 @@ export const supabaseReservations = {
     // 4. Generate unique booking code
     const code = 'PK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
+    const finalMethod = data.payment_method || 'Mercado Pago';
+    const finalPaymentStatus = data.payment_status || (finalMethod === 'Efectivo' ? 'pending' : 'paid');
+    const finalResStatus = data.status || 'confirmed';
+
     const { data: newRes, error } = await supabase
       .from('reservations')
       .insert({
@@ -586,9 +593,9 @@ export const supabaseReservations = {
         end_time: data.end_time,
         total_hours: hours,
         total_price: totalPrice,
-        status: 'confirmed',
-        payment_method: 'Efectivo',
-        payment_status: 'paid',
+        status: finalResStatus,
+        payment_method: finalMethod,
+        payment_status: finalPaymentStatus,
       })
       .select('*, parking:parkings(*), space:parking_spaces(*), user:users(*)')
       .single();
@@ -624,8 +631,10 @@ export const supabaseReservations = {
       end_time: newRes.end_time,
       total_hours: Number(newRes.total_hours),
       total_price: Number(newRes.total_price),
-      status: 'confirmed',
-      status_display: 'Confirmada',
+      status: newRes.status as ReservationStatus,
+      status_display: getReservationStatusDisplay(newRes.status),
+      payment_method: newRes.payment_method,
+      payment_status: newRes.payment_status,
       created_at: newRes.created_at,
       updated_at: newRes.updated_at,
     };
@@ -654,6 +663,22 @@ export const supabaseReservations = {
       message: 'Reserva cancelada correctamente.',
       reservation: (await this.getReservations()).find((r) => r.id === id)!,
     };
+  },
+
+  async updatePayment(id: number | string, payment_method: string, payment_status: 'paid' | 'pending' = 'paid'): Promise<Reservation> {
+    if (!supabase) throw new Error('Supabase no está configurado.');
+
+    const { error } = await supabase
+      .from('reservations')
+      .update({
+        payment_method,
+        payment_status,
+        status: 'confirmed',
+      })
+      .eq('id', id);
+
+    if (error) throw new Error(error.message);
+    return this.getReservationById(id);
   },
 
   async verifyQr(code: string): Promise<{ valid: boolean; message: string; reservation: Reservation }> {
