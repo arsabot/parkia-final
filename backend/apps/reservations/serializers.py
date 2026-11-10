@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 from rest_framework import serializers
 from apps.parking.models import Parking, ParkingSpace
@@ -56,11 +56,12 @@ class ReservationSerializer(serializers.ModelSerializer):
             'check_out_time',
             'payment_status',
             'payment_method',
+            'payment_expires_at',
             'staff_notes',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'booking_code', 'user', 'total_price', 'total_hours', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'booking_code', 'user', 'total_price', 'total_hours', 'created_at', 'updated_at', 'payment_expires_at']
 
 
 class ReservationCreateSerializer(serializers.ModelSerializer):
@@ -160,7 +161,11 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        from django.utils import timezone
         user = self.context['request'].user
         validated_data['user'] = user
-        validated_data['status'] = Reservation.Status.CONFIRMED
+        validated_data['status'] = Reservation.Status.PENDING
+        validated_data['payment_status'] = 'pending'
+        validated_data['payment_method'] = 'Mercado Pago'
+        validated_data['payment_expires_at'] = timezone.now() + timedelta(minutes=15)
         return super().create(validated_data)

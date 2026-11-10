@@ -1,5 +1,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from rest_framework import serializers
@@ -23,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
             'avatar_url',
             'created_at'
         ]
-        read_only_fields = ['id', 'created_at', 'full_name']
+        read_only_fields = ['id', 'role', 'created_at', 'full_name']
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.email
@@ -32,6 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     password_confirmation = serializers.CharField(write_only=True, min_length=6)
+    role = serializers.ChoiceField(choices=[User.Role.DRIVER, User.Role.OWNER], default=User.Role.DRIVER)
 
     class Meta:
         model = User
@@ -48,6 +51,11 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['password'] != data['password_confirmation']:
             raise serializers.ValidationError({'password_confirmation': 'Las contraseñas no coinciden.'})
+        candidate = User(email=data.get('email', ''), first_name=data.get('first_name', ''), last_name=data.get('last_name', ''))
+        try:
+            validate_password(data['password'], user=candidate)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({'password': list(exc.messages)})
         return data
 
     def create(self, validated_data):
@@ -75,7 +83,7 @@ class LoginSerializer(serializers.Serializer):
         if not email or not password:
             raise serializers.ValidationError('Debe ingresar correo y contraseña.')
 
-        user = authenticate(username=email, password=password)
+        user = authenticate(request=self.context.get('request'), username=email, password=password)
         if not user:
             # Check if user exists to provide clean error
             if not User.objects.filter(email=email).exists():
@@ -139,5 +147,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         if not default_token_generator.check_token(user, token):
             raise serializers.ValidationError({'token': 'El enlace ha expirado o ya fue utilizado.'})
 
+        try:
+            validate_password(data['password'], user=user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({'password': list(exc.messages)})
         data['user'] = user
         return data
