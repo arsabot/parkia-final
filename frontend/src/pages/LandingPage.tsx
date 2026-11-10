@@ -70,7 +70,7 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark text-slate-900 dark:text-slate-100 transition-colors">
       
       {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-32 bg-gradient-to-b from-navy-950 via-slate-900 to-navy-900 text-white">
@@ -102,10 +102,10 @@ export const LandingPage: React.FC = () => {
               onSubmit={handleSearchSubmit}
               role="search"
               aria-label="Búsqueda de estacionamientos"
-              className="bg-white/95 backdrop-blur-xl p-3 sm:p-4 rounded-3xl shadow-2xl border border-white/20 max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-3 text-slate-900"
+              className="bg-white/95 dark:bg-parkia-card-dark/95 backdrop-blur-xl p-3 sm:p-4 rounded-3xl shadow-2xl border border-white/20 dark:border-parkia-line-dark max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-3 text-slate-900 dark:text-white"
             >
               <div className="flex-1 flex items-center gap-3 px-3 w-full">
-                <MapPin className="w-5 h-5 text-teal-600 shrink-0" aria-hidden="true" />
+                <MapPin className="w-5 h-5 text-teal-600 dark:text-teal-400 shrink-0" aria-hidden="true" />
                 <label htmlFor="hero-search-input" className="sr-only">
                   ¿A dónde vas?
                 </label>
@@ -115,7 +115,7 @@ export const LandingPage: React.FC = () => {
                   placeholder="¿A dónde vas? (Ej: Obelisco, Palermo, Recoleta...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none min-h-[44px]"
+                  className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none min-h-[44px]"
                 />
               </div>
 
@@ -124,11 +124,11 @@ export const LandingPage: React.FC = () => {
                   type="button"
                   onClick={handleUseLocation}
                   disabled={isLocating}
-                  className="p-3 sm:p-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors shrink-0 flex items-center justify-center font-semibold text-xs gap-1.5 w-full sm:w-auto min-h-[44px] cursor-pointer"
+                  className="p-3 sm:p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors shrink-0 flex items-center justify-center font-semibold text-xs gap-1.5 w-full sm:w-auto min-h-[44px] cursor-pointer"
                   title="Usar mi ubicación actual"
                   aria-label="Usar mi ubicación actual"
                 >
-                  <Navigation className={`w-4 h-4 text-teal-600 ${isLocating ? 'animate-spin' : ''}`} aria-hidden="true" />
+                  <Navigation className={`w-4 h-4 text-teal-600 dark:text-teal-400 ${isLocating ? 'animate-spin' : ''}`} aria-hidden="true" />
                   <span className="sm:hidden">Cerca de mí</span>
                 </button>
 
@@ -166,46 +166,46 @@ export const LandingPage: React.FC = () => {
       {/* 2. CÓMO FUNCIONA */}
       <section id="como-funciona" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 px-3 py-1 rounded-full border border-brand-200 dark:border-brand-800">
             Flujo Simple
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-3 tracking-tight">
             ¿Cómo funciona PARKIA?
           </h2>
-          <p className="text-slate-500 text-sm sm:text-base mt-2">
+          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base mt-2">
             Tres sencillos pasos para estacionar sin estrés ni demoras.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm hover:shadow-md transition-all text-center relative group">
-            <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
+          <div className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-8 shadow-sm hover:shadow-md transition-all text-center relative group">
+            <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
               1
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Busca tu destino</h3>
-            <p className="text-slate-500 text-sm leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Busca tu destino</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
               Ingresa una dirección o utiliza tu geolocalización para descubrir los estacionamientos más cercanos y comparar tarifas en el mapa.
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm hover:shadow-md transition-all text-center relative group">
-            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
+          <div className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-8 shadow-sm hover:shadow-md transition-all text-center relative group">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
               2
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Elige fecha y plaza</h3>
-            <p className="text-slate-500 text-sm leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Elige fecha y plaza</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
               Selecciona tu franja horaria y tu espacio preferido (A01, B02...). El sistema bloquea tu lugar de forma garantizada.
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm hover:shadow-md transition-all text-center relative group">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
+          <div className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-8 shadow-sm hover:shadow-md transition-all text-center relative group">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-xl mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner">
               3
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Llega y estaciona</h3>
-            <p className="text-slate-500 text-sm leading-relaxed">
-              Muestra tu código de reserva <span className="font-mono font-bold text-slate-900">PK-XXXXXX</span> al ingresar y disfruta de tu estadía sin ticket de papel.
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Llega y estaciona</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+              Muestra tu código de reserva <span className="font-mono font-bold text-slate-900 dark:text-white">PK-XXXXXX</span> al ingresar y disfruta de tu estadía sin ticket de papel.
             </p>
           </div>
 
@@ -214,17 +214,17 @@ export const LandingPage: React.FC = () => {
 
       {/* 3. ESTACIONAMIENTOS DESTACADOS */}
       {featuredParkings.length > 0 && (
-        <section className="py-16 bg-slate-100/70 border-y border-slate-200/60">
+        <section className="py-16 bg-slate-100/70 dark:bg-parkia-navy/40 border-y border-slate-200/60 dark:border-parkia-line-dark">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">
+                <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 px-3 py-1 rounded-full border border-brand-200 dark:border-brand-800">
                   Ubicaciones Top
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
                   Estacionamientos Populares
                 </h2>
-                <p className="text-slate-500 text-sm">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
                   Espacios verificados con la mejor valoración y seguridad 24 horas.
                 </p>
               </div>
@@ -254,13 +254,13 @@ export const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
               ¿Por qué PARKIA?
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-4 tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-4 tracking-tight leading-tight">
               La forma inteligente de moverse en la ciudad.
             </h2>
-            <p className="text-slate-500 text-base mt-4 mb-8 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-base mt-4 mb-8 leading-relaxed">
               Basta de gastar combustible y perder 20 minutos buscando dónde dejar el auto. Con Parkia tienes el control en tu teléfono.
             </p>
 
@@ -272,12 +272,12 @@ export const LandingPage: React.FC = () => {
                 { title: 'Servicios para vehículos ecológicos', desc: 'Filtra fácilmente garages con estaciones de carga para autos eléctricos.' },
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-3.5">
-                  <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
-                    <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">{item.desc}</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{item.title}</h4>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}

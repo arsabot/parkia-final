@@ -47,16 +47,16 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   };
 
   return (
-    <div className={`bg-white rounded-3xl border border-slate-100 p-6 shadow-sm ${className}`}>
+    <div className={`bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-6 shadow-sm ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-6">
+      <div className="flex items-center justify-between pb-5 border-b border-slate-100 dark:border-parkia-line-dark mb-6">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-5 h-5 text-brand-600" aria-hidden="true" />
-          <h3 className="font-extrabold text-navy-900 text-base">Filtros y Orden</h3>
+          <SlidersHorizontal className="w-5 h-5 text-brand-600 dark:text-brand-400" aria-hidden="true" />
+          <h3 className="font-extrabold text-navy-900 dark:text-white text-base">Filtros y Orden</h3>
         </div>
         <button
           onClick={onReset}
-          className="text-xs font-bold text-slate-500 hover:text-brand-600 flex items-center gap-1 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg p-1"
+          className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 flex items-center gap-1 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg p-1"
           aria-label="Restablecer todos los filtros"
         >
           <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
@@ -82,11 +82,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         {/* Max Price Slider */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-              <DollarSign className="w-3.5 h-3.5 text-brand-600" />
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+              <DollarSign className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               Precio máx. por hora
             </label>
-            <span className="text-sm font-black text-brand-600">
+            <span className="text-sm font-black text-brand-600 dark:text-brand-400">
               {filters.max_price ? `$${filters.max_price}` : 'Cualquiera'}
             </span>
           </div>
@@ -97,7 +97,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             step="100"
             value={filters.max_price || 4000}
             onChange={handlePriceChange}
-            className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600"
+            className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-600"
           />
           <div className="flex justify-between text-[10px] text-slate-400 font-semibold mt-1">
             <span>$1.000</span>
@@ -109,11 +109,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         {/* Max Distance Slider */}
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-brand-600" />
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               Radio de distancia
             </label>
-            <span className="text-sm font-black text-brand-600">
+            <span className="text-sm font-black text-brand-600 dark:text-brand-400">
               {filters.max_distance ? `${filters.max_distance} km` : 'Sin límite'}
             </span>
           </div>
@@ -124,7 +124,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             step="1"
             value={filters.max_distance || 20}
             onChange={handleDistanceChange}
-            className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600"
+            className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-600"
           />
           <div className="flex justify-between text-[10px] text-slate-400 font-semibold mt-1">
             <span>1 km</span>
@@ -134,8 +134,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </div>
 
         {/* Amenities Checkboxes */}
-        <div className="pt-2 border-t border-slate-100">
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+        <div className="pt-2 border-t border-slate-100 dark:border-parkia-line-dark">
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">
             Servicios e Instalaciones
           </label>
           <div className="space-y-2.5">
@@ -148,13 +148,13 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             ].map((item) => (
               <label
                 key={item.key}
-                className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer select-none hover:text-slate-900 group"
+                className="flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none hover:text-slate-900 dark:hover:text-white group"
               >
                 <input
                   type="checkbox"
                   checked={!!filters[item.key]}
                   onChange={() => handleToggle(item.key)}
-                  className="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 transition-all rounded-md"
+                  className="w-4 h-4 rounded text-brand-600 border-slate-300 dark:border-slate-600 focus:ring-brand-500 transition-all rounded-md"
                 />
                 <span className="group-hover:translate-x-0.5 transition-transform">{item.label}</span>
               </label>

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { FavoritesProvider } from './context/FavoritesContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
@@ -101,10 +102,11 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <FavoritesProvider>
-            <AppLayout>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <FavoritesProvider>
+              <AppLayout>
               <Routes>
                 {/* Public & Driver Routes */}
                 <Route path="/" element={<LandingPage />} />
@@ -183,7 +185,8 @@ export const App: React.FC = () => {
           </FavoritesProvider>
         </ToastProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </ThemeProvider>
+  </BrowserRouter>
   );
 };
 

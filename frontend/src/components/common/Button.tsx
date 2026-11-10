@@ -31,10 +31,10 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const variantStyles = {
-    primary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow-md shadow-brand-500/25 focus-visible:ring-brand-500',
-    secondary: 'bg-navy-900 hover:bg-navy-800 text-white shadow-sm hover:shadow-md shadow-navy-950/20 focus-visible:ring-navy-900',
-    outline: 'border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 focus-visible:ring-brand-500',
-    ghost: 'hover:bg-slate-100 text-slate-700 focus-visible:ring-brand-500',
+    primary: 'bg-parkia-lime hover:bg-[#92d326] text-parkia-navy shadow-sm hover:shadow-md focus-visible:ring-parkia-lime font-extrabold',
+    secondary: 'bg-parkia-blue hover:bg-[#184a8c] text-white shadow-sm hover:shadow-md focus-visible:ring-parkia-blue',
+    outline: 'border border-slate-300 dark:border-parkia-line-dark hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 focus-visible:ring-parkia-blue',
+    ghost: 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 focus-visible:ring-parkia-blue',
     danger: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm hover:shadow-md shadow-rose-500/25 focus-visible:ring-rose-500',
     emerald: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md shadow-emerald-500/25 focus-visible:ring-emerald-500',
   };

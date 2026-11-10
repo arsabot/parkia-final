@@ -119,8 +119,7 @@ class DemoLoginView(views.APIView):
         else:
             # Asegurar que el rol corresponda
             if user.role != user_role:
-                user.role = user_role
-                user.save()
+                user.set_main_role(user_role)
 
         # Si es dueño de garaje demo, asegurar asignación de su estacionamiento
         if user_role == User.Role.OWNER:
