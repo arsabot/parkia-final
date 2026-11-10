@@ -28,6 +28,7 @@ import {
 } from 'recharts';
 import { KPICard } from '../../components/admin/KPICard';
 import { Badge } from '../../components/common/Badge';
+import { Pagination } from '../../components/common/Pagination';
 import { adminService } from '../../services/adminService';
 import { AdminDashboardData } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -36,6 +37,8 @@ export const AdminDashboardPage: React.FC = () => {
   const { isOwner } = useAuth();
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reservationsPage, setReservationsPage] = useState(1);
+  const [reservationsPageSize, setReservationsPageSize] = useState<number>(5);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -384,7 +387,9 @@ export const AdminDashboardPage: React.FC = () => {
                 {recent_reservations.length === 0 ? (
                   <p className="text-xs text-slate-400 py-6 text-center">No hay reservas registradas.</p>
                 ) : (
-                  recent_reservations.map((res) => (
+                  recent_reservations
+                    .slice((reservationsPage - 1) * reservationsPageSize, reservationsPage * reservationsPageSize)
+                    .map((res) => (
                     <div key={res.id} className="py-3.5 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div>
@@ -429,7 +434,9 @@ export const AdminDashboardPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-parkia-line-dark text-slate-700 dark:text-slate-300 font-medium">
-                    {recent_reservations.map((res) => (
+                    {recent_reservations
+                      .slice((reservationsPage - 1) * reservationsPageSize, reservationsPage * reservationsPageSize)
+                      .map((res) => (
                       <tr key={res.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                         <td className="py-3 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">
                           {res.booking_code}
@@ -455,6 +462,17 @@ export const AdminDashboardPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Controles de paginación (5, 10, 15) */}
+              <Pagination
+                currentPage={reservationsPage}
+                totalItems={recent_reservations.length}
+                pageSize={reservationsPageSize}
+                onPageChange={setReservationsPage}
+                onPageSizeChange={setReservationsPageSize}
+                pageSizeOptions={[5, 10, 15]}
+                itemLabel="reservas"
+              />
             </div>
 
           </div>

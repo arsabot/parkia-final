@@ -44,7 +44,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-navy-950/65 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-navy-950/65 backdrop-blur-sm animate-fade-in overflow-x-hidden overflow-y-auto overscroll-contain w-screen max-w-full touch-manipulation"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -55,21 +55,21 @@ export const Modal: React.FC<ModalProps> = ({
         aria-hidden="true"
       />
       <div
-        className={`relative w-full ${maxWidthClasses[maxWidth]} bg-white dark:bg-parkia-card-dark rounded-3xl shadow-2xl border border-slate-100 dark:border-parkia-line-dark overflow-hidden z-10 animate-scale-in max-h-[92vh] flex flex-col text-slate-900 dark:text-slate-100`}
+        className={`relative w-full ${maxWidthClasses[maxWidth]} max-w-[calc(100vw-1.25rem)] bg-white dark:bg-parkia-card-dark rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-parkia-line-dark overflow-hidden z-10 animate-scale-in max-h-[92vh] flex flex-col text-slate-900 dark:text-slate-100 min-w-0 box-border`}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 dark:border-parkia-line-dark shrink-0 bg-slate-50/50 dark:bg-parkia-navy/50">
-            <h3 id={titleId} className="text-base sm:text-lg font-extrabold text-navy-900 dark:text-white">{title}</h3>
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4.5 border-b border-slate-100 dark:border-parkia-line-dark shrink-0 bg-slate-50/50 dark:bg-parkia-navy/50">
+            <h3 id={titleId} className="text-base sm:text-lg font-extrabold text-navy-900 dark:text-white truncate">{title}</h3>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-navy-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-navy-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shrink-0"
               aria-label="Cerrar modal"
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         )}
-        <div className="p-5 sm:p-6 overflow-y-auto">{children}</div>
+        <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden w-full min-w-0">{children}</div>
       </div>
     </div>
   );

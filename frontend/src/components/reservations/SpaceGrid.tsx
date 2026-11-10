@@ -80,7 +80,7 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
   selectedId,
   onSelect,
   hasPermit,
-  gridClassName = 'grid-cols-5 sm:grid-cols-6 max-h-36',
+  gridClassName = 'grid-cols-4 sm:grid-cols-6 max-h-36',
   showFloor = true,
 }) => {
   const hasAccessibleSpaces = spaces.some(isAccessibleSpace);
@@ -88,7 +88,7 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
   return (
     <>
       <div
-        className={`grid gap-2 overflow-y-auto p-2 rounded-2xl border bg-plaza-fondo border-plaza-borde ${gridClassName}`}
+        className={`grid gap-1.5 sm:gap-2 overflow-y-auto overflow-x-hidden w-full min-w-0 p-2 rounded-2xl border bg-plaza-fondo border-plaza-borde ${gridClassName}`}
         role="group"
         aria-label="Selección de plaza"
       >
