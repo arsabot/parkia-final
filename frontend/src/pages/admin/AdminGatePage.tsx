@@ -242,7 +242,7 @@ export const AdminGatePage: React.FC = () => {
                     onChange={(e) => setSelectedParkingId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                     className="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
                   >
-                    {!isOwner && <option value="all">🏢 Todos los Estacionamientos</option>}
+                    {!isOwner && <option value="all">Todos los Estacionamientos</option>}
                     {parkings.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
@@ -708,7 +708,7 @@ export const AdminGatePage: React.FC = () => {
 
                               {res.status === 'completed' && (
                                 <span className="text-[11px] font-bold text-slate-400">
-                                  ✓ Finalizado
+                                  Finalizado
                                 </span>
                               )}
                             </td>
@@ -785,11 +785,11 @@ export const AdminGatePage: React.FC = () => {
                 onChange={(e) => setCheckoutMethod(e.target.value)}
                 className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-navy-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
-                <option value="Efectivo">💵 Efectivo</option>
-                <option value="Mercado Pago">📱 Mercado Pago (QR Garita)</option>
-                <option value="Tarjeta Débito">💳 Tarjeta de Débito</option>
-                <option value="Tarjeta Crédito">💳 Tarjeta de Crédito</option>
-                <option value="Transferencia">🏦 Transferencia Bancaria</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Mercado Pago">Mercado Pago (QR Garita)</option>
+                <option value="Tarjeta Débito">Tarjeta de Débito</option>
+                <option value="Tarjeta Crédito">Tarjeta de Crédito</option>
+                <option value="Transferencia">Transferencia Bancaria</option>
               </select>
             </div>
 

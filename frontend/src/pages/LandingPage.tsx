@@ -4,7 +4,6 @@ import {
   Search, 
   MapPin, 
   Navigation, 
-  Sparkles, 
   ShieldCheck, 
   Clock, 
   Zap, 
@@ -85,7 +84,7 @@ export const LandingPage: React.FC = () => {
             
             {/* Pill badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold text-teal-300 mb-6 shadow-inner animate-fade-in">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span className="w-2 h-2 rounded-full bg-teal-400" />
               <span>La plataforma #1 en reservas de estacionamiento inteligente</span>
             </div>
 
@@ -155,7 +154,7 @@ export const LandingPage: React.FC = () => {
                 <span>Lugar asegurado</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-xl font-extrabold text-white">4.9★</span>
+                <span className="text-xl font-extrabold text-white flex items-center gap-1">4.9 <Star className="w-4 h-4 fill-amber-400 text-amber-400 inline" /></span>
                 <span>Satisfacción</span>
               </div>
             </div>

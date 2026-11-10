@@ -15,16 +15,16 @@ type Step = 'cat' | 'res' | 'desc' | 'cont' | 'conf';
 type Flow = { step: Step; cat?: string; res?: string; desc?: string; cont?: string };
 
 const MAIN = ['Cómo reservar', 'Problemas con un pago', 'Presentar un reclamo', 'Ver mi reclamo', 'Preguntas frecuentes', 'Hablar con una persona'];
-const FAQS: Array<[string, string]> = [
-  ['🔍', '¿Cómo buscar y reservar un lugar?'],
-  ['💳', '¿Cómo pagar con Mercado Pago?'],
-  ['📱', '¿Cómo ingreso con el código QR?'],
-  ['⏰', '¿Qué pasa si llego antes o después?'],
-  ['❌', '¿Cómo cancelar y pedir reembolso?'],
-  ['⚡', '¿Hay cocheras con carga eléctrica o techadas?'],
-  ['🏢', '¿Cómo registro mi estacionamiento en Parkia?'],
-  ['🅿️', 'Ver garages y tarifas'],
-  ['📞', '¿Cómo hablo con soporte humano?'],
+const FAQS: string[] = [
+  '¿Cómo buscar y reservar un lugar?',
+  '¿Cómo pagar con Mercado Pago?',
+  '¿Cómo ingreso con el código QR?',
+  '¿Qué pasa si llego antes o después?',
+  '¿Cómo cancelar y pedir reembolso?',
+  '¿Hay cocheras con carga eléctrica o techadas?',
+  '¿Cómo registro mi estacionamiento en Parkia?',
+  'Ver garages y tarifas',
+  '¿Cómo hablo con soporte humano?',
 ];
 const PAGO = ['Cobro duplicado', 'Pago rechazado', 'No recibí el comprobante', 'Reembolso', 'Menú'];
 const CATS = ['Pago', 'Reserva', 'Garage o servicio', 'App o web', 'Otro', 'Cancelar'];
@@ -100,7 +100,7 @@ export function ChatWidget() {
     pagos: () => bot('Lamento que hayas tenido un problema con tu pago. ¿Qué te pasó?', PAGO),
     doble: () => bot('Si ves dos cargos por la misma reserva, uno suele ser una <b>retención temporal</b> del banco que se libera en <b>3 a 5 días hábiles</b>. Si pasado ese plazo sigue duplicado, lo reintegramos.', ['Presentar un reclamo', 'Hablar con una persona', 'Menú']),
     rechazo: () => bot('Un pago rechazado suele deberse a <b>fondos insuficientes</b>, límite de compra online o datos mal ingresados. Probá con otra tarjeta o con Mercado Pago. Tu lugar se mantiene reservado por <b>10 minutos</b>.', ['Presentar un reclamo', 'Cómo reservar', 'Menú']),
-    comp: () => bot('El comprobante llega por email al confirmar el pago. También podés descargarlo desde <b>Mis Reservas</b> ➜ detalle de la reserva. Revisá la carpeta de spam.', ['Presentar un reclamo', 'Menú']),
+    comp: () => bot('El comprobante llega por email al confirmar el pago. También podés descargarlo desde <b>Mis Reservas</b> &gt; detalle de la reserva. Revisá la carpeta de spam.', ['Presentar un reclamo', 'Menú']),
     reemb: () => bot('Cancelando hasta <b>1 hora antes</b>, el reembolso es total y se acredita en <b>5 a 10 días hábiles</b> según tu banco. Fuera de ese plazo se evalúa caso por caso desde un reclamo.', ['Presentar un reclamo', 'Cancelar o modificar', 'Menú']),
     cancel: () => bot('Desde <b>Mis Reservas</b> podés cancelar o modificar el horario.<div class="card"><b>Cancelación gratuita</b><span>Hasta 1 hora antes del ingreso.</span></div><div class="card"><b>Modificación</b><span>Para cambiar el horario, cancelá y creá una nueva reserva (sujeta a disponibilidad).</span></div>', ['Problemas con un pago', 'Presentar un reclamo', 'Menú']),
     tarifas: () => void showGarages(),
@@ -146,7 +146,7 @@ export function ChatWidget() {
   const faqMenu = () =>
     bot(
       'Elegí una pregunta frecuente o escribí tu consulta abajo:' +
-        FAQS.map(([i, q]) => `<button type="button" class="faq" data-q="${q}"><span>${i}</span>${q}</button>`).join(''),
+        FAQS.map((q) => `<button type="button" class="faq" data-q="${q}">${q}</button>`).join(''),
       ['Menú'],
     );
 
@@ -160,7 +160,7 @@ export function ChatWidget() {
           ? items.slice(0, 3).map((x) => `<div class="card"><b>${esc(x.name)}</b><span>${esc(x.address)} · ${x.available_spaces} lugares libres</span></div>`).join('')
           : '<div class="card"><span>Por ahora no hay garages con este servicio.</span></div>');
       bot(
-        block('⚡ Con carga eléctrica', asList(ev).filter((x) => x.is_active && x.has_ev_charging)) + '<br>' + block('🏠 Techadas', asList(cov).filter((x) => x.is_active && x.is_covered)) + '<br>Para ver más, usá los filtros en <b>Buscar</b>.',
+        block('Con carga eléctrica', asList(ev).filter((x) => x.is_active && x.has_ev_charging)) + '<br>' + block('Techadas', asList(cov).filter((x) => x.is_active && x.is_covered)) + '<br>Para ver más, usá los filtros en <b>Buscar</b>.',
         ['Preguntas frecuentes', 'Menú'],
       );
     } catch {
@@ -202,7 +202,7 @@ export function ChatWidget() {
     try {
       const { codigo } = await createClaim({ categoria: f.cat ?? '', reserva: f.res ?? '', descripcion: f.desc ?? '', contacto: f.cont ?? '' });
       flow.current = null;
-      bot(`<span class="ok">✓ Reclamo registrado</span><div class="code">${esc(codigo)}</div>Respondemos en hasta <b>48 horas hábiles</b>. Guardá este número para consultar el estado cuando quieras.`, ['Ver mi reclamo', 'Menú']);
+      bot(`<span class="ok">Reclamo registrado</span><div class="code">${esc(codigo)}</div>Respondemos en hasta <b>48 horas hábiles</b>. Guardá este número para consultar el estado cuando quieras.`, ['Ver mi reclamo', 'Menú']);
     } catch {
       if (!authService.isAuthenticated()) return expired();
       bot('No pude registrar tu reclamo en este momento. Probá de nuevo en unos minutos o escribinos a soporte@parkia.example.', ['Enviar reclamo', 'Cancelar']);
@@ -305,8 +305,8 @@ export function ChatWidget() {
     if (/cancel|modific|cambiar/.test(t)) return R.cancel();
     if (/tarifa|precio|cuesta|garage|disponib|lugar/.test(t)) return R.tarifas();
     if (/persona|humano|asesor|agente|ayuda/.test(t)) return R.humano();
-    if (/gracias|genial|perfecto/.test(t)) return bot('¡De nada! Que tengas un excelente día 🚗', ['Menú']);
-    if (/hola|buen(a|o)s|que tal/.test(t)) return bot('¡Hola! Soy el asistente virtual de ParkIA 👋 ¿En qué puedo ayudarte?');
+    if (/gracias|genial|perfecto/.test(t)) return bot('¡De nada! Que tengas un excelente día.', ['Menú']);
+    if (/hola|buen(a|o)s|que tal/.test(t)) return bot('¡Hola! Soy el asistente de Parkia. ¿En qué puedo ayudarte?');
     bot('No estoy seguro de haber entendido. Elegí una opción del menú o escribime con otras palabras; si preferís, te paso con una persona.');
   };
 
@@ -328,7 +328,7 @@ export function ChatWidget() {
     setOpen(true);
     if (!started.current) {
       started.current = true;
-      bot(`¡Hola${user ? ', ' + esc(user.first_name) : ''}! Soy el asistente virtual de ParkIA 👋<br>¿En qué puedo ayudarte?`);
+      bot(`¡Hola${user ? ', ' + esc(user.first_name) : ''}! Soy el asistente de Parkia.<br>¿En qué puedo ayudarte?`);
     }
   };
 
@@ -341,19 +341,25 @@ export function ChatWidget() {
   return (
     <div id="pk-root">
       <button id="pk-fab" className={open ? '' : 'show'} onClick={openChat} aria-label="Abrir asistente">
-        💬<em />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <em />
       </button>
-      <section id="pk-chat" className={`chat${open ? '' : ' hide'}`} aria-label="Asistente ParkIA">
+      <section id="pk-chat" className={`chat${open ? '' : ' hide'}`} aria-label="Asistente Parkia">
         <div className="head">
           <div className="av">
             <img src={logo} alt="PARKIA" />
           </div>
           <div>
-            <b>ParkIA · Asistente</b>
-            <small>● Consultas y recepción de reclamos · 24 h</small>
+            <b>Parkia · Soporte</b>
+            <small>Consultas y recepción de reclamos · 24 h</small>
           </div>
           <button className="x" onClick={() => setOpen(false)} aria-label="Cerrar">
-            ✕
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
         <div
@@ -392,7 +398,10 @@ export function ChatWidget() {
         <form id="pk-f" onSubmit={onSubmit}>
           <input id="pk-t" value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí tu consulta…" autoComplete="off" aria-label="Mensaje" />
           <button className="send" aria-label="Enviar">
-            ➤
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
           </button>
         </form>
         <div className="note">

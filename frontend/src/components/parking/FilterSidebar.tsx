@@ -1,5 +1,5 @@
 import React from 'react';
-import { SlidersHorizontal, RotateCcw, DollarSign, MapPin, Sparkles } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw, DollarSign, MapPin } from 'lucide-react';
 import { SearchFilters } from '../../types';
 import { Select } from '../common/Select';
 

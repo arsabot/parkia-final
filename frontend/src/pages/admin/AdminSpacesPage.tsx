@@ -9,7 +9,6 @@ import {
   AlertCircle, 
   Clock, 
   Wrench,
-  Sparkles,
   ScanLine,
   Filter,
   Check,
@@ -127,7 +126,7 @@ export const AdminSpacesPage: React.FC = () => {
                   ? 'bg-teal-100 text-teal-800 border border-teal-200' 
                   : 'bg-amber-100 text-amber-800 border border-amber-200'
               }`}>
-                {isOwner ? '🏢 Panel Dueño de Garaje' : '👑 Super Administrador'}
+                {isOwner ? 'Panel Dueño de Garaje' : 'Super Administrador'}
               </span>
               <span className="text-xs font-bold text-slate-400">
                 Monitoreo de Ocupación en Tiempo Real
