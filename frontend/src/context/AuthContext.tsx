@@ -19,6 +19,10 @@ interface AuthContextType {
     password_confirmation: string;
     role?: UserRole;
     phone?: string;
+    has_disability_permit?: boolean;
+    cud_number?: string;
+    cud_dni?: string;
+    cud_expiration?: string;
   }) => Promise<AuthResponse>;
   demoLogin: (role: UserRole) => Promise<AuthResponse>;
   logout: () => void;
@@ -61,6 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password_confirmation: string;
     role?: UserRole;
     phone?: string;
+    has_disability_permit?: boolean;
+    cud_number?: string;
+    cud_dni?: string;
+    cud_expiration?: string;
   }) => {
     const res = await authService.register(data);
     setUser(res.user);

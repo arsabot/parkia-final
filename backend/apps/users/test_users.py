@@ -197,3 +197,54 @@ class RolesTablaIntermediaTests(TestCase):
         data = data.get('user', data)
         self.assertEqual(data['role'], 'driver')
         self.assertEqual(sorted(data['roles']), ['disabled', 'driver'])
+
+    def test_registro_con_cud_valido_asigna_rol_disabled(self):
+        payload = {
+            'first_name': 'Juan',
+            'last_name': 'Pérez',
+            'email': 'juan.cud@parkia.com',
+            'password': 'password123',
+            'password_confirmation': 'password123',
+            'role': 'driver',
+            'has_disability_permit': True,
+            'cud_number': '04-12345678-9',
+            'cud_dni': '35123456',
+            'cud_expiration': '2028-12-31',
+        }
+        res = self.client.post(reverse('auth-register'), payload, format='json')
+        self.assertEqual(res.status_code, 201)
+        user = User.objects.get(email='juan.cud@parkia.com')
+        self.assertTrue(user.has_role(User.Role.DISABLED))
+        self.assertTrue(user.cud_verified)
+        self.assertEqual(user.cud_number, '04-12345678-9')
+        self.assertEqual(sorted(user.role_codes), ['disabled', 'driver'])
+
+    def test_registro_con_permiso_sin_cud_falla(self):
+        payload = {
+            'first_name': 'Juan',
+            'last_name': 'Pérez',
+            'email': 'invalido.cud@parkia.com',
+            'password': 'password123',
+            'password_confirmation': 'password123',
+            'role': 'driver',
+            'has_disability_permit': True,
+            'cud_number': '',
+        }
+        res = self.client.post(reverse('auth-register'), payload, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('cud_number', res.data.get('errors', {}))
+
+    def test_endpoint_verificar_cud(self):
+        verify_url = reverse('auth-verify-cud')
+        # CUD válido
+        res = self.client.post(verify_url, {
+            'cud_number': '04-98765432-1',
+            'cud_dni': '28999888',
+            'cud_expiration': '2029-01-01'
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.data.get('valid'))
+
+        # CUD con formato corto inválido
+        res_bad = self.client.post(verify_url, {'cud_number': '123'}, format='json')
+        self.assertEqual(res_bad.status_code, 400)

@@ -34,7 +34,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-parkia-page-dark">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
       </div>
     );
@@ -54,7 +54,7 @@ const SuperAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-parkia-page-dark">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
       </div>
     );
@@ -75,7 +75,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-parkia-page-dark">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
       </div>
     );
@@ -90,7 +90,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-parkia-page-dark text-slate-900 dark:text-slate-100 transition-colors">
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />

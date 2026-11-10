@@ -73,7 +73,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-slate-50 dark:bg-parkia-page-dark py-12 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-md w-full space-y-8 animate-fade-in">
         
         {/* Header */}
@@ -85,20 +85,20 @@ export const LoginPage: React.FC = () => {
               className="w-14 h-14 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
             />
           </Link>
-          <h2 className="text-3xl font-extrabold text-navy-900 tracking-tight">
+          <h2 className="text-3xl font-extrabold text-navy-900 dark:text-white tracking-tight">
             Iniciar Sesión
           </h2>
-          <p className="text-slate-500 text-sm mt-2">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
             Ingresa a tu cuenta para gestionar tus reservas o estacionamientos.
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+        <div className="bg-white dark:bg-parkia-card-dark rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-parkia-line-dark shadow-xl shadow-slate-200/50 dark:shadow-none transition-colors">
           
           {/* Quick Demo Logins Box with 3 roles */}
-          <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2 text-center">
+          <div className="mb-6 p-4 bg-slate-50 dark:bg-parkia-navy/40 rounded-2xl border border-slate-200/80 dark:border-parkia-line-dark">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2 text-center">
               Accesos Demo para pruebas rápidas
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -106,9 +106,9 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 onClick={() => handleQuickDemo('driver')}
                 disabled={!!demoLoading}
-                className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 hover:border-brand-500 hover:text-brand-600 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1"
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark text-slate-800 dark:text-slate-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1 cursor-pointer"
               >
-                <Car className="w-4 h-4 text-brand-600" />
+                <Car className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                 <span>Conductor</span>
               </button>
               
@@ -116,10 +116,10 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 onClick={() => handleQuickDemo('owner')}
                 disabled={!!demoLoading}
-                className="p-2.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1"
+                className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/60 text-teal-800 dark:text-teal-200 hover:bg-teal-100 dark:hover:bg-teal-900/50 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1 cursor-pointer"
                 title="Dueño de garaje (Cámara QR, garita y plazas vacantes)"
               >
-                <Building2 className="w-4 h-4 text-teal-600" />
+                <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 <span>Dueño Garaje</span>
               </button>
 
@@ -127,21 +127,21 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 onClick={() => handleQuickDemo('admin')}
                 disabled={!!demoLoading}
-                className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1"
+                className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-xs font-bold transition-all shadow-sm flex flex-col items-center justify-center gap-1 cursor-pointer"
                 title="Super Admin Ariel (Alta/Baja de garajes y control total)"
               >
-                <Crown className="w-4 h-4 text-amber-500" />
+                <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 <span>Super Admin</span>
               </button>
             </div>
           </div>
           <Auth0GoogleButton />
           <div className="relative flex py-2 items-center mb-6">
-            <div className="flex-grow border-t border-slate-200" />
-            <span className="flex-shrink mx-3 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+            <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
+            <span className="flex-shrink mx-3 text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider font-semibold">
               O con tu email
             </span>
-            <div className="flex-grow border-t border-slate-200" />
+            <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
           </div>
 
           {/* Form */}
@@ -171,7 +171,7 @@ export const LoginPage: React.FC = () => {
               <div className="flex justify-end mt-1.5">
                 <Link
                   to="/forgot-password"
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline transition-colors"
+                  className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 hover:underline transition-colors"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -191,9 +191,9 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* Register Link */}
-          <div className="text-center pt-6 mt-6 border-t border-slate-100 text-xs text-slate-500">
+          <div className="text-center pt-6 mt-6 border-t border-slate-100 dark:border-parkia-line-dark text-xs text-slate-500 dark:text-slate-400">
             ¿Aún no tienes cuenta?{' '}
-            <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700">
+            <Link to="/register" className="font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300">
               Registrate gratis aquí
             </Link>
           </div>

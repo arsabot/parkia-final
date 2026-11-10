@@ -70,24 +70,24 @@ export const BookingConfirmationPage: React.FC = () => {
   )}`;
 
   return (
-    <div className="min-h-screen bg-slate-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-100 dark:bg-parkia-page-dark py-12 px-4 sm:px-6 lg:px-8 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-xl mx-auto space-y-6 animate-fade-in">
         
         {/* Top Success Banner */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20 animate-scale-in">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20 animate-scale-in">
             <CheckCircle2 className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             ¡Reserva Confirmada!
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Tu lugar ya está reservado y garantizado. Guarda este comprobante.
           </p>
         </div>
 
         {/* Digital Boarding Pass / Ticket Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative">
+        <div className="bg-white dark:bg-parkia-card-dark rounded-3xl shadow-xl border border-slate-200 dark:border-parkia-line-dark overflow-hidden relative transition-colors">
           
           {/* Top Header of Ticket */}
           <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-brand-950 text-white p-6 sm:p-7">
@@ -102,7 +102,7 @@ export const BookingConfirmationPage: React.FC = () => {
                   </span>
                   <button
                     onClick={copyCode}
-                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
+                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
                     title="Copiar código"
                   >
                     <Copy className="w-4 h-4" />
@@ -124,36 +124,36 @@ export const BookingConfirmationPage: React.FC = () => {
 
           {/* Perforated Divider Visual */}
           <div className="relative flex items-center justify-between px-4 -my-3 z-10">
-            <div className="w-6 h-6 rounded-full bg-slate-100 -ml-7 shadow-inner" />
-            <div className="flex-1 border-t-2 border-dashed border-slate-200 mx-2" />
-            <div className="w-6 h-6 rounded-full bg-slate-100 -mr-7 shadow-inner" />
+            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-parkia-page-dark -ml-7 shadow-inner" />
+            <div className="flex-1 border-t-2 border-dashed border-slate-200 dark:border-parkia-line-dark mx-2" />
+            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-parkia-page-dark -mr-7 shadow-inner" />
           </div>
 
           {/* Ticket Details Body */}
-          <div className="p-6 sm:p-7 space-y-6 bg-white">
+          <div className="p-6 sm:p-7 space-y-6 bg-white dark:bg-parkia-card-dark transition-colors">
             <div className="grid grid-cols-2 gap-4">
               
               <div>
                 <span className="text-xs text-slate-400 font-medium block">Fecha</span>
-                <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5 mt-0.5">
-                  <Calendar className="w-4 h-4 text-brand-600" />
+                <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mt-0.5">
+                  <Calendar className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                   {reservation.date}
                 </span>
               </div>
 
               <div>
                 <span className="text-xs text-slate-400 font-medium block">Horario</span>
-                <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5 mt-0.5">
-                  <Clock className="w-4 h-4 text-brand-600" />
+                <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mt-0.5">
+                  <Clock className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                   {reservation.start_time.slice(0, 5)} - {reservation.end_time.slice(0, 5)} hs
                 </span>
               </div>
 
               <div>
                 <span className="text-xs text-slate-400 font-medium block">Plaza asignada</span>
-                <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5 mt-0.5">
-                  <Layers className="w-4 h-4 text-brand-600" />
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mt-0.5">
+                  <Layers className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                     {reservation.space_code} ({reservation.space_floor})
                   </span>
                 </span>
@@ -161,8 +161,8 @@ export const BookingConfirmationPage: React.FC = () => {
 
               <div>
                 <span className="text-xs text-slate-400 font-medium block">Vehículo / Patente</span>
-                <span className="text-sm font-bold font-mono text-slate-900 flex items-center gap-1.5 mt-0.5">
-                  <Car className="w-4 h-4 text-brand-600" />
+                <span className="text-sm font-bold font-mono text-slate-900 dark:text-white flex items-center gap-1.5 mt-0.5">
+                  <Car className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                   {reservation.vehicle_plate}
                 </span>
               </div>
@@ -170,24 +170,24 @@ export const BookingConfirmationPage: React.FC = () => {
             </div>
 
             {/* QR Code Ticket Access */}
-            <div className="flex flex-col items-center justify-center p-5 bg-gradient-to-b from-slate-50 to-white rounded-2xl border border-slate-200 text-center">
+            <div className="flex flex-col items-center justify-center p-5 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/60 dark:to-parkia-card-dark rounded-2xl border border-slate-200 dark:border-parkia-line-dark text-center">
               <QRCodeDisplay
                 value={reservation.booking_code}
                 size={190}
                 title="Pase Digital • Escanear al Ingreso / Egreso"
               />
-              <p className="text-xs text-slate-500 max-w-sm mt-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-3">
                 Mostrá este código QR en la garita o terminal de acceso al llegar para validar tu ingreso automático y registrar tu estadía.
               </p>
             </div>
 
             {/* Total Price Bar */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+            <div className="p-4 bg-slate-50 dark:bg-parkia-page-dark rounded-2xl border border-slate-200/80 dark:border-parkia-line-dark flex items-center justify-between">
               <div>
-                <span className="text-xs text-slate-500 font-medium block">Total Estimado ({reservation.total_hours} hs)</span>
-                <span className="text-[11px] text-emerald-600 font-semibold">Pago directo en garita/salida</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">Total Estimado ({reservation.total_hours} hs)</span>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Pago directo en garita/salida</span>
               </div>
-              <span className="text-2xl font-black text-slate-900">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">
                 ${Number(reservation.total_price).toLocaleString('es-AR')}
               </span>
             </div>
@@ -218,7 +218,7 @@ export const BookingConfirmationPage: React.FC = () => {
         <div className="text-center">
           <Link
             to="/search"
-            className="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors"
+            className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
           >
             ← Buscar otro estacionamiento
           </Link>
