@@ -739,8 +739,12 @@ export const supabaseReservations = {
       total_price: Number(res.total_price),
       status: res.status,
       status_display: getReservationStatusDisplay(res.status),
+      cancellation_reason: res.cancellation_reason,
       check_in_time: res.check_in_time,
       check_out_time: res.check_out_time,
+      payment_method: res.payment_method || 'Mercado Pago',
+      payment_status: res.payment_status || 'paid',
+      staff_notes: res.staff_notes || '',
       created_at: res.created_at,
       updated_at: res.updated_at,
     };
@@ -756,20 +760,26 @@ export const supabaseReservations = {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
     const now = new Date().toISOString();
+    const updatePayload: any = {
+      check_in_time: now,
+      status: 'confirmed',
+      staff_notes: data?.notes || '',
+    };
+    if (data?.payment_method) {
+      updatePayload.payment_method = data.payment_method;
+      updatePayload.payment_status = 'paid';
+    }
+
     const { data: updated, error } = await supabase
       .from('reservations')
-      .update({
-        check_in_time: now,
-        status: 'confirmed',
-        staff_notes: data?.notes || '',
-      })
+      .update(updatePayload)
       .eq('id', id)
       .select('*, parking:parkings(*), space:parking_spaces(*), user:users(*)')
       .single();
 
     if (error) throw new Error(error.message);
 
-    if (updated.space_id) {
+    if (updated?.space_id) {
       await supabase.from('parking_spaces').update({ status: 'occupied' }).eq('id', updated.space_id);
     }
 
@@ -780,13 +790,23 @@ export const supabaseReservations = {
   async checkOut(id: number, data?: { notes?: string; payment_method?: string }): Promise<{ message: string; reservation: Reservation }> {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
+    // Fetch existing reservation to preserve its payment method unless explicitly overridden
+    const { data: currentRes } = await supabase
+      .from('reservations')
+      .select('payment_method, space_id')
+      .eq('id', id)
+      .single();
+
     const now = new Date().toISOString();
+    const finalMethod = data?.payment_method || currentRes?.payment_method || 'Mercado Pago';
+
     const { data: updated, error } = await supabase
       .from('reservations')
       .update({
         check_out_time: now,
         status: 'completed',
-        payment_method: data?.payment_method || 'Efectivo',
+        payment_method: finalMethod,
+        payment_status: 'paid',
         staff_notes: data?.notes || '',
       })
       .eq('id', id)
@@ -795,8 +815,9 @@ export const supabaseReservations = {
 
     if (error) throw new Error(error.message);
 
-    if (updated.space_id) {
-      await supabase.from('parking_spaces').update({ status: 'available' }).eq('id', updated.space_id);
+    const spaceId = updated?.space_id || currentRes?.space_id;
+    if (spaceId) {
+      await supabase.from('parking_spaces').update({ status: 'available' }).eq('id', spaceId);
     }
 
     const res = (await this.getReservations()).find((r) => r.id === id)!;
