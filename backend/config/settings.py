@@ -14,12 +14,17 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-if not SECRET_KEY or SECRET_KEY.startswith('django-insecure'):
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'parkia-dev-secret-key-super-safe-2026'
+    else:
+        raise ImproperlyConfigured('Falta DJANGO_SECRET_KEY en backend/.env (o usa un valor inseguro).')
+elif SECRET_KEY.startswith('django-insecure') and not DEBUG:
     raise ImproperlyConfigured('Falta DJANGO_SECRET_KEY en backend/.env (o usa un valor inseguro).')
 
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver,.trycloudflare.com,.pages.dev').split(',') if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
@@ -44,6 +49,7 @@ INSTALLED_APPS = [
     'apps.reviews',
     'apps.admin_stats',
     'apps.claims',
+    'apps.pagos',
 ]
 
 MIDDLEWARE = [
@@ -151,14 +157,19 @@ SIMPLE_JWT = {
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://parkia.pages.dev',
 ]
 CORS_ALLOWED_ORIGINS += [o.strip() for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if o.strip()]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https:\/\/.*\.pages\.dev$',
+    r'^https:\/\/.*\.trycloudflare\.com$',
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.pages.dev',
@@ -175,3 +186,8 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 # Auth0 (botón "Continuar con Google")
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN', '')
 AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE', '')
+
+# Mercado Pago Configuration
+MERCADOPAGO_ACCESS_TOKEN = os.getenv('MERCADOPAGO_ACCESS_TOKEN', '')
+MERCADOPAGO_WEBHOOK_SECRET = os.getenv('MERCADOPAGO_WEBHOOK_SECRET', '')
+MERCADOPAGO_WEBHOOK_URL = os.getenv('MERCADOPAGO_WEBHOOK_URL', '')
