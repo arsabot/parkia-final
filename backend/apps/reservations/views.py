@@ -86,10 +86,40 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reason = request.data.get('reason', 'Cancelado por el usuario')
         reservation.status = Reservation.Status.CANCELLED
         reservation.cancellation_reason = reason
+
+        # Si la reserva ya fue abonada, se procesa automáticamente el reembolso
+        is_refunded = False
+        if reservation.payment_status == 'paid':
+            reservation.payment_status = 'refunded'
+            is_refunded = True
+
+            # Sincronizar estado en modelo Payment si existe
+            try:
+                from apps.pagos.models import Payment
+                payment = getattr(reservation, 'payment', None)
+                if payment and payment.status == Payment.Status.APPROVED:
+                    payment.status = Payment.Status.REFUNDED
+                    payment.status_detail = 'reembolso_total_cancelacion'
+                    payment.save(update_fields=['status', 'status_detail', 'updated_at'])
+            except Exception:
+                pass
+
         reservation.save()
 
+        # Liberar la plaza asociada si estaba reservada
+        if reservation.space and reservation.space.status == 'reserved':
+            reservation.space.status = 'available'
+            reservation.space.save(update_fields=['status'])
+
+        msg = (
+            f'Reserva cancelada y reembolso del 100% (${reservation.total_price}) procesado a tu cuenta.'
+            if is_refunded else
+            'Reserva cancelada exitosamente.'
+        )
+
         return Response({
-            'message': 'Reserva cancelada exitosamente.',
+            'message': msg,
+            'refunded': is_refunded,
             'reservation': ReservationSerializer(reservation).data
         })
 

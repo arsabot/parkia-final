@@ -30,8 +30,10 @@ import { KPICard } from '../../components/admin/KPICard';
 import { Badge } from '../../components/common/Badge';
 import { adminService } from '../../services/adminService';
 import { AdminDashboardData } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 export const AdminDashboardPage: React.FC = () => {
+  const { isOwner } = useAuth();
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,6 +70,10 @@ export const AdminDashboardPage: React.FC = () => {
   }
 
   const { kpis, charts, recent_reservations } = data;
+  const platformCommission = kpis.platform_commission ?? Math.round(Number(kpis.total_revenue) * 0.15);
+  const ownerNetRevenue = kpis.owner_net_revenue ?? Math.round(Number(kpis.total_revenue) * 0.85);
+  const todayPlatformCommission = kpis.today_platform_commission ?? Math.round(Number(kpis.today_revenue) * 0.15);
+  const todayOwnerNetRevenue = kpis.today_owner_net_revenue ?? Math.round(Number(kpis.today_revenue) * 0.85);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark py-8 text-slate-900 dark:text-slate-100 transition-colors">
@@ -121,6 +127,87 @@ export const AdminDashboardPage: React.FC = () => {
                 icon={Car}
                 variant="blue"
               />
+            </div>
+
+            {/* Liquidación Financiera y Modelo de Negocio (15% Comisión Parkia / 85% Neto Dueño) */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-brand-950 rounded-3xl p-6 sm:p-7 border border-slate-800 dark:border-parkia-line-dark shadow-xl text-white">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-white/10 mb-6">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      {isOwner ? 'Liquidación del Garaje' : 'Modelo de Negocio Parkia'}
+                    </span>
+                    <span className="text-xs text-slate-300 font-medium">
+                      Tasa Estándar: 15% Comisión Plataforma • 85% Liquidación Dueño
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white mt-1.5">
+                    {isOwner ? 'Desglose Financiero y Ganancia Neta' : 'Liquidación y Distribución de Ingresos'}
+                  </h2>
+                </div>
+
+                <div className="text-left sm:text-right">
+                  <span className="text-xs text-slate-400 block font-medium">Volumen Total Procesado</span>
+                  <span className="text-2xl font-black text-white">
+                    ${Number(kpis.total_revenue).toLocaleString('es-AR')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Columna 1: Ingreso Bruto */}
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <span className="text-xs text-slate-400 font-medium block">
+                    {isOwner ? 'Cobros Brutos del Garaje' : 'Ingresos Brutos Plataforma'}
+                  </span>
+                  <span className="text-2xl font-black text-white mt-1 block">
+                    ${Number(kpis.total_revenue).toLocaleString('es-AR')}
+                  </span>
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    100% de reservas confirmadas y cobradas
+                  </span>
+                </div>
+
+                {/* Columna 2: Comisión Super Admin Parkia */}
+                <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-brand-300 font-bold">
+                      {isOwner ? 'Comisión de Servicio Parkia (15%)' : 'Ganancia Super Admin (15%)'}
+                    </span>
+                    <span className="text-[10px] uppercase font-extrabold bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded">
+                      {isOwner ? 'Deducido' : 'Ganancia Parkia'}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-black text-brand-300 mt-1 block">
+                    {isOwner ? '-' : ''}${platformCommission.toLocaleString('es-AR')}
+                  </span>
+                  <span className="text-[11px] text-slate-300 mt-1 block">
+                    {isOwner 
+                      ? 'Tarifa por uso del software, pasarela y app'
+                      : `Hoy: +$${todayPlatformCommission.toLocaleString('es-AR')} por comisiones`}
+                  </span>
+                </div>
+
+                {/* Columna 3: Ganancia Neta Dueño */}
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-emerald-300 font-bold">
+                      {isOwner ? 'Tu Ganancia Neta (85%)' : 'Total a Liquidar a Dueños (85%)'}
+                    </span>
+                    <span className="text-[10px] uppercase font-extrabold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">
+                      {isOwner ? 'A Cobrar' : 'Para Garajes'}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-black text-emerald-400 mt-1 block">
+                    ${ownerNetRevenue.toLocaleString('es-AR')}
+                  </span>
+                  <span className="text-[11px] text-slate-300 mt-1 block">
+                    {isOwner 
+                      ? 'Saldo neto disponible para transferencia bancaria'
+                      : `Hoy: +$${todayOwnerNetRevenue.toLocaleString('es-AR')} a transferir`}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Recharts: Row 1 - Daily Evolution & Peak Hours */}

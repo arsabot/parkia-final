@@ -44,6 +44,14 @@ class AdminDashboardStatsView(views.APIView):
         total_revenue = revenue_qs.aggregate(total=Sum('total_price'))['total'] or 0
         today_revenue = revenue_qs.filter(date=today).aggregate(total=Sum('total_price'))['total'] or 0
 
+        # Lógica de comisión y división de ingresos (Estándar: 15% Parkia Super Admin / 85% Dueño Garaje)
+        COMMISSION_RATE = 0.15
+        OWNER_RATE = 0.85
+        platform_commission = round(float(total_revenue) * COMMISSION_RATE, 2)
+        owner_net_revenue = round(float(total_revenue) * OWNER_RATE, 2)
+        today_platform_commission = round(float(today_revenue) * COMMISSION_RATE, 2)
+        today_owner_net_revenue = round(float(today_revenue) * OWNER_RATE, 2)
+
         # 2. Charts: Last 7 days trend
         days_names = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
         reservations_by_day = []
@@ -112,6 +120,11 @@ class AdminDashboardStatsView(views.APIView):
                 'occupancy_rate': occupancy_rate,
                 'total_revenue': float(total_revenue),
                 'today_revenue': float(today_revenue),
+                'commission_rate_percentage': 15,
+                'platform_commission': platform_commission,
+                'owner_net_revenue': owner_net_revenue,
+                'today_platform_commission': today_platform_commission,
+                'today_owner_net_revenue': today_owner_net_revenue,
             },
             'charts': {
                 'reservations_by_day': reservations_by_day,

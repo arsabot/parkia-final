@@ -276,7 +276,11 @@ export const MyReservationsPage: React.FC = () => {
                         {res.payment_method}
                       </span>
                     )}
-                    {res.payment_status === 'paid' ? (
+                    {res.payment_status === 'refunded' ? (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                        ↩ Reembolsado
+                      </span>
+                    ) : res.payment_status === 'paid' ? (
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                         ✓ Pagado
                       </span>
