@@ -48,3 +48,4 @@ Este directorio contiene todo lo necesario para migrar la base de datos de **Par
    VITE_SUPABASE_ANON_KEY=tu-anon-key-aqui
    ```
 4. Al hacer deploy en Cloudflare Pages (`npm run deploy`), la plataforma en [https://parkia.pages.dev](https://parkia.pages.dev) funcionará de forma independiente 24/7 en cualquier celular, tablet o computadora, sin requerir ningún servidor backend corriendo en tu máquina.
+

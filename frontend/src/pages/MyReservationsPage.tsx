@@ -13,7 +13,11 @@ import {
   ArrowRight,
   Frown,
   Calendar,
-  QrCode
+  QrCode,
+  Wallet,
+  CreditCard,
+  Banknote,
+  Smartphone
 } from 'lucide-react';
 import { Reservation } from '../types';
 import { reservationService } from '../services/reservationService';
@@ -24,16 +28,21 @@ import { EmptyState } from '../components/common/EmptyState';
 import { Modal } from '../components/common/Modal';
 import { QRCodeDisplay } from '../components/common/QRCodeDisplay';
 import { CancelReservationModal } from '../components/reservations/CancelReservationModal';
+import { PaymentCheckoutModal, PaymentMethod } from '../components/reservations/PaymentCheckoutModal';
+import { useToast } from '../context/ToastContext';
+import confetti from 'canvas-confetti';
 
 export const MyReservationsPage: React.FC = () => {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { success, error } = useToast();
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
   const [selectedForCancel, setSelectedForCancel] = useState<Reservation | null>(null);
   const [selectedForQr, setSelectedForQr] = useState<Reservation | null>(null);
+  const [selectedForPayment, setSelectedForPayment] = useState<Reservation | null>(null);
 
   const fetchReservations = async () => {
     try {
@@ -44,6 +53,19 @@ export const MyReservationsPage: React.FC = () => {
       console.error('Error fetching reservations', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaymentComplete = async (details: { method: PaymentMethod; status: 'paid' | 'pending' }) => {
+    if (!selectedForPayment) return;
+    try {
+      const updated = await reservationService.updatePayment(selectedForPayment.id, details.method, details.status);
+      setReservations((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+      setSelectedForPayment(null);
+      confetti({ particleCount: 110, spread: 75 });
+      success('¡Pago procesado con éxito!');
+    } catch (err: any) {
+      error(err.message || 'Error al procesar el pago.');
     }
   };
 
@@ -92,9 +114,24 @@ export const MyReservationsPage: React.FC = () => {
           <div className="bg-gradient-to-tr from-slate-950 via-slate-900 to-brand-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30">
-                  Próxima Reserva
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30">
+                    Próxima Reserva
+                  </span>
+                  {nextReservation.payment_status === 'paid' ? (
+                    <span className="text-[11px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                      ✓ Pago Acreditado ({nextReservation.payment_method || 'Mercado Pago'})
+                    </span>
+                  ) : nextReservation.payment_method === 'Efectivo' ? (
+                    <span className="text-[11px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                      Pago en Garita
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                      Pago Pendiente
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-2xl font-bold text-white mt-2">
                   {nextReservation.parking_name}
                 </h3>
@@ -138,7 +175,19 @@ export const MyReservationsPage: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {nextReservation.status === 'confirmed' && nextReservation.payment_status !== 'paid' && nextReservation.payment_method !== 'Efectivo' && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setSelectedForPayment(nextReservation)}
+                    leftIcon={<Wallet className="w-4 h-4" />}
+                    className="bg-[#009EE3] hover:bg-[#0081B8] text-white shadow-md cursor-pointer"
+                  >
+                    Pagar con Mercado Pago
+                  </Button>
+                )}
+
                 <Button
                   variant="emerald"
                   size="sm"
@@ -217,11 +266,29 @@ export const MyReservationsPage: React.FC = () => {
                 className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between gap-5"
               >
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                       #{res.booking_code}
                     </span>
                     <Badge variant={res.status as any}>{res.status_display}</Badge>
+                    {res.payment_method && (
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {res.payment_method}
+                      </span>
+                    )}
+                    {res.payment_status === 'paid' ? (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                        ✓ Pagado
+                      </span>
+                    ) : res.payment_method === 'Efectivo' ? (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        En garita
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                        Pendiente
+                      </span>
+                    )}
                   </div>
 
                   <h4 className="text-lg font-bold text-slate-900 dark:text-white">{res.parking_name}</h4>
@@ -259,9 +326,20 @@ export const MyReservationsPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2 mt-2">
+                    {res.status === 'confirmed' && res.payment_status !== 'paid' && res.payment_method !== 'Efectivo' && (
+                      <button
+                        onClick={() => setSelectedForPayment(res)}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#009EE3] hover:bg-[#0081B8] px-3 py-1.5 rounded-xl transition-colors shadow-xs cursor-pointer"
+                        title="Pagar con Mercado Pago"
+                      >
+                        <Wallet className="w-3.5 h-3.5" />
+                        Pagar
+                      </button>
+                    )}
+
                     <button
                       onClick={() => setSelectedForQr(res)}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-navy-900 hover:text-brand-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-navy-900 hover:text-brand-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 transition-colors cursor-pointer"
                       title="Ver código QR"
                     >
                       <QrCode className="w-3.5 h-3.5 text-teal-600" />
@@ -271,7 +349,7 @@ export const MyReservationsPage: React.FC = () => {
                     {res.status === 'confirmed' && (
                       <button
                         onClick={() => setSelectedForCancel(res)}
-                        className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 transition-colors"
+                        className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 transition-colors cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -344,6 +422,19 @@ export const MyReservationsPage: React.FC = () => {
           onClose={() => setSelectedForCancel(null)}
           reservation={selectedForCancel}
           onCancelled={handleReservationCancelled}
+        />
+      )}
+
+      {/* Payment Checkout Modal for Driver */}
+      {selectedForPayment && (
+        <PaymentCheckoutModal
+          isOpen={!!selectedForPayment}
+          onClose={() => setSelectedForPayment(null)}
+          method={(selectedForPayment.payment_method as PaymentMethod) || 'Mercado Pago'}
+          amount={Number(selectedForPayment.total_price)}
+          parkingName={selectedForPayment.parking_name}
+          durationHours={Number(selectedForPayment.total_hours)}
+          onPaymentSuccess={handlePaymentComplete}
         />
       )}
     </div>
