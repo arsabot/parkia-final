@@ -529,3 +529,4 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
     </Modal>
   );
 };
+
