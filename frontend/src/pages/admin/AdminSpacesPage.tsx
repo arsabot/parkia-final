@@ -9,7 +9,6 @@ import {
   AlertCircle, 
   Clock, 
   Wrench,
-  Sparkles,
   ScanLine,
   Filter,
   Check,
@@ -21,7 +20,8 @@ import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { parkingService } from '../../services/parkingService';
-import { Parking, ParkingSpace, SpaceStatus } from '../../types';
+import { Parking, ParkingSpace, SpaceStatus, SpaceType } from '../../types';
+import { AccessibleSign } from '../../components/reservations/SpaceGrid';
 
 export const AdminSpacesPage: React.FC = () => {
   const { isSuperAdmin, isOwner } = useAuth();
@@ -85,6 +85,23 @@ export const AdminSpacesPage: React.FC = () => {
     }
   };
 
+  const handleChangeType = async (spaceType: SpaceType) => {
+    if (!selectedSpace || selectedSpace.space_type === spaceType) return;
+    try {
+      const updated = await parkingService.updateSpaceType(selectedSpace.id, spaceType);
+      setSpaces((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      // La ventana queda abierta para poder cambiar también el estado
+      setSelectedSpace(updated);
+      success(
+        spaceType === 'disabled'
+          ? `Plaza ${selectedSpace.code} marcada como accesible`
+          : `Plaza ${selectedSpace.code} marcada como común`
+      );
+    } catch (err: any) {
+      error(err.message || 'Error al cambiar el tipo de plaza');
+    }
+  };
+
   const handleAddSpace = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedParkingId || !newSpaceCode.trim()) return;
@@ -115,7 +132,7 @@ export const AdminSpacesPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark py-8 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
@@ -124,19 +141,19 @@ export const AdminSpacesPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-1">
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                 isOwner 
-                  ? 'bg-teal-100 text-teal-800 border border-teal-200' 
-                  : 'bg-amber-100 text-amber-800 border border-amber-200'
+                  ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800/50' 
+                  : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50'
               }`}>
-                {isOwner ? '🏢 Panel Dueño de Garaje' : '👑 Super Administrador'}
+                {isOwner ? 'Panel Dueño de Garaje' : 'Super Administrador'}
               </span>
               <span className="text-xs font-bold text-slate-400">
                 Monitoreo de Ocupación en Tiempo Real
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold text-navy-900 tracking-tight">
+            <h1 className="text-3xl font-extrabold text-navy-900 dark:text-white tracking-tight">
               Gestión de Plazas Vacantes
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               Visualiza en vivo los espacios libres, autos estacionados y modifica la disponibilidad con 1 toque.
             </p>
           </div>
@@ -156,25 +173,25 @@ export const AdminSpacesPage: React.FC = () => {
         <div className="space-y-6">
             
             {/* Garage Selector & Vacancy Counters */}
-            <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors">
               <div className="w-full sm:w-auto flex-1">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                   {isOwner && parkings.length <= 1 ? 'Garaje Asignado' : 'Estacionamiento Seleccionado'}
                 </label>
                 {isOwner && parkings.length <= 1 ? (
-                  <div className="w-full sm:max-w-md bg-emerald-50/80 border border-emerald-200/80 rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-sm">
+                  <div className="w-full sm:max-w-md bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-300" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-300 dark:ring-emerald-700" />
                       <div>
-                        <h4 className="text-sm font-extrabold text-navy-900 leading-tight">
+                        <h4 className="text-sm font-extrabold text-navy-900 dark:text-white leading-tight">
                           {currentParking?.name || parkings[0]?.name || 'Tu Garaje'}
                         </h4>
-                        <p className="text-xs text-slate-500 font-medium">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                           {currentParking?.address || parkings[0]?.address}
                         </p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-extrabold bg-emerald-200/60 text-emerald-800 px-2 py-0.5 rounded-full uppercase">
+                    <span className="text-[10px] font-extrabold bg-emerald-200/60 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200 px-2 py-0.5 rounded-full uppercase">
                       Tu Garaje
                     </span>
                   </div>
@@ -182,7 +199,7 @@ export const AdminSpacesPage: React.FC = () => {
                   <select
                     value={selectedParkingId || ''}
                     onChange={(e) => setSelectedParkingId(Number(e.target.value))}
-                    className="w-full sm:max-w-md bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full sm:max-w-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
                   >
                     {parkings.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -200,7 +217,7 @@ export const AdminSpacesPage: React.FC = () => {
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
                     filterStatus === 'available'
                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                      : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${filterStatus === 'available' ? 'bg-white' : 'bg-emerald-500'}`} />
@@ -211,7 +228,7 @@ export const AdminSpacesPage: React.FC = () => {
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
                     filterStatus === 'occupied'
                       ? 'bg-rose-600 text-white border-rose-600 shadow-md'
-                      : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                      : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/50 hover:bg-rose-100'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${filterStatus === 'occupied' ? 'bg-white' : 'bg-rose-500'}`} />
@@ -222,7 +239,7 @@ export const AdminSpacesPage: React.FC = () => {
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
                     filterStatus === 'reserved'
                       ? 'bg-amber-600 text-white border-amber-600 shadow-md'
-                      : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                      : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/50 hover:bg-amber-100'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${filterStatus === 'reserved' ? 'bg-white' : 'bg-amber-500'}`} />
@@ -233,7 +250,7 @@ export const AdminSpacesPage: React.FC = () => {
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
                     filterStatus === 'maintenance'
                       ? 'bg-slate-700 text-white border-slate-700 shadow-md'
-                      : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-parkia-line-dark hover:bg-slate-200'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${filterStatus === 'maintenance' ? 'bg-white' : 'bg-slate-400'}`} />
@@ -243,10 +260,10 @@ export const AdminSpacesPage: React.FC = () => {
             </div>
 
             {/* Interactive Grid of Spaces */}
-            <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm">
+            <div className="bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark p-6 sm:p-8 shadow-sm transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-lg">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-lg">
                     Cuadrícula de Plazas - {currentParking?.name}
                   </h3>
                   <p className="text-xs text-slate-400">
@@ -257,7 +274,7 @@ export const AdminSpacesPage: React.FC = () => {
                 {filterStatus !== 'all' && (
                   <button
                     onClick={() => setFilterStatus('all')}
-                    className="text-xs text-teal-600 font-bold hover:underline"
+                    className="text-xs text-teal-600 dark:text-teal-400 font-bold hover:underline cursor-pointer"
                   >
                     Mostrar todas ({spaces.length})
                   </button>
@@ -294,7 +311,12 @@ export const AdminSpacesPage: React.FC = () => {
                           isAvailable ? 'text-emerald-600' : isOccupied ? 'text-rose-600' : isReserved ? 'text-amber-600' : 'text-slate-400'
                         }`} />
                         <span className="font-extrabold text-sm tracking-wider">{space.code}</span>
-                        <span className="text-[10px] font-semibold opacity-75">{space.floor}</span>
+                        <span className="text-[10px] font-semibold opacity-75 flex items-center gap-1">
+                          {space.space_type === 'disabled' && (
+                            <AccessibleSign className="w-4 h-4" fondo="text-plaza-simbolo" figura="text-plaza-simbolo-figura" />
+                          )}
+                          {space.floor}
+                        </span>
                       </button>
                     );
                   })}
@@ -310,11 +332,55 @@ export const AdminSpacesPage: React.FC = () => {
         <Modal
           isOpen={isStatusModalOpen}
           onClose={() => setIsStatusModalOpen(false)}
-          title={`Plaza ${selectedSpace.code} (${selectedSpace.floor})`}
+          title={`Plaza ${selectedSpace.code} (${selectedSpace.floor})${selectedSpace.space_type === 'disabled' ? ' · Accesible' : ''}`}
           maxWidth="sm"
         >
           <div className="space-y-4">
-            <p className="text-xs text-slate-500">
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Tipo de plaza</p>
+              <div className="grid grid-cols-1 gap-2" role="radiogroup" aria-label="Tipo de plaza">
+                <button
+                  type="button"
+                  role="radio"
+                  onClick={() => handleChangeType('standard')}
+                  aria-checked={selectedSpace.space_type !== 'disabled'}
+                  className={`w-full p-3 min-h-[44px] rounded-xl border bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm text-left flex items-center justify-between cursor-pointer transition-colors ${
+                    selectedSpace.space_type !== 'disabled' ? 'border-slate-400 dark:border-slate-500 ring-2 ring-slate-300 dark:ring-slate-600' : 'border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Car className="w-4 h-4 text-slate-500 shrink-0" aria-hidden="true" />
+                    <span>Común</span>
+                  </span>
+                  {selectedSpace.space_type !== 'disabled'
+                    ? <Check className="w-4 h-4 text-slate-600 dark:text-slate-300" aria-hidden="true" />
+                    : <span className="w-3 h-3 rounded-full border-2 border-slate-300 dark:border-slate-600" />}
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  onClick={() => handleChangeType('disabled')}
+                  aria-checked={selectedSpace.space_type === 'disabled'}
+                  className={`w-full p-3 min-h-[44px] rounded-xl border bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-200 font-bold text-sm text-left flex items-center justify-between cursor-pointer transition-colors ${
+                    selectedSpace.space_type === 'disabled' ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-blue-200 dark:border-blue-900/60'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <AccessibleSign className="w-4 h-4 shrink-0" fondo="text-plaza-simbolo" figura="text-plaza-simbolo-figura" />
+                    <span>Accesible (personas con discapacidad)</span>
+                  </span>
+                  {selectedSpace.space_type === 'disabled'
+                    ? <Check className="w-4 h-4 text-blue-700 dark:text-blue-300" aria-hidden="true" />
+                    : <span className="w-3 h-3 rounded-full bg-parkia-blue" />}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Las plazas accesibles solo las pueden reservar personas con credencial de discapacidad verificada.
+              </p>
+            </div>
+
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider pt-2 border-t border-slate-100 dark:border-slate-800">Estado</p>
+            <p className="text-xs text-slate-500 -mt-2">
               Selecciona el nuevo estado operativo para esta plaza:
             </p>
 

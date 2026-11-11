@@ -1,0 +1,58 @@
+/*
+ * Colores del selector de plazas de Parkia.
+ * Mapa de colores: cada color significa una sola cosa en toda la app.
+ *   verde = libre, gris tachado = no disponible (ocupada, reservada o en mantenimiento),
+ *   azul con cartel = accesible (el azul del cartel internacional),
+ *   azul marino con rayita lima = tu plaza (como el logo de Parkia),
+ *   azul con rayita lima = elegiste una plaza accesible.
+ * En el panel del admin, además: rojo = ocupado, amarillo = reservado, gris = mantenimiento.
+ * Cada color va como "R G B" (sin comas) para que Tailwind pueda aplicarle
+ * transparencia. Al lado de cada uno está el código hex.
+ * Para cambiarlos podés usar el editor "Colores Parkia" y reemplazar este archivo.
+ */
+
+/* Modo claro */
+:root {
+  --parkia-fondo: 245 247 250;            /* #F5F7FA Fondo de la grilla */
+  --parkia-borde: 209 213 219;            /* #D1D5DB Bordes y separadores */
+  --parkia-texto: 15 23 42;               /* #0F172A Texto general */
+  --parkia-plaza: 236 253 245;            /* #ECFDF5 Plaza libre (verde) */
+  --parkia-libre-borde: 134 239 172;      /* #86EFAC Borde de plaza libre */
+  --parkia-libre-texto: 6 95 70;          /* #065F46 Texto de plaza libre */
+  --parkia-ocupada: 241 245 249;          /* #F1F5F9 Plaza no disponible */
+  --parkia-ocupada-texto: 156 163 175;    /* #9CA3AF Texto de plaza no disponible */
+  --parkia-elegida: 15 23 42;             /* #0F172A Tu plaza (azul marino) */
+  --parkia-elegida-texto: 255 255 255;    /* #FFFFFF Texto de tu plaza */
+  --parkia-franja: 163 230 53;            /* #A3E635 Rayita de tu plaza (verde lima Parkia) */
+  --parkia-accesible: 219 234 254;        /* #DBEAFE Plaza accesible (celeste) */
+  --parkia-accesible-borde: 30 90 168;    /* #1E5AA8 Borde de plaza accesible */
+  --parkia-accesible-texto: 30 58 138;    /* #1E3A8A Texto de plaza accesible */
+  --parkia-accesible-elegida: 30 90 168;  /* #1E5AA8 Tu plaza accesible (azul) */
+  --parkia-accesible-elegida-texto: 255 255 255; /* #FFFFFF Texto de tu plaza accesible */
+  --parkia-simbolo: 30 90 168;            /* #1E5AA8 Cartel de accesibilidad (fondo) */
+  --parkia-simbolo-figura: 255 255 255;   /* #FFFFFF Cartel de accesibilidad (silla y borde) */
+  --parkia-leyenda: 107 114 128;          /* #6B7280 Texto de la leyenda */
+}
+
+/* Modo oscuro (se activa con la clase "dark" en <html>) */
+.dark {
+  --parkia-fondo: 11 17 32;               /* #0B1120 */
+  --parkia-borde: 38 50 74;               /* #26324A */
+  --parkia-texto: 255 255 255;            /* #FFFFFF */
+  --parkia-plaza: 5 46 22;                /* #052E16 */
+  --parkia-libre-borde: 21 128 61;        /* #15803D */
+  --parkia-libre-texto: 187 247 208;      /* #BBF7D0 */
+  --parkia-ocupada: 30 41 59;             /* #1E293B */
+  --parkia-ocupada-texto: 100 116 139;    /* #64748B */
+  --parkia-elegida: 255 255 255;          /* #FFFFFF */
+  --parkia-elegida-texto: 15 23 42;       /* #0F172A */
+  --parkia-franja: 163 230 53;            /* #A3E635 */
+  --parkia-accesible: 23 37 84;           /* #172554 */
+  --parkia-accesible-borde: 96 165 250;   /* #60A5FA */
+  --parkia-accesible-texto: 219 234 254;  /* #DBEAFE */
+  --parkia-accesible-elegida: 37 99 235;  /* #2563EB */
+  --parkia-accesible-elegida-texto: 255 255 255; /* #FFFFFF */
+  --parkia-simbolo: 59 130 246;           /* #3B82F6 */
+  --parkia-simbolo-figura: 255 255 255;   /* #FFFFFF */
+  --parkia-leyenda: 156 163 175;          /* #9CA3AF */
+}

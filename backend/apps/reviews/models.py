@@ -19,11 +19,14 @@ class Review(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.parking.name} ({self.rating}★)"
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Recalcular promedio de calificación del estacionamiento
-        reviews = Review.objects.filter(parking=self.parking)
-        avg = reviews.aggregate(models.Avg('rating'))['rating__avg'] or 5.0
-        self.parking.rating = round(avg, 1)
-        self.parking.reviews_count = reviews.count()
-        self.parking.save(update_fields=['rating', 'reviews_count'])
+
+
+def recalcular_rating(parking):
+    """Recalcula el promedio y la cantidad de reseñas de un estacionamiento.
+    Se llama desde las señales de signals.py, así queda bien también cuando
+    una reseña se edita o se borra (antes solo se hacía en save())."""
+    reviews = Review.objects.filter(parking=parking)
+    avg = reviews.aggregate(models.Avg('rating'))['rating__avg'] or 5.0
+    parking.rating = round(avg, 1)
+    parking.reviews_count = reviews.count()
+    parking.save(update_fields=['rating', 'reviews_count'])

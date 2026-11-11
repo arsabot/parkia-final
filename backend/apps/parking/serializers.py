@@ -105,9 +105,8 @@ class ParkingCreateUpdateSerializer(serializers.ModelSerializer):
                         role=User.Role.OWNER
                     )
                 else:
-                    if owner_user.role != User.Role.OWNER and not owner_user.is_superuser:
-                        owner_user.role = User.Role.OWNER
-                        owner_user.save()
+                    if not owner_user.has_role(User.Role.OWNER) and not owner_user.is_superuser:
+                        owner_user.set_main_role(User.Role.OWNER)
                 validated_data['owner'] = owner_user
             else:
                 validated_data['owner'] = None

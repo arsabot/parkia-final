@@ -21,20 +21,19 @@ class Command(BaseCommand):
             defaults={
                 'first_name': 'Carlos',
                 'last_name': 'Méndez',
-                'role': User.Role.DRIVER,
                 'phone': '+54 9 11 4488-2211',
                 'avatar_url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
             }
         )
         driver_user.set_password('parkia123')
         driver_user.save()
+        driver_user.set_main_role(User.Role.DRIVER)
 
         admin_user, _ = User.objects.get_or_create(
             email='admin@parkia.com',
             defaults={
                 'first_name': 'Valentina',
                 'last_name': 'Rossi',
-                'role': User.Role.ADMIN,
                 'is_staff': True,
                 'is_superuser': True,
                 'phone': '+54 9 11 8899-7733',
@@ -43,20 +42,23 @@ class Command(BaseCommand):
         )
         admin_user.set_password('parkia123')
         admin_user.save()
+        admin_user.set_main_role(User.Role.ADMIN)
 
         user_lucia, _ = User.objects.get_or_create(
             email='lucia.gomez@gmail.com',
-            defaults={'first_name': 'Lucía', 'last_name': 'Gómez', 'role': User.Role.DRIVER, 'phone': '+54 9 11 9911-3322'}
+            defaults={'first_name': 'Lucía', 'last_name': 'Gómez', 'phone': '+54 9 11 9911-3322'}
         )
         user_lucia.set_password('parkia123')
         user_lucia.save()
+        user_lucia.set_main_role(User.Role.DRIVER)
 
         user_martin, _ = User.objects.get_or_create(
             email='martin.suarez@gmail.com',
-            defaults={'first_name': 'Martín', 'last_name': 'Suárez', 'role': User.Role.DRIVER, 'phone': '+54 9 11 7722-1144'}
+            defaults={'first_name': 'Martín', 'last_name': 'Suárez', 'phone': '+54 9 11 7722-1144'}
         )
         user_martin.set_password('parkia123')
         user_martin.save()
+        user_martin.set_main_role(User.Role.DRIVER)
 
         self.stdout.write(self.style.SUCCESS('✓ Usuarios creados (conductor@parkia.com, admin@parkia.com / pass: parkia123)'))
 

@@ -7,8 +7,12 @@ export interface User {
   last_name: string;
   full_name: string;
   role: UserRole;
+  roles?: string[];
   phone?: string;
   avatar_url?: string;
+  cud_number?: string;
+  cud_verified?: boolean;
+  cud_expiration?: string;
   created_at: string;
 }
 
@@ -138,6 +142,11 @@ export interface AdminKPIs {
   occupancy_rate: number;
   total_revenue: number;
   today_revenue: number;
+  commission_rate_percentage?: number;
+  platform_commission?: number;
+  owner_net_revenue?: number;
+  today_platform_commission?: number;
+  today_owner_net_revenue?: number;
 }
 
 export interface AdminDashboardData {

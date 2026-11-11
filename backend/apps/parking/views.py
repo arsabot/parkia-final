@@ -180,6 +180,22 @@ class ParkingSpaceViewSet(viewsets.ModelViewSet):
         space.save()
         return Response(ParkingSpaceSerializer(space).data)
 
+    @action(detail=True, methods=['patch'])
+    def set_type(self, request, pk=None):
+        """Cambia el tipo de plaza (por ejemplo, común o accesible)."""
+        space = self.get_object()
+        # Si es dueño de garaje, verificar que sea el propietario
+        if request.user.role == 'owner' and space.parking.owner != request.user and not request.user.is_superuser:
+            return Response({'error': 'No tienes permiso para modificar plazas de otro estacionamiento.'}, status=status.HTTP_403_FORBIDDEN)
+
+        new_type = request.data.get('space_type')
+        if new_type not in [choice[0] for choice in ParkingSpace.SpaceType.choices]:
+            return Response({'error': 'Tipo de plaza no válido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        space.space_type = new_type
+        space.save()
+        return Response(ParkingSpaceSerializer(space).data)
+
 
 class FavoritesListView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]

@@ -6,10 +6,11 @@ import {
   Car, 
   CheckCircle2, 
   AlertCircle, 
-  Sparkles, 
   Info,
   DollarSign,
-  Layers
+  Layers,
+  CreditCard,
+  ShieldCheck
 } from 'lucide-react';
 import { Parking, ParkingSpace } from '../../types';
 import { reservationService } from '../../services/reservationService';
@@ -17,6 +18,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { SpaceGrid, defaultSpace } from './SpaceGrid';
+import { AccessibleSpotCard } from './AccessibleSpotCard';
+import { PaymentMethodSelector } from './PaymentMethodSelector';
+import { PaymentCheckoutModal, PaymentMethod } from './PaymentCheckoutModal';
 import confetti from 'canvas-confetti';
 
 interface BookingModalProps {
@@ -32,7 +37,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   parking,
   onSuccess,
 }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  // Solo quien tiene la credencial verificada por un admin puede elegir plazas accesibles
+  const hasPermit = Boolean(user?.roles?.includes('disabled'));
   const { toast, success, error } = useToast();
   const navigate = useNavigate();
 
@@ -44,6 +51,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | undefined>(undefined);
   const [vehiclePlate, setVehiclePlate] = useState<string>('AA123BB');
   const [vehicleModel, setVehicleModel] = useState<string>('Auto Particular');
+  const [isAccessibleRequested, setIsAccessibleRequested] = useState<boolean>(hasPermit);
+
+  // Payment state
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('Mercado Pago');
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
 
   // Availability & Loading State
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
@@ -52,6 +64,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [estimatedPrice, setEstimatedPrice] = useState<number>(Number(parking.price_per_hour) * 2);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Sync accessible request if user permit changes
+  useEffect(() => {
+    if (hasPermit) {
+      setIsAccessibleRequested(true);
+    }
+  }, [hasPermit]);
 
   // Check dynamic availability whenever time slot or date changes
   useEffect(() => {
@@ -73,12 +92,21 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           end_time: endTime,
         });
 
-        setAvailableSpaces(res.spaces || []);
+        const spaces = res.spaces || [];
+        setAvailableSpaces(spaces);
         setDurationHours(res.duration_hours || 1.0);
         setEstimatedPrice(res.estimated_price || Number(parking.price_per_hour));
 
-        // Auto select first available space if none chosen
-        const firstFree = res.spaces.find((s) => s.is_available);
+        // Auto select space respecting accessible preference
+        if (isAccessibleRequested) {
+          const accSpace = spaces.find((s: any) => (s.space_type === 'disabled' || s.is_accessible) && s.is_available);
+          if (accSpace) {
+            setSelectedSpaceId(accSpace.id);
+            return;
+          }
+        }
+
+        const firstFree = defaultSpace(spaces);
         if (firstFree && !selectedSpaceId) {
           setSelectedSpaceId(firstFree.id);
         }
@@ -91,9 +119,25 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     const timer = setTimeout(checkSlots, 300);
     return () => clearTimeout(timer);
-  }, [isOpen, parking.id, date, startTime, endTime]);
+  }, [isOpen, parking.id, date, startTime, endTime, isAccessibleRequested]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle accessible spot toggle
+  const handleAccessibleChange = (checked: boolean) => {
+    setIsAccessibleRequested(checked);
+    if (checked) {
+      const accSpace = availableSpaces.find((s: any) => (s.space_type === 'disabled' || s.is_accessible) && s.is_available);
+      if (accSpace) {
+        setSelectedSpaceId(accSpace.id);
+      }
+    } else {
+      const stdSpace = availableSpaces.find((s: any) => s.space_type !== 'disabled' && !s.is_accessible && s.is_available);
+      if (stdSpace) {
+        setSelectedSpaceId(stdSpace.id);
+      }
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isAuthenticated) {
@@ -104,6 +148,20 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     if (validationError) return;
 
+    // Si es efectivo, se confirma la reserva directamente sin pasar por pasarela online
+    if (selectedMethod === 'Efectivo') {
+      createReservationAndFinish('Efectivo', 'pending', 'confirmed');
+    } else {
+      // Para Mercado Pago, Tarjeta o MODO/Ualá abrimos el modal interactivo de checkout
+      setIsCheckoutOpen(true);
+    }
+  };
+
+  const createReservationAndFinish = async (
+    method: PaymentMethod,
+    paymentStatus: 'paid' | 'pending',
+    reservationStatus: 'confirmed' | 'pending' = 'confirmed'
+  ) => {
     try {
       setIsSubmitting(true);
       const res = await reservationService.createReservation({
@@ -114,16 +172,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         date,
         start_time: startTime,
         end_time: endTime,
+        payment_method: method,
+        payment_status: paymentStatus,
+        status: reservationStatus,
       });
 
       // Celebration effect
       confetti({
-        particleCount: 100,
-        spread: 70,
+        particleCount: 110,
+        spread: 75,
         origin: { y: 0.6 },
       });
 
-      success('¡Reserva confirmada con éxito!');
+      if (paymentStatus === 'paid') {
+        success('¡Pago acreditado y reserva confirmada!');
+      } else {
+        success('¡Reserva confirmada con éxito! Abonás al ingresar.');
+      }
+
       onClose();
 
       if (onSuccess) {
@@ -139,193 +205,205 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-brand-600" />
-          <span>Reservar lugar en {parking.name}</span>
-        </div>
-      }
-      maxWidth="lg"
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        
-        {/* Info banner */}
-        <div className="p-3.5 bg-brand-50 rounded-2xl border border-brand-100 flex items-start gap-3 text-xs text-brand-900">
-          <Info className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold">Tarifa por hora:</span> ${Number(parking.price_per_hour).toLocaleString('es-AR')}. 
-            Tu espacio quedará reservado de inmediato con garantía de lugar.
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <span className="text-slate-900 dark:text-white">Reservar lugar en {parking.name}</span>
           </div>
-        </div>
-
-        {/* Date & Time selection */}
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="booking-modal-date" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-teal-600" aria-hidden="true" />
-              Fecha de Reserva
-            </label>
-            <input
-              id="booking-modal-date"
-              type="date"
-              min={todayStr}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        }
+        maxWidth="lg"
+      >
+        <form onSubmit={handleFormSubmit} className="space-y-5">
+          
+          {/* Info banner */}
+          <div className="p-3.5 bg-brand-50 dark:bg-brand-950/40 rounded-2xl border border-brand-100 dark:border-brand-900/60 flex items-start gap-3 text-xs text-brand-900 dark:text-brand-200">
+            <Info className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
             <div>
-              <label htmlFor="booking-modal-start" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
-                Hora Entrada
+              <span className="font-bold">Tarifa por hora:</span> ${Number(parking.price_per_hour).toLocaleString('es-AR')}. 
+              Tu espacio quedará reservado de inmediato con garantía de lugar.
+            </div>
+          </div>
+
+          {/* Date & Time selection */}
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="booking-modal-date" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+                Fecha de Reserva
               </label>
               <input
-                id="booking-modal-start"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                id="booking-modal-date"
+                type="date"
+                min={todayStr}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 required
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="booking-modal-start" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+                  Hora Entrada
+                </label>
+                <input
+                  id="booking-modal-start"
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                />
+              </div>
+              <div>
+                <label htmlFor="booking-modal-end" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+                  Hora Salida
+                </label>
+                <input
+                  id="booking-modal-end"
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Accessible spot request card matching mockups 6 & 7 */}
+          <AccessibleSpotCard
+            checked={isAccessibleRequested}
+            onChange={handleAccessibleChange}
+            hasPermit={hasPermit}
+          />
+
+          {/* Space Selector Visual Grid */}
+          {availableSpaces.length > 0 && (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+                  Elegir Plaza / Espacio
+                </span>
+              </label>
+              <SpaceGrid
+                spaces={availableSpaces}
+                selectedId={selectedSpaceId}
+                onSelect={setSelectedSpaceId}
+                hasPermit={hasPermit}
+              />
+            </div>
+          )}
+
+          {/* Vehicle Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-parkia-line-dark">
+            <div>
+              <label htmlFor="booking-modal-plate" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Car className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+                Patente / Matrícula
+              </label>
+              <input
+                id="booking-modal-plate"
+                type="text"
+                placeholder="Ej: AA 123 BB"
+                value={vehiclePlate}
+                onChange={(e) => setVehiclePlate(e.target.value)}
+                required
+                className="w-full uppercase font-mono tracking-widest bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
               />
             </div>
             <div>
-              <label htmlFor="booking-modal-end" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
-                Hora Salida
+              <label htmlFor="booking-modal-model" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Vehículo (Opcional)
               </label>
               <input
-                id="booking-modal-end"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                required
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
+                id="booking-modal-model"
+                type="text"
+                placeholder="Ej: Toyota Corolla"
+                value={vehicleModel}
+                onChange={(e) => setVehicleModel(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-parkia-page-dark border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3.5 py-2 text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
               />
             </div>
           </div>
-        </div>
 
-        {/* Space Selector Visual Grid */}
-        {availableSpaces.length > 0 && (
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-teal-600" aria-hidden="true" />
-                Elegir Plaza / Espacio
-              </span>
-              <span className="text-[11px] text-slate-400 font-medium lowercase">
-                (verde = disponible)
-              </span>
-            </label>
-            <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200" role="group" aria-label="Selección de plaza">
-              {availableSpaces.map((s) => {
-                const isSelected = selectedSpaceId === s.id;
-                const isFree = s.is_available;
+          {/* Payment Method Selector matching mockups 6 & 7 */}
+          <div className="pt-2 border-t border-slate-100 dark:border-parkia-line-dark">
+            <PaymentMethodSelector
+              selectedMethod={selectedMethod}
+              onSelectMethod={setSelectedMethod}
+            />
+          </div>
 
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    disabled={!isFree}
-                    onClick={() => setSelectedSpaceId(s.id)}
-                    aria-label={`Plaza ${s.code}, ${s.floor}, ${isFree ? (isSelected ? 'seleccionada' : 'disponible') : 'no disponible'}`}
-                    aria-pressed={isSelected}
-                    className={`py-2 px-1 min-h-[44px] rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center cursor-pointer ${
-                      isSelected
-                        ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30 scale-105 ring-2 ring-teal-400'
-                        : isFree
-                        ? 'bg-white text-emerald-700 border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50'
-                        : 'bg-slate-200/70 text-slate-400 cursor-not-allowed line-through'
-                    }`}
-                  >
-                    <span>{s.code}</span>
-                    <span className="text-[9px] opacity-80 font-normal">
-                      {s.floor === 'Planta Baja' ? 'PB' : 'P1'}
-                    </span>
-                  </button>
-                );
-              })}
+          {/* Validation error message */}
+          {validationError && (
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{validationError}</span>
+            </div>
+          )}
+
+          {/* Price & Summary breakdown */}
+          <div className="p-4 bg-slate-900 dark:bg-parkia-page-dark border border-slate-800 dark:border-parkia-line-dark rounded-2xl text-white flex items-center justify-between shadow-lg">
+            <div>
+              <span className="text-xs text-slate-400 block font-medium">
+                Duración: <strong className="text-white">{durationHours.toFixed(1)} hs</strong> • {selectedMethod}
+              </span>
+              <span className="text-xs text-slate-400">
+                {selectedMethod === 'Efectivo' ? 'Abonás en garita al ingresar:' : 'Total a pagar ahora:'}
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-black text-emerald-400">
+                ${estimatedPrice.toLocaleString('es-AR')}
+              </span>
             </div>
           </div>
-        )}
 
-        {/* Vehicle Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <div>
-            <label htmlFor="booking-modal-plate" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Car className="w-4 h-4 text-teal-600" aria-hidden="true" />
-              Patente / Matrícula
-            </label>
-            <input
-              id="booking-modal-plate"
-              type="text"
-              placeholder="Ej: AA 123 BB"
-              value={vehiclePlate}
-              onChange={(e) => setVehiclePlate(e.target.value)}
-              required
-              className="w-full uppercase font-mono tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
-            />
+          {/* Submit button */}
+          <div className="flex items-center gap-3">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="emerald"
+              isLoading={isSubmitting || isCheckingAvailability}
+              disabled={!!validationError}
+              className="flex-1 py-3.5 font-bold text-base shadow-lg shadow-emerald-500/20"
+            >
+              {selectedMethod === 'Efectivo' ? 'Confirmar Reserva' : 'Pagar y Reservar'}
+            </Button>
           </div>
-          <div>
-            <label htmlFor="booking-modal-model" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Vehículo (Opcional)
-            </label>
-            <input
-              id="booking-modal-model"
-              type="text"
-              placeholder="Ej: Toyota Corolla"
-              value={vehicleModel}
-              onChange={(e) => setVehicleModel(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[44px]"
-            />
-          </div>
-        </div>
 
-        {/* Validation error message */}
-        {validationError && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{validationError}</span>
-          </div>
-        )}
+          <p className="text-center text-[11px] text-slate-500 dark:text-slate-400 font-medium inline-flex items-center justify-center gap-1.5 w-full">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span>Cancelación gratuita • Confirmación instantánea</span>
+          </p>
+        </form>
+      </Modal>
 
-        {/* Price & Summary breakdown */}
-        <div className="p-4 bg-slate-900 rounded-2xl text-white flex items-center justify-between shadow-lg">
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">
-              Duración estimada: <strong className="text-white">{durationHours.toFixed(1)} hs</strong>
-            </span>
-            <span className="text-xs text-slate-400">Total a pagar en destino:</span>
-          </div>
-          <div className="text-right">
-            <span className="text-2xl font-black text-emerald-400">
-              ${estimatedPrice.toLocaleString('es-AR')}
-            </span>
-          </div>
-        </div>
-
-        {/* Submit button */}
-        <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="emerald"
-            isLoading={isSubmitting || isCheckingAvailability}
-            disabled={!!validationError}
-            className="flex-1 py-3.5 font-bold text-base"
-          >
-            Confirmar Reserva
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      {/* Interactive Payment Checkout Modal */}
+      <PaymentCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        method={selectedMethod}
+        amount={estimatedPrice}
+        parkingName={parking.name}
+        durationHours={durationHours}
+        onPaymentSuccess={async (details) => {
+          await createReservationAndFinish(details.method, details.status, 'confirmed');
+          setIsCheckoutOpen(false);
+        }}
+      />
+    </>
   );
 };
