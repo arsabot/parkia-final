@@ -152,8 +152,7 @@ class MercadoPagoPaymentTests(APITestCase):
 
     def test_access_qr_is_refused_while_payment_is_pending(self):
         reservation = self.create_pending_reservation()
-        self.user.role = User.Role.ADMIN
-        self.user.save(update_fields=['role'])
+        self.user.set_main_role(User.Role.ADMIN)
         self.client.force_authenticate(self.user)
 
         response = self.client.post('/api/reservations/verify_qr/', {'code': reservation.booking_code}, format='json')

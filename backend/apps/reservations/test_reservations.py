@@ -128,3 +128,82 @@ class ReservationTests(TestCase):
         res.refresh_from_db()
         self.assertEqual(res.status, Reservation.Status.CANCELLED)
         self.assertEqual(res.cancellation_reason, 'No necesito viajar hoy')
+
+
+class AccessibleSpaceTests(TestCase):
+    """Las plazas accesibles solo las puede reservar quien tiene credencial verificada."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.driver = User.objects.create_user(
+            email='sin_credencial@test.com', password='password123',
+            first_name='Ana', last_name='Ruiz', role=User.Role.DRIVER
+        )
+        self.permit_driver = User.objects.create_user(
+            email='con_credencial@test.com', password='password123',
+            first_name='Luis', last_name='Sosa', role=User.Role.DRIVER,
+            roles=[User.Role.DISABLED]
+        )
+        self.parking = Parking.objects.create(
+            name='Estacionamiento Accesible', address='Av. Corrientes 1000',
+            city='Buenos Aires', latitude=-34.60, longitude=-58.38,
+            price_per_hour=1000.00, opening_time=time(8, 0), closing_time=time(22, 0),
+            capacity=5, is_active=True
+        )
+        self.accessible = ParkingSpace.objects.create(
+            parking=self.parking, code='A01',
+            space_type=ParkingSpace.SpaceType.DISABLED,
+            status=ParkingSpace.Status.AVAILABLE
+        )
+        self.standard = ParkingSpace.objects.create(
+            parking=self.parking, code='A02',
+            status=ParkingSpace.Status.AVAILABLE
+        )
+        self.tomorrow = (date.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+
+    def _payload(self, space=None):
+        payload = {
+            'parking': self.parking.id, 'vehicle_plate': 'AB123CD',
+            'date': self.tomorrow, 'start_time': '10:00', 'end_time': '12:00',
+        }
+        if space:
+            payload['space'] = space.id
+        return payload
+
+    def test_sin_credencial_no_puede_reservar_plaza_accesible(self):
+        self.client.force_authenticate(user=self.driver)
+        response = self.client.post('/api/reservations/', self._payload(self.accessible), format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Reservation.objects.filter(space=self.accessible).exists())
+
+    def test_con_credencial_puede_reservar_plaza_accesible(self):
+        self.client.force_authenticate(user=self.permit_driver)
+        response = self.client.post('/api/reservations/', self._payload(self.accessible), format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_autoasignacion_no_da_plaza_accesible_sin_credencial(self):
+        self.client.force_authenticate(user=self.driver)
+        response = self.client.post('/api/reservations/', self._payload(), format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Reservation.objects.get().space, self.standard)
+
+    def test_usuario_no_puede_activarse_la_credencial(self):
+        self.client.force_authenticate(user=self.driver)
+        self.client.patch('/api/auth/me/', {'roles': ['driver', 'disabled']}, format='json')
+        self.assertFalse(User.objects.get(pk=self.driver.pk).has_role(User.Role.DISABLED))
+
+    def test_autoasignacion_con_credencial_prefiere_plaza_comun(self):
+        self.client.force_authenticate(user=self.permit_driver)
+        response = self.client.post('/api/reservations/', self._payload(), format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Reservation.objects.get().space, self.standard)
+
+    def test_sin_credencial_y_solo_quedan_accesibles_no_reserva(self):
+        Reservation.objects.create(
+            user=self.permit_driver, parking=self.parking, space=self.standard,
+            vehicle_plate='ZZ999ZZ', date=self.tomorrow, start_time='10:00', end_time='12:00',
+            total_hours=2, total_price=2000, status=Reservation.Status.CONFIRMED
+        )
+        self.client.force_authenticate(user=self.driver)
+        response = self.client.post('/api/reservations/', self._payload(), format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

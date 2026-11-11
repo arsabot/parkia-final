@@ -40,7 +40,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
       {label && (
         <label 
           htmlFor={selectId} 
-          className="block text-xs font-bold text-slate-700 tracking-wide"
+          className="block text-xs font-bold text-slate-700 dark:text-slate-300 tracking-wide"
         >
           {label}
           {required && <span className="text-rose-500 ml-1" aria-hidden="true">*</span>}
@@ -64,12 +64,12 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
           disabled={disabled}
           aria-invalid={!!error}
           aria-describedby={errorId || hintId}
-          className={`w-full min-h-[44px] py-2.5 pr-10 bg-slate-50 border rounded-xl text-sm font-bold text-slate-900 transition-all appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:bg-white disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed ${
+          className={`w-full min-h-[44px] py-2.5 pr-10 bg-slate-50 dark:bg-slate-800 border rounded-xl text-sm font-bold text-slate-900 dark:text-slate-100 transition-all appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:bg-white dark:focus:bg-slate-700 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed ${
             leftIcon ? 'pl-11' : 'pl-3.5'
           } ${
             error 
-              ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20 text-rose-900' 
-              : 'border-slate-200 hover:border-slate-300 focus:border-brand-500 focus:ring-brand-500/20'
+              ? 'border-rose-300 dark:border-rose-500 focus:border-rose-500 focus:ring-rose-500/20 text-rose-900 dark:text-rose-200' 
+              : 'border-slate-200 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-500 focus:border-brand-500 focus:ring-brand-500/20'
           } ${className}`}
           {...props}
         >

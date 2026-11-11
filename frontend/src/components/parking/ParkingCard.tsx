@@ -46,14 +46,14 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
     <div
       onMouseEnter={() => onHover && onHover(parking.id)}
       onMouseLeave={() => onHover && onHover(null)}
-      className={`group relative bg-white rounded-3xl border transition-all duration-300 p-4 sm:p-5 flex flex-col sm:flex-row gap-5 shadow-sm hover:shadow-xl ${
+      className={`group relative bg-white dark:bg-parkia-card-dark rounded-3xl border transition-all duration-300 p-4 sm:p-5 flex flex-col sm:flex-row gap-5 shadow-sm hover:shadow-xl ${
         isSelected
           ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-brand-500/10'
-          : 'border-slate-100 hover:border-slate-200'
+          : 'border-slate-100 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-600'
       }`}
     >
       {/* Image & Badges */}
-      <div className="relative w-full sm:w-44 md:w-48 lg:w-44 xl:w-48 2xl:w-52 h-44 sm:h-auto rounded-2xl overflow-hidden shrink-0 bg-slate-100">
+      <div className="relative w-full sm:w-44 md:w-48 lg:w-44 xl:w-48 2xl:w-52 h-44 sm:h-auto rounded-2xl overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800">
         <img
           src={parking.image_url || 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=500'}
           alt={parking.name}
@@ -67,7 +67,7 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
             e.stopPropagation();
             toggleFavorite(parking.id);
           }}
-          className="absolute top-3 right-3 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-white/95 backdrop-blur-md text-slate-700 hover:text-rose-500 shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          className="absolute top-3 right-3 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-white/95 dark:bg-parkia-navy/95 backdrop-blur-md text-slate-700 dark:text-slate-200 hover:text-rose-500 shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
           aria-label={favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
           title={favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
         >
@@ -100,7 +100,7 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
               <span className="line-clamp-1">{parking.city}</span>
             </div>
             {parking.distance_km !== undefined && (
-              <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md shrink-0">
                 a {parking.distance_km} km
               </span>
             )}
@@ -108,12 +108,12 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
 
           {/* Title */}
           <Link to={`/parking/${parking.id}`} className="block">
-            <h3 className="text-lg font-extrabold text-navy-900 group-hover:text-brand-600 transition-colors line-clamp-1 mb-1">
+            <h3 className="text-lg font-extrabold text-navy-900 dark:text-white group-hover:text-brand-500 transition-colors line-clamp-1 mb-1">
               {parking.name}
             </h3>
           </Link>
 
-          <p className="text-xs text-slate-600 line-clamp-1 mb-3 font-medium">{parking.address}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 mb-3 font-medium">{parking.address}</p>
 
           {/* Rating */}
           <div className="mb-3">
@@ -131,10 +131,10 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
         </div>
 
         {/* Bottom bar: Pricing, Availability and CTA */}
-        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div className="pt-3 border-t border-slate-100 dark:border-parkia-line-dark flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Tarifa por hora</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Tarifa por hora</span>
               <span
                 className={`text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap ${
                   isFull
@@ -159,7 +159,7 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
                 )}
               </span>
             </div>
-            <span className="text-xl font-black text-navy-900 block leading-tight">
+            <span className="text-xl font-black text-navy-900 dark:text-white block leading-tight">
               {formatCurrency(parking.price_per_hour)}
             </span>
           </div>

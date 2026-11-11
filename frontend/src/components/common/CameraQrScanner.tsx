@@ -7,8 +7,7 @@ import {
   X, 
   AlertCircle, 
   CheckCircle2, 
-  RefreshCw,
-  Sparkles
+  RefreshCw
 } from 'lucide-react';
 import { Button } from './Button';
 

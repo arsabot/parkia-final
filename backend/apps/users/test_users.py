@@ -24,8 +24,8 @@ class UsersAuthTests(TestCase):
             'first_name': 'Test',
             'last_name': 'Driver',
             'email': 'testdriver@parkia.com',
-            'password': 'Estacion4miento!',
-            'password_confirmation': 'Estacion4miento!',
+            'password': 'password123',
+            'password_confirmation': 'password123',
             'role': 'driver',
             'phone': '+5491100000000'
         }
@@ -142,3 +142,109 @@ class UsersAuthTests(TestCase):
             'token': token
         }, format='json')
         self.assertEqual(reused_res.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class RolesTablaIntermediaTests(TestCase):
+    """Roles como relación muchos a muchos: Role + UserRole."""
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_un_usuario_puede_tener_varios_roles(self):
+        from apps.users.models import UserRole
+        user = User.objects.create_user(email='multi@test.com', password='x12345678', first_name='M', last_name='R')
+        user.add_role(User.Role.DISABLED)
+        self.assertEqual(sorted(user.role_codes), ['disabled', 'driver'])
+        self.assertEqual(UserRole.objects.filter(user=user).count(), 2)
+        # El rol principal sigue siendo conductor y además tiene credencial
+        self.assertEqual(user.role, User.Role.DRIVER)
+        self.assertTrue(user.has_role(User.Role.DISABLED))
+
+    def test_un_rol_lo_tienen_muchos_usuarios(self):
+        from apps.users.models import Role
+        for i in range(3):
+            User.objects.create_user(email=f'cond{i}@test.com', password='x12345678', first_name='C', last_name=str(i))
+        self.assertEqual(Role.objects.get(code='driver').users.count(), 3)
+
+    def test_cambiar_rol_principal_conserva_disabled(self):
+        user = User.objects.create_user(email='cambio@test.com', password='x12345678', first_name='C', last_name='R',
+                                        roles=[User.Role.DISABLED])
+        user.set_main_role(User.Role.OWNER)
+        self.assertEqual(sorted(user.role_codes), ['disabled', 'owner'])
+        self.assertEqual(user.role, User.Role.OWNER)
+
+    def test_no_se_puede_borrar_un_rol_en_uso(self):
+        from django.db.models import ProtectedError
+        from apps.users.models import Role
+        User.objects.create_user(email='prot@test.com', password='x12345678', first_name='P', last_name='R')
+        with self.assertRaises(ProtectedError):
+            Role.objects.get(code='driver').delete()
+
+    def test_registro_no_permite_elegir_admin_ni_disabled(self):
+        for rol in ['admin', 'disabled']:
+            response = self.client.post(reverse('auth-register'), {
+                'first_name': 'X', 'last_name': 'Y', 'email': f'{rol}@hack.com',
+                'password': 'password123', 'password_confirmation': 'password123', 'role': rol,
+            }, format='json')
+            self.assertEqual(response.status_code, 400, rol)
+            self.assertFalse(User.objects.filter(email=f'{rol}@hack.com').exists())
+
+    def test_me_devuelve_roles(self):
+        user = User.objects.create_user(email='me@test.com', password='x12345678', first_name='M', last_name='E',
+                                        roles=[User.Role.DISABLED])
+        self.client.force_authenticate(user=user)
+        data = self.client.get(reverse('auth-me')).json()
+        data = data.get('user', data)
+        self.assertEqual(data['role'], 'driver')
+        self.assertEqual(sorted(data['roles']), ['disabled', 'driver'])
+
+    def test_registro_con_cud_valido_asigna_rol_disabled(self):
+        payload = {
+            'first_name': 'Juan',
+            'last_name': 'Pérez',
+            'email': 'juan.cud@parkia.com',
+            'password': 'password123',
+            'password_confirmation': 'password123',
+            'role': 'driver',
+            'has_disability_permit': True,
+            'cud_number': '04-12345678-9',
+            'cud_dni': '35123456',
+            'cud_expiration': '2028-12-31',
+        }
+        res = self.client.post(reverse('auth-register'), payload, format='json')
+        self.assertEqual(res.status_code, 201)
+        user = User.objects.get(email='juan.cud@parkia.com')
+        self.assertTrue(user.has_role(User.Role.DISABLED))
+        self.assertTrue(user.cud_verified)
+        self.assertEqual(user.cud_number, '04-12345678-9')
+        self.assertEqual(sorted(user.role_codes), ['disabled', 'driver'])
+
+    def test_registro_con_permiso_sin_cud_falla(self):
+        payload = {
+            'first_name': 'Juan',
+            'last_name': 'Pérez',
+            'email': 'invalido.cud@parkia.com',
+            'password': 'password123',
+            'password_confirmation': 'password123',
+            'role': 'driver',
+            'has_disability_permit': True,
+            'cud_number': '',
+        }
+        res = self.client.post(reverse('auth-register'), payload, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('cud_number', res.data.get('errors', {}))
+
+    def test_endpoint_verificar_cud(self):
+        verify_url = reverse('auth-verify-cud')
+        # CUD válido
+        res = self.client.post(verify_url, {
+            'cud_number': '04-98765432-1',
+            'cud_dni': '28999888',
+            'cud_expiration': '2029-01-01'
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.data.get('valid'))
+
+        # CUD con formato corto inválido
+        res_bad = self.client.post(verify_url, {'cud_number': '123'}, format='json')
+        self.assertEqual(res_bad.status_code, 400)

@@ -22,6 +22,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user', 'created_at']
 
+    def validate_parking(self, value):
+        # Una reseña no se puede mover a otro estacionamiento al editarla
+        if self.instance and value != self.instance.parking:
+            raise serializers.ValidationError('No se puede cambiar el estacionamiento de una reseña.')
+        return value
+
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
