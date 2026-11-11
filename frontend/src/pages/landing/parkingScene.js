@@ -139,26 +139,29 @@ export function createParkingScene(cv, opts) {
   const tip = pool(LIME, 0.6, 0.6, 0.9); tip.position.y = 0.03; S.add(tip);
 
   let t0 = performance.now();
+  let tick;
   const setT = (i) => {
     T = i; drawGround(); gt.needsUpdate = true; buildLime(); recolorLeds();
     fill.position.x = B[T].cx; sg.position.x = B[T].cx; lbl.position.x = B[T].cx; drawLbl();
     curve = mkCurve(); route.geometry.dispose(); route.geometry = ribbon(0.035); routeGlow.geometry.dispose(); routeGlow.geometry = ribbon(0.26);
     if (opts.getChipCode()) opts.getChipCode().textContent = 'Plaza B' + pad(T);
     t0 = performance.now();
+    cancelAnimationFrame(state.raf);
+    state.raf = requestAnimationFrame(tick);
   };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   const pickSpot = (e) => { const r = cv.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, C); const hit = ray.intersectObject(gr)[0]; if (!hit) return -1;
     const p = hit.point; if (p.z < ZB - DEP || p.z > ZB) return -1; const i = B.findIndex(s => p.x >= s.x0 && p.x < s.x0 + s.w); if (i < 0 || B[i].v === 1) return -1; return i; };
 
   let el = 1.0, dist = 14, aspect = 2.4;
-  const size = () => { const w = cv.clientWidth || 1200, h = cv.clientHeight || 600; R.setSize(w, h, false); aspect = w / h; C.aspect = aspect; const t15 = 2 * Math.tan(15 * Math.PI / 180); const fitW = 20 / (t15 * aspect); const fitH = 9 * Math.sin(el) / (0.5 * t15); dist = Math.max(14, Math.min(40, Math.max(fitW, fitH))); C.setViewOffset(w, h, 0, w < 860 ? -h * 0.04 : -h * 0.23, w, h); C.updateProjectionMatrix(); };
+  const size = () => { const w = cv.clientWidth || 1200, h = cv.clientHeight || 600; R.setSize(w, h, false); aspect = w / h; C.aspect = aspect; const t15 = 2 * Math.tan(15 * Math.PI / 180); const fitW = 20 / (t15 * aspect); const fitH = 9 * Math.sin(el) / (0.5 * t15); dist = Math.max(14, Math.min(40, Math.max(fitW, fitH))); C.setViewOffset(w, h, 0, w < 860 ? -h * 0.04 : -h * 0.23, w, h); C.updateProjectionMatrix(); if (tick && !state.dead) { cancelAnimationFrame(state.raf); state.raf = requestAnimationFrame(tick); } };
   size(); if (window.ResizeObserver) { state.ro = new ResizeObserver(size); state.ro.observe(cv); }
   const ez = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2, ss = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const dim = new THREE.Color('#3c5414'), hot = new THREE.Color(LIME), gDim = new THREE.Color('#2c4a0a'), gHot = new THREE.Color('#8fd81e'), lDim = new THREE.Color('#5b6b45'), tmp = new THREE.Color();
   const chipPt = new THREE.Vector3();
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const tick = (ms) => { if (state.dead) return;
-    const DUR = 7.4, DELAY = 0.9, s = reduce ? 9 : ((ms - t0) / 1000) % 12;
+  tick = (ms) => { if (state.dead) return;
+    const DUR = 7.4, DELAY = 0.9, s = reduce ? 9 : Math.min(DUR, (ms - t0) / 1000);
     const u = s < DELAY ? 0 : (s < DUR ? ez((s - DELAY) / (DUR - DELAY)) : 1);
     const p = curve.getPointAt(u), tn = curve.getTangentAt(Math.min(Math.max(u, 0.001), 0.999)); me.position.set(p.x, 0, p.z); me.rotation.y = Math.atan2(-tn.x, -tn.z);
     const grow = Math.min(1, ss(0, 1, s / 2.6) * 1.0);
@@ -179,8 +182,10 @@ export function createParkingScene(cv, opts) {
     R.render(S, C);
     const chipEl = opts.getChip(); if (chipEl) { chipPt.set(B[T].cx, 1.6, zp); chipPt.project(C); const w = cv.clientWidth, h = cv.clientHeight; const x = (chipPt.x * 0.5 + 0.5) * w, y = (-chipPt.y * 0.5 + 0.5) * h; const cw = chipEl.offsetWidth || 140, ch = chipEl.offsetHeight || 90;
       chipEl.style.transform = 'translate(' + (x - cw / 2).toFixed(1) + 'px,' + (y - ch).toFixed(1) + 'px)'; chipEl.style.opacity = (0.25 + 0.75 * heat).toFixed(2); }
-    state.raf = requestAnimationFrame(tick); };
+    if (s < DUR || accK > 0.01 || (opts.getAccUntil() && ms < opts.getAccUntil())) state.raf = requestAnimationFrame(tick); };
   state.raf = requestAnimationFrame(tick);
+  const invalidate = () => { if (!state.dead) { cancelAnimationFrame(state.raf); state.raf = requestAnimationFrame(tick); } };
+  cv.addEventListener('pk-scene-invalidate', invalidate);
 
   const onMove = (e) => { const i = pickSpot(e); cv.style.cursor = (i >= 0 && i !== T) ? 'pointer' : 'default'; };
   const onClick = (e) => { const i = pickSpot(e); if (i >= 0 && i !== T) setT(i); };
@@ -192,6 +197,7 @@ export function createParkingScene(cv, opts) {
     if (state.ro) state.ro.disconnect();
     cv.removeEventListener('pointermove', onMove);
     cv.removeEventListener('click', onClick);
+    cv.removeEventListener('pk-scene-invalidate', invalidate);
     S.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); }); });
     pm.dispose();
     R.dispose();
