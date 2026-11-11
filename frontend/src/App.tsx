@@ -99,11 +99,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // La landing ("/") trae su propio header y footer (oscuro, con modo claro opcional).
+  const { pathname } = useLocation();
+  const isLanding = pathname === '/';
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-parkia-page-dark text-slate-900 dark:text-slate-100 transition-colors">
-      <Navbar />
+      {!isLanding && <Navbar />}
       <main className="flex-1">{children}</main>
-      <Footer />
+      {!isLanding && <Footer />}
       <ChatWidget />
     </div>
   );
