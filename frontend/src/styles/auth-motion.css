@@ -1,0 +1,87 @@
+/*
+ * Parkia · movimiento de autenticación
+ * Spring real (stiffness 400, damping 30, mass 1) muestreado en linear().
+ * Leve sobrepaso (~3%) y asentamiento en ~280ms. Solo se animan transform y opacity.
+ */
+:root {
+  --pk-spring: linear(0, 0.039, 0.132, 0.255, 0.386, 0.514, 0.631, 0.732, 0.815, 0.882,
+    0.933, 0.97, 0.996, 1.013, 1.023, 1.027, 1.028, 1.025, 1.015, 1.006, 1);
+  --pk-out: cubic-bezier(0.23, 1, 0.32, 1); /* para color/opacity: sin rebote */
+  --pk-fast: 120ms;
+  --pk-base: 180ms;
+  --pk-spring-dur: 280ms;
+}
+
+/* ── Feedback táctil ─────────────────────────────────────────────────────── */
+.pk-press {
+  transition: transform var(--pk-fast) var(--pk-out), background-color var(--pk-base) var(--pk-out),
+    border-color var(--pk-base) var(--pk-out), box-shadow var(--pk-base) var(--pk-out);
+}
+.pk-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* ── Medidor de fuerza ───────────────────────────────────────────────────── */
+.pk-strength-track {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+.pk-strength-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform var(--pk-spring-dur) var(--pk-spring), background-color var(--pk-base) var(--pk-out);
+}
+.pk-strength-fill[data-on='true'] {
+  transform: scaleX(1);
+}
+.pk-strength-label {
+  transition: opacity var(--pk-base) var(--pk-out), transform var(--pk-spring-dur) var(--pk-spring);
+}
+.pk-strength-label[data-visible='false'] {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* ── Ojito: los dos íconos se cruzan en vez de cortar ────────────────────── */
+.pk-eye {
+  /* la posición (absolute) la da la clase de Tailwind en el botón */
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #94a3b8;
+  transition: color var(--pk-base) var(--pk-out), background-color var(--pk-base) var(--pk-out),
+    transform var(--pk-fast) var(--pk-out);
+}
+.pk-eye:hover { color: #0f172a; background: #f1f5f9; }
+.pk-eye:active { transform: scale(0.92); }
+.pk-eye > svg {
+  position: absolute;
+  transition: opacity 130ms var(--pk-out), transform 130ms var(--pk-out);
+}
+.pk-eye > svg[data-show='false'] {
+  opacity: 0;
+  transform: scale(0.6) rotate(-12deg);
+}
+
+/* Mensaje de error que aparece sin empujar de golpe el layout */
+.pk-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows var(--pk-spring-dur) var(--pk-spring), opacity var(--pk-base) var(--pk-out);
+}
+.pk-collapse[data-open='true'] { grid-template-rows: 1fr; opacity: 1; }
+.pk-collapse > * { overflow: hidden; }
+
+/* Mensajes que aparecen sin empujar el layout de golpe */
+@media (prefers-reduced-motion: reduce) {
+  .pk-strength-fill, .pk-strength-label, .pk-eye, .pk-eye > svg, .pk-collapse { transition-duration: 1ms !important; }
+}
