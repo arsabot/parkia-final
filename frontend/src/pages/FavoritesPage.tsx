@@ -39,22 +39,22 @@ export const FavoritesPage: React.FC = () => {
   }, [isAuthenticated, authLoading, navigate]);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark py-10 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Bookmark className="w-7 h-7 text-brand-600" />
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Bookmark className="w-7 h-7 text-brand-600 dark:text-brand-400" />
             Mis Favoritos
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Tus estacionamientos guardados para un acceso y reserva rápida.
           </p>
         </div>
 
         {loading ? (
           <div className="space-y-4">
-            <div className="h-36 bg-white rounded-3xl animate-pulse" />
-            <div className="h-36 bg-white rounded-3xl animate-pulse" />
+            <div className="h-36 bg-white dark:bg-parkia-card-dark rounded-3xl animate-pulse" />
+            <div className="h-36 bg-white dark:bg-parkia-card-dark rounded-3xl animate-pulse" />
           </div>
         ) : favorites.length === 0 ? (
           <EmptyState
