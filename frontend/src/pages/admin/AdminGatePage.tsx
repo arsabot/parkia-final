@@ -19,8 +19,7 @@ import {
   Smartphone,
   Receipt,
   ShieldCheck,
-  Check,
-  Sparkles
+  Check
 } from 'lucide-react';
 import { reservationService } from '../../services/reservationService';
 import { parkingService } from '../../services/parkingService';
@@ -509,8 +508,8 @@ export const AdminGatePage: React.FC = () => {
                           : 'text-slate-300 hover:text-white hover:bg-white/5'
                       }`}
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>⚡ Auto (Detecta In/Out)</span>
+                      <ScanLine className="w-3.5 h-3.5" />
+                      <span>Auto (Detecta In/Out)</span>
                     </button>
                     <button
                       type="button"
@@ -641,7 +640,7 @@ export const AdminGatePage: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="text-sm font-black text-white flex items-center gap-2">
-                          {lastFeedback.type === 'in' ? '¡Ingreso Validado! Barrera Abierta 🚗' : '¡Egreso Validado! Plaza Liberada 🏁'}
+                          {lastFeedback.type === 'in' ? '¡Ingreso Validado! Barrera Abierta' : '¡Egreso Validado! Plaza Liberada'}
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 uppercase">
                             {lastFeedback.time}
                           </span>
