@@ -12,8 +12,7 @@ import {
   Accessibility,
   CheckCircle2,
   AlertCircle,
-  FileCheck2,
-  Sparkles
+  FileCheck2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -266,7 +265,7 @@ export const RegisterPage: React.FC = () => {
                       onClick={handleFillDemoCud}
                       className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
-                      <Sparkles className="w-3 h-3 text-amber-500" /> Usar CUD de prueba
+                      Usar CUD de prueba
                     </button>
                   </div>
 
