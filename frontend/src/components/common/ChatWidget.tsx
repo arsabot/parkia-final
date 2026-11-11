@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MessageSquare, X, Send } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
 import type { Parking } from '../../types';
 import { parkingService } from '../../services/parkingService';
 import { reservationService } from '../../services/reservationService';
 import { createClaim, getClaim, listClaims } from '../../services/chatbotApi';
-import logo from '../../assets/parkia-chat-logo.png';
+import logo from '../../assets/landing/parkia-icono.png';
 import './chatWidget.css';
 
 type Msg = { id: number; from: 'bot' | 'user' | 'typing'; text: string };
@@ -46,6 +45,8 @@ export function ChatWidget() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chips, setChips] = useState<string[]>([]);
   const [text, setText] = useState('');
+  const [tip, setTip] = useState(false);
+  const [seen, setSeen] = useState(false);
   const flow = useRef<Flow | null>(null);
   const waiting = useRef(false);
   const started = useRef(false);
@@ -76,6 +77,13 @@ export function ChatWidget() {
     }
     prevUser.current = cur;
   }, [user?.id]);
+
+  // Burbuja "¿Te ayudo...?" que aparece a los 4 segundos si todavía no se abrió el chat.
+  useEffect(() => {
+    if (seen) return;
+    const t = window.setTimeout(() => setTip(true), 4000);
+    return () => window.clearTimeout(t);
+  }, [seen]);
 
   // El asistente es para conductores: no se muestra en el panel de administración.
   if (pathname.startsWith('/admin')) return null;
@@ -327,6 +335,8 @@ export function ChatWidget() {
 
   const openChat = () => {
     setOpen(true);
+    setTip(false);
+    setSeen(true);
     if (!started.current) {
       started.current = true;
       bot(`¡Hola${user ? ', ' + esc(user.first_name) : ''}! Soy el asistente de Parkia.<br>¿En qué puedo ayudarte?`);
@@ -340,22 +350,47 @@ export function ChatWidget() {
   };
 
   return (
-    <div id="pk-root">
-      <button id="pk-fab" className={open ? '' : 'show'} onClick={openChat} aria-label="Abrir asistente">
-        <MessageSquare className="w-6 h-6 text-white" />
-        <em />
+    <div id="pk-root" className={`${open ? 'open' : ''} ${seen ? 'seen' : ''} ${tip && !open ? 'tip' : ''}`}>
+      <div className="pk-tip" role="status">
+        <button type="button" className="pk-tip-open" onClick={openChat}>
+          ¿Te ayudo a encontrar lugar?
+        </button>
+        <button
+          type="button"
+          className="pk-tip-x"
+          aria-label="Cerrar sugerencia"
+          onClick={() => {
+            setTip(false);
+            setSeen(true);
+          }}
+        >
+          ×
+        </button>
+      </div>
+      <button id="pk-fab" type="button" onClick={() => (open ? setOpen(false) : openChat())} aria-expanded={open} aria-label={open ? 'Cerrar asistente' : 'Abrir asistente Parkia'}>
+        <svg className="ic ic-b" width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-7l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" stroke="#A3E635" strokeWidth="2" strokeLinejoin="round" />
+          <circle cx="8" cy="11" r="1.4" fill="#D9F99D" />
+          <circle cx="12" cy="11" r="1.4" fill="#D9F99D" />
+          <circle cx="16" cy="11" r="1.4" fill="#D9F99D" />
+        </svg>
+        <svg className="ic ic-x" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A3E635" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+        <em aria-hidden="true" />
       </button>
-      <section id="pk-chat" className={`chat${open ? '' : ' hide'}`} aria-label="Asistente Parkia">
+      <section id="pk-chat" className="chat" aria-label="Asistente Parkia" aria-hidden={!open}>
         <div className="head">
           <div className="av">
-            <img src={logo} alt="PARKIA" />
+            <img src={logo} alt="" />
+            <i aria-hidden="true" />
           </div>
           <div>
             <b>Parkia · Soporte</b>
             <small>Consultas y recepción de reclamos · 24 h</small>
           </div>
-          <button className="x" onClick={() => setOpen(false)} aria-label="Cerrar">
-            <X className="w-4 h-4 text-white" />
+          <button type="button" className="x" onClick={() => setOpen(false)} aria-label="Cerrar">
+            ×
           </button>
         </div>
         <div
@@ -394,7 +429,9 @@ export function ChatWidget() {
         <form id="pk-f" onSubmit={onSubmit}>
           <input id="pk-t" value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí tu consulta…" autoComplete="off" aria-label="Mensaje" />
           <button className="send" aria-label="Enviar" type="submit">
-            <Send className="w-4 h-4 text-white" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
           </button>
         </form>
         <div className="note">
