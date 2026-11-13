@@ -34,12 +34,16 @@ interface BookingModalProps {
 
 const getSessionId = (): string => {
   if (typeof window === 'undefined') return 'sess_default';
-  let sid = sessionStorage.getItem('parkia_lock_session_id');
-  if (!sid) {
-    sid = 'sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-    sessionStorage.setItem('parkia_lock_session_id', sid);
+  try {
+    let sid = sessionStorage.getItem('parkia_lock_session_id');
+    if (!sid) {
+      sid = 'sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      sessionStorage.setItem('parkia_lock_session_id', sid);
+    }
+    return sid;
+  } catch {
+    return 'sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
   }
-  return sid;
 };
 
 const formatTimer = (seconds: number) => {
@@ -509,6 +513,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 spaces={availableSpaces}
                 selectedId={selectedSpaceId}
                 onSelect={handleSelectSpace}
+                onSelectLocked={() => {
+                  toast('Esta plaza acaba de ser seleccionada por otro usuario. Elegí otra plaza disponible.', 'warning');
+                }}
                 hasPermit={hasPermit}
               />
             </div>

@@ -29,6 +29,9 @@ CREATE INDEX IF NOT EXISTS idx_space_locks_parking ON space_locks(parking_id, st
 -- 3. Habilitar RLS en space_locks
 ALTER TABLE space_locks ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE space_locks REPLICA IDENTITY FULL;
+ALTER TABLE parking_spaces REPLICA IDENTITY FULL;
+
 DROP POLICY IF EXISTS "Public Read SpaceLocks" ON space_locks;
 CREATE POLICY "Public Read SpaceLocks" ON space_locks FOR SELECT USING (true);
 
@@ -505,3 +508,4 @@ BEGIN
     );
 END;
 $$;
+

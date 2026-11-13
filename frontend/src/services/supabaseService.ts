@@ -1127,12 +1127,21 @@ export const supabaseReservations = {
         };
       }
 
-      await supabase
-        .from('space_locks')
-        .update({ status: 'released' })
-        .eq('parking_id', params.parking_id)
-        .eq('status', 'active')
-        .or(`session_id.eq.${params.session_id},user_id.eq.${params.user_id || 0}`);
+      if (params.user_id) {
+        await supabase
+          .from('space_locks')
+          .update({ status: 'released' })
+          .eq('parking_id', params.parking_id)
+          .eq('status', 'active')
+          .or(`session_id.eq.${params.session_id},user_id.eq.${params.user_id}`);
+      } else {
+        await supabase
+          .from('space_locks')
+          .update({ status: 'released' })
+          .eq('parking_id', params.parking_id)
+          .eq('status', 'active')
+          .eq('session_id', params.session_id);
+      }
 
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
       const { data: newLock, error: insertErr } = await supabase

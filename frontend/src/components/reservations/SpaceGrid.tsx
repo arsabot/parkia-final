@@ -80,6 +80,7 @@ interface SpaceGridProps {
   spaces: SpaceOption[];
   selectedId?: number;
   onSelect: (id: number) => void;
+  onSelectLocked?: (space: SpaceOption) => void;
   hasPermit: boolean;
   /** Clases de la grilla (columnas, alto máximo) según dónde se use */
   gridClassName?: string;
@@ -91,6 +92,7 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
   spaces,
   selectedId,
   onSelect,
+  onSelectLocked,
   hasPermit,
   gridClassName = 'grid-cols-4 sm:grid-cols-6 max-h-36',
   showFloor = true,
@@ -125,8 +127,18 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
             <button
               key={s.id}
               type="button"
-              disabled={!canPickSpace(s, hasPermit)}
-              onClick={() => onSelect(s.id)}
+              disabled={(!s.is_available && !isLockedOther) || isRestricted}
+              onClick={() => {
+                if (isLockedOther) {
+                  if (onSelectLocked) {
+                    onSelectLocked(s);
+                  } else {
+                    onSelect(s.id);
+                  }
+                  return;
+                }
+                onSelect(s.id);
+              }}
               title={
                 isLockedOther
                   ? 'Esta plaza acaba de ser seleccionada por otro usuario. Elegí otra plaza disponible.'
@@ -136,7 +148,7 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
               }
               aria-label={`Plaza ${s.code}${isAccessible ? ' accesible' : ''}, ${s.floor}, ${stateLabel}`}
               aria-pressed={isSelected}
-              className={`relative py-2 px-1 min-h-[44px] rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center cursor-pointer ${
+              className={`relative py-2 px-1 min-h-[44px] rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center cursor-pointer touch-manipulation select-none ${
                 isSelected && isAccessible
                   ? // Tu plaza accesible: azul con la rayita lima
                     'bg-plaza-accesible-elegida text-plaza-accesible-elegida-texto border-b-4 border-plaza-franja shadow-md scale-105'
