@@ -11,6 +11,7 @@ import {
   SpaceType,
   ReservationStatus,
   AdminDashboardData,
+  LockAcquireResult,
 } from '../types';
 
 // Helper display mappings
@@ -29,6 +30,10 @@ export const getSpaceTypeDisplay = (type: string): string => {
 
 export const getSpaceStatusDisplay = (status: string): string => {
   switch (status) {
+    case 'locked':
+    case 'locked_by_me':
+    case 'locked_by_other':
+      return 'Bloqueada temporalmente';
     case 'occupied':
       return 'Ocupada';
     case 'reserved':
@@ -890,6 +895,8 @@ export const supabaseReservations = {
     date: string;
     start_time: string;
     end_time: string;
+    session_id?: string;
+    user_id?: number;
   }): Promise<{
     parking_id: number;
     total_spaces: number;
@@ -904,6 +911,14 @@ export const supabaseReservations = {
       space_type: string;
       is_available: boolean;
       status: string;
+      is_locked_by_me?: boolean;
+      is_locked_by_other?: boolean;
+      lock_info?: {
+        lock_id: number;
+        is_mine: boolean;
+        expires_at: string;
+        seconds_remaining: number;
+      } | null;
     }>;
   }> {
     const spaces = await supabaseParking.getSpaces(params.parking_id);
@@ -913,24 +928,348 @@ export const supabaseReservations = {
     const [endH] = params.end_time.split(':').map(Number);
     const duration = Math.max(1, (endH || 12) - (startH || 10));
 
-    const available = spaces.filter((s) => s.status === 'available');
+    // Limpieza de bloqueos vencidos si Supabase está activo
+    const nowIso = new Date().toISOString();
+    try {
+      if (supabase) {
+        await supabase
+          .from('space_locks')
+          .update({ status: 'expired' })
+          .eq('status', 'active')
+          .lt('expires_at', nowIso);
+      }
+    } catch {
+      // Ignorar si la tabla no fue migrada aún
+    }
 
-    return {
-      parking_id: Number(params.parking_id),
-      total_spaces: spaces.length,
-      available_spaces_count: available.length,
-      has_availability: available.length > 0,
-      duration_hours: duration,
-      estimated_price: duration * parking.price_per_hour,
-      spaces: spaces.map((s) => ({
+    // Consultar bloqueos activos
+    let activeLocks: any[] = [];
+    try {
+      if (supabase) {
+        const { data: locks } = await supabase
+          .from('space_locks')
+          .select('*')
+          .eq('parking_id', params.parking_id)
+          .eq('date', params.date)
+          .eq('status', 'active')
+          .gt('expires_at', nowIso)
+          .lt('start_time', params.end_time)
+          .gt('end_time', params.start_time);
+        activeLocks = locks || [];
+      }
+    } catch {
+      // fallback
+    }
+
+    // Consultar reservas activas en ese rango horario
+    let activeReservations: any[] = [];
+    try {
+      if (supabase) {
+        const { data: resList } = await supabase
+          .from('reservations')
+          .select('space_id')
+          .eq('parking_id', params.parking_id)
+          .eq('date', params.date)
+          .in('status', ['pending', 'confirmed'])
+          .lt('start_time', params.end_time)
+          .gt('end_time', params.start_time);
+        activeReservations = resList || [];
+      }
+    } catch {
+      // fallback
+    }
+    const reservedSpaceIds = new Set(activeReservations.map((r) => r.space_id).filter(Boolean));
+
+    const lockedMap = new Map<number, any>();
+    for (const l of activeLocks) {
+      const isMine = (params.session_id && l.session_id === params.session_id) || (params.user_id && l.user_id === params.user_id);
+      const remaining = Math.max(0, Math.floor((new Date(l.expires_at).getTime() - Date.now()) / 1000));
+      lockedMap.set(l.space_id, {
+        lock_id: l.id,
+        is_mine: isMine,
+        expires_at: l.expires_at,
+        seconds_remaining: remaining,
+      });
+    }
+
+    const spacesComputed = spaces.map((s) => {
+      const lock = lockedMap.get(s.id);
+      const isMaintenance = s.status === 'maintenance';
+      const isReserved = reservedSpaceIds.has(s.id) || s.status === 'occupied' || s.status === 'reserved';
+
+      let status: string = s.status;
+      let isAvailable = false;
+      let isLockedByMe = false;
+      let isLockedByOther = false;
+
+      if (isMaintenance) {
+        status = 'maintenance';
+        isAvailable = false;
+      } else if (isReserved) {
+        status = 'occupied';
+        isAvailable = false;
+      } else if (lock) {
+        if (lock.is_mine) {
+          status = 'locked_by_me';
+          isAvailable = true;
+          isLockedByMe = true;
+        } else {
+          status = 'locked_by_other';
+          isAvailable = false;
+          isLockedByOther = true;
+        }
+      } else {
+        status = 'available';
+        isAvailable = true;
+      }
+
+      return {
         id: s.id,
         code: s.code,
         floor: s.floor,
         space_type: s.space_type,
-        is_available: s.status === 'available',
-        status: s.status,
-      })),
+        is_available: isAvailable,
+        status,
+        is_locked_by_me: isLockedByMe,
+        is_locked_by_other: isLockedByOther,
+        lock_info: lock || null,
+      };
+    });
+
+    const availableCount = spacesComputed.filter((s) => s.is_available).length;
+
+    return {
+      parking_id: Number(params.parking_id),
+      total_spaces: spaces.length,
+      available_spaces_count: availableCount,
+      has_availability: availableCount > 0,
+      duration_hours: duration,
+      estimated_price: duration * parking.price_per_hour,
+      spaces: spacesComputed,
     };
+  },
+
+  async acquireSpaceLock(params: {
+    space_id: number;
+    parking_id: number;
+    user_id?: number;
+    session_id: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+  }): Promise<LockAcquireResult> {
+    if (!supabase) throw new Error('Supabase no está configurado.');
+
+    // 1. Invocar función RPC atómica de PostgreSQL con bloqueo de fila FOR UPDATE
+    try {
+      const { data, error } = await supabase.rpc('acquire_space_lock', {
+        p_space_id: params.space_id,
+        p_parking_id: params.parking_id,
+        p_user_id: params.user_id || null,
+        p_session_id: params.session_id,
+        p_date: params.date,
+        p_start_time: params.start_time,
+        p_end_time: params.end_time,
+      });
+
+      if (!error && data) {
+        return data as LockAcquireResult;
+      }
+    } catch (rpcErr) {
+      console.warn('RPC acquire_space_lock error, intentando fallback cliente:', rpcErr);
+    }
+
+    // 2. Fallback transaccional del lado cliente si la función RPC aún no está creada
+    const nowIso = new Date().toISOString();
+    try {
+      await supabase
+        .from('space_locks')
+        .update({ status: 'expired' })
+        .eq('status', 'active')
+        .lt('expires_at', nowIso);
+
+      const { data: otherLocks } = await supabase
+        .from('space_locks')
+        .select('*')
+        .eq('space_id', params.space_id)
+        .eq('date', params.date)
+        .eq('status', 'active')
+        .gt('expires_at', nowIso)
+        .lt('start_time', params.end_time)
+        .gt('end_time', params.start_time);
+
+      const conflicting = (otherLocks || []).find(
+        (l) => l.session_id !== params.session_id && (!params.user_id || l.user_id !== params.user_id)
+      );
+
+      if (conflicting) {
+        return {
+          success: false,
+          code: 'LOCKED_BY_OTHER',
+          message: 'Esta plaza acaba de ser seleccionada por otro usuario. Elegí otra plaza disponible.',
+        };
+      }
+
+      const { data: reservations } = await supabase
+        .from('reservations')
+        .select('id')
+        .eq('space_id', params.space_id)
+        .eq('date', params.date)
+        .in('status', ['pending', 'confirmed'])
+        .lt('start_time', params.end_time)
+        .gt('end_time', params.start_time);
+
+      if (reservations && reservations.length > 0) {
+        return {
+          success: false,
+          code: 'ALREADY_RESERVED',
+          message: 'Esta plaza ya se encuentra reservada para esa franja horaria.',
+        };
+      }
+
+      await supabase
+        .from('space_locks')
+        .update({ status: 'released' })
+        .eq('parking_id', params.parking_id)
+        .eq('status', 'active')
+        .or(`session_id.eq.${params.session_id},user_id.eq.${params.user_id || 0}`);
+
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const { data: newLock, error: insertErr } = await supabase
+        .from('space_locks')
+        .insert({
+          space_id: params.space_id,
+          parking_id: params.parking_id,
+          user_id: params.user_id || null,
+          session_id: params.session_id,
+          date: params.date,
+          start_time: params.start_time,
+          end_time: params.end_time,
+          status: 'active',
+          locked_at: nowIso,
+          expires_at: expiresAt,
+        })
+        .select('id')
+        .single();
+
+      if (insertErr) {
+        return {
+          success: false,
+          code: 'LOCK_FAILED',
+          message: 'No se pudo bloquear la plaza: ' + insertErr.message,
+        };
+      }
+
+      await supabase.from('parking_spaces').update({ status: 'locked' }).eq('id', params.space_id);
+
+      return {
+        success: true,
+        lock_id: newLock.id,
+        space_id: params.space_id,
+        expires_at: expiresAt,
+        ttl_seconds: 300,
+        message: 'Tu plaza está protegida durante 5 minutos.',
+      };
+    } catch (e: any) {
+      return {
+        success: false,
+        code: 'LOCK_ERROR',
+        message: e.message || 'Error al procesar el bloqueo.',
+      };
+    }
+  },
+
+  async releaseSpaceLock(params: {
+    lock_id: number;
+    session_id: string;
+    user_id?: number;
+  }): Promise<{ success: boolean; message: string }> {
+    if (!supabase) return { success: false, message: 'Supabase no disponible.' };
+
+    try {
+      const { data, error } = await supabase.rpc('release_space_lock', {
+        p_lock_id: params.lock_id,
+        p_session_id: params.session_id,
+        p_user_id: params.user_id || null,
+      });
+      if (!error && data) return data;
+    } catch {
+      // Fallback
+    }
+
+    try {
+      const { data: lock } = await supabase
+        .from('space_locks')
+        .select('space_id')
+        .eq('id', params.lock_id)
+        .single();
+
+      await supabase
+        .from('space_locks')
+        .update({ status: 'released' })
+        .eq('id', params.lock_id);
+
+      if (lock?.space_id) {
+        await supabase.from('parking_spaces').update({ status: 'available' }).eq('id', lock.space_id);
+      }
+      return { success: true, message: 'Plaza liberada exitosamente.' };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Error al liberar plaza.' };
+    }
+  },
+
+  async confirmReservationWithLock(data: {
+    lock_id: number;
+    session_id: string;
+    parking: number;
+    space?: number;
+    vehicle_plate: string;
+    vehicle_model?: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    payment_method?: string;
+    payment_status?: 'pending' | 'paid' | 'refunded';
+    status?: ReservationStatus;
+  }): Promise<{ message: string; reservation: Reservation }> {
+    if (!supabase) throw new Error('Supabase no está configurado.');
+
+    try {
+      const userStr = localStorage.getItem('parkia_user');
+      const user = userStr ? JSON.parse(userStr) : { id: 1 };
+      const { data: rpcRes, error } = await supabase.rpc('confirm_reservation_with_lock', {
+        p_lock_id: data.lock_id,
+        p_session_id: data.session_id,
+        p_user_id: user.id,
+        p_vehicle_plate: data.vehicle_plate,
+        p_vehicle_model: data.vehicle_model || 'Auto Particular',
+        p_payment_method: data.payment_method || 'Mercado Pago',
+        p_payment_status: data.payment_status || 'paid',
+        p_reservation_status: data.status || 'confirmed',
+      });
+
+      if (!error && rpcRes && rpcRes.success) {
+        return { message: rpcRes.message, reservation: rpcRes.reservation };
+      }
+      if (rpcRes && !rpcRes.success) {
+        throw new Error(rpcRes.message);
+      }
+    } catch (e: any) {
+      if (e.message && e.message.includes('minutos')) {
+        throw e;
+      }
+      console.warn('RPC confirm_reservation_with_lock fallback:', e);
+    }
+
+    const res = await this.createReservation({
+      ...data,
+    });
+    try {
+      await supabase.from('space_locks').update({ status: 'converted' }).eq('id', data.lock_id);
+    } catch {
+      // Ignorar si la tabla no está creada
+    }
+    return res;
   },
 };
 

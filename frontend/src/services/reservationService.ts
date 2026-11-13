@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Reservation, ReservationStatus } from '../types';
+import { Reservation, ReservationStatus, LockAcquireResult } from '../types';
 import { isSupabaseConfigured } from './supabaseClient';
 import { supabaseReservations } from './supabaseService';
 
@@ -64,6 +64,8 @@ export const reservationService = {
     date: string;
     start_time: string;
     end_time: string;
+    session_id?: string;
+    user_id?: number;
   }): Promise<{
     parking_id: number;
     total_spaces: number;
@@ -78,12 +80,70 @@ export const reservationService = {
       space_type: string;
       is_available: boolean;
       status: string;
+      is_locked_by_me?: boolean;
+      is_locked_by_other?: boolean;
+      lock_info?: {
+        lock_id: number;
+        is_mine: boolean;
+        expires_at: string;
+        seconds_remaining: number;
+      } | null;
     }>;
   }> {
     if (isSupabaseConfigured()) {
       return supabaseReservations.checkAvailability(params);
     }
     return api.get('/reservations/check_availability/', params);
+  },
+
+  async acquireSpaceLock(params: {
+    space_id: number;
+    parking_id: number;
+    user_id?: number;
+    session_id: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+  }): Promise<LockAcquireResult> {
+    if (isSupabaseConfigured()) {
+      return supabaseReservations.acquireSpaceLock(params);
+    }
+    return api.post<LockAcquireResult>('/reservations/lock_space/', params);
+  },
+
+  async releaseSpaceLock(params: {
+    lock_id: number;
+    session_id: string;
+    user_id?: number;
+  }): Promise<{ success: boolean; message: string }> {
+    if (isSupabaseConfigured()) {
+      return supabaseReservations.releaseSpaceLock(params);
+    }
+    return api.post<{ success: boolean; message: string }>('/reservations/release_lock/', params);
+  },
+
+  async confirmReservationWithLock(data: {
+    lock_id: number;
+    session_id: string;
+    parking: number;
+    space?: number;
+    vehicle_plate: string;
+    vehicle_model?: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    payment_method?: string;
+    payment_status?: 'pending' | 'paid' | 'refunded';
+    status?: ReservationStatus;
+  }): Promise<{ message: string; reservation: Reservation }> {
+    if (isSupabaseConfigured()) {
+      return supabaseReservations.confirmReservationWithLock(data);
+    }
+    return api.post<{ message: string; reservation: Reservation }>('/reservations/', {
+      ...data,
+      lock_id: data.lock_id,
+      session_id: data.session_id,
+    });
   },
 
   async verifyQr(code: string): Promise<{ valid: boolean; message: string; reservation: Reservation }> {

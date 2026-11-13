@@ -16,8 +16,35 @@ export interface User {
   created_at: string;
 }
 
-export type SpaceStatus = 'available' | 'occupied' | 'reserved' | 'maintenance';
+export type SpaceStatus = 'available' | 'locked' | 'occupied' | 'reserved' | 'maintenance';
 export type SpaceType = 'standard' | 'disabled' | 'ev' | 'large';
+
+export interface SpaceLock {
+  id: number;
+  space_id: number;
+  parking_id: number;
+  user_id?: number | null;
+  session_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: 'active' | 'expired' | 'released' | 'converted';
+  locked_at: string;
+  expires_at: string;
+  ttl_seconds?: number;
+}
+
+export interface LockAcquireResult {
+  success: boolean;
+  lock_id?: number;
+  space_id?: number;
+  space_code?: string;
+  expires_at?: string;
+  ttl_seconds?: number;
+  is_renewed?: boolean;
+  code?: string;
+  message: string;
+}
 
 export interface ParkingSpace {
   id: number;

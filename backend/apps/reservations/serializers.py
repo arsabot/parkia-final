@@ -69,6 +69,8 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
     payment_method = serializers.CharField(required=False, default='Mercado Pago')
     payment_status = serializers.CharField(required=False, default='pending')
     status = serializers.CharField(required=False, allow_null=True, default=None)
+    lock_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    session_id = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
 
     class Meta:
         model = Reservation
@@ -83,6 +85,8 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
             'payment_method',
             'payment_status',
             'status',
+            'lock_id',
+            'session_id',
         ]
 
     def validate(self, data):
@@ -188,8 +192,12 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         from django.utils import timezone
+        from apps.reservations.models import SpaceLock
         user = self.context['request'].user
         validated_data['user'] = user
+
+        lock_id = validated_data.pop('lock_id', None)
+        session_id = validated_data.pop('session_id', None)
 
         # Metodo y estado de pago
         payment_method = validated_data.get('payment_method') or 'Mercado Pago'
@@ -208,4 +216,20 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
 
         if not validated_data.get('payment_expires_at'):
             validated_data['payment_expires_at'] = timezone.now() + timedelta(minutes=15)
-        return super().create(validated_data)
+
+        reservation = super().create(validated_data)
+
+        # Si habia un bloqueo temporal, convertirlo y marcar plaza como reservada
+        if lock_id:
+            try:
+                lock = SpaceLock.objects.get(id=lock_id)
+                lock.status = SpaceLock.Status.CONVERTED
+                lock.save(update_fields=['status', 'updated_at'])
+            except SpaceLock.DoesNotExist:
+                pass
+
+        if reservation.space:
+            reservation.space.status = ParkingSpace.Status.RESERVED
+            reservation.space.save(update_fields=['status'])
+
+        return reservation

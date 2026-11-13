@@ -69,3 +69,40 @@ class Reservation(models.Model):
         if not self.booking_code:
             self.booking_code = generate_booking_code()
         super().save(*args, **kwargs)
+
+
+class SpaceLock(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = 'active', 'Activo'
+        EXPIRED = 'expired', 'Expirado'
+        RELEASED = 'released', 'Liberado'
+        CONVERTED = 'converted', 'Convertido a reserva'
+
+    space = models.ForeignKey(ParkingSpace, on_delete=models.CASCADE, related_name='locks')
+    parking = models.ForeignKey(Parking, on_delete=models.CASCADE, related_name='locks')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='space_locks', null=True, blank=True)
+    session_id = models.CharField('ID de sesión del cliente', max_length=100)
+
+    date = models.DateField('Fecha de reserva solicitada')
+    start_time = models.TimeField('Hora de entrada')
+    end_time = models.TimeField('Hora de salida')
+
+    status = models.CharField('Estado del bloqueo', max_length=20, choices=Status.choices, default=Status.ACTIVE)
+    locked_at = models.DateTimeField('Fecha de bloqueo', auto_now_add=True)
+    expires_at = models.DateTimeField('Fecha de expiración')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Bloqueo temporal de plaza'
+        verbose_name_plural = 'Bloqueos temporales de plazas'
+        ordering = ['-locked_at']
+        indexes = [
+            models.Index(fields=['space', 'date', 'status']),
+            models.Index(fields=['expires_at']),
+            models.Index(fields=['session_id', 'status']),
+        ]
+
+    def __str__(self):
+        return f"Lock #{self.id} | Plaza {self.space.code} en {self.parking.name} ({self.status}) expira {self.expires_at}"
