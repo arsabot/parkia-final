@@ -474,6 +474,24 @@ export const supabaseParking = {
   },
 };
 
+// Helper para resolver un user_id válido en Supabase
+async function getValidSupabaseUserId(candidateId?: number | null, email?: string | null): Promise<number | null> {
+  if (!supabase) return null;
+  try {
+    if (candidateId && !isNaN(Number(candidateId))) {
+      const { data } = await supabase.from('users').select('id').eq('id', Number(candidateId)).maybeSingle();
+      if (data?.id) return Number(data.id);
+    }
+    if (email && typeof email === 'string') {
+      const { data } = await supabase.from('users').select('id').eq('email', email.trim().toLowerCase()).maybeSingle();
+      if (data?.id) return Number(data.id);
+    }
+  } catch {
+    // Si hay error de red o tabla no accesible, retorna null de forma segura
+  }
+  return null;
+}
+
 // ============================================================================
 // SUPABASE RESERVATION SERVICE
 // ============================================================================
@@ -588,9 +606,19 @@ export const supabaseReservations = {
       throw new Error('Esta plaza ya cuenta con una reserva confirmada para este horario.');
     }
 
-    // 3. Current user
+    // 3. Current user (validar contra tabla users de Supabase para evitar violación de FK)
     const userStr = localStorage.getItem('parkia_user');
-    const user = userStr ? JSON.parse(userStr) : { id: 1 };
+    const storedUser = userStr ? JSON.parse(userStr) : null;
+    let validUserId = await getValidSupabaseUserId(storedUser?.id, storedUser?.email);
+    if (!validUserId) {
+      const { data: defaultUser } = await supabase
+        .from('users')
+        .select('id')
+        .order('id', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      validUserId = defaultUser?.id || 1;
+    }
 
     // 4. Generate unique booking code
     const code = 'PK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -603,7 +631,7 @@ export const supabaseReservations = {
       .from('reservations')
       .insert({
         booking_code: code,
-        user_id: user.id,
+        user_id: validUserId,
         parking_id: data.parking,
         space_id: spaceId,
         vehicle_plate: data.vehicle_plate.toUpperCase(),
@@ -1075,12 +1103,17 @@ export const supabaseReservations = {
   }): Promise<LockAcquireResult> {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
+    // Sanitizar user_id contra la tabla users de Supabase para evitar violación de FK
+    const userStr = localStorage.getItem('parkia_user');
+    const storedUser = userStr ? JSON.parse(userStr) : null;
+    const validUserId = await getValidSupabaseUserId(params.user_id, storedUser?.email);
+
     // 1. Invocar función RPC atómica de PostgreSQL con bloqueo de fila FOR UPDATE
     try {
       const { data, error } = await supabase.rpc('acquire_space_lock', {
         p_space_id: params.space_id,
         p_parking_id: params.parking_id,
-        p_user_id: params.user_id || null,
+        p_user_id: validUserId,
         p_session_id: params.session_id,
         p_date: params.date,
         p_start_time: params.start_time,
@@ -1114,7 +1147,7 @@ export const supabaseReservations = {
         .gt('end_time', params.start_time);
 
       const conflicting = (otherLocks || []).find(
-        (l) => l.session_id !== params.session_id && (!params.user_id || l.user_id !== params.user_id)
+        (l) => l.session_id !== params.session_id && (!validUserId || l.user_id !== validUserId)
       );
 
       if (conflicting) {
@@ -1142,13 +1175,13 @@ export const supabaseReservations = {
         };
       }
 
-      if (params.user_id) {
+      if (validUserId) {
         await supabase
           .from('space_locks')
           .update({ status: 'released' })
           .eq('parking_id', params.parking_id)
           .eq('status', 'active')
-          .or(`session_id.eq.${params.session_id},user_id.eq.${params.user_id}`);
+          .or(`session_id.eq.${params.session_id},user_id.eq.${validUserId}`);
       } else {
         await supabase
           .from('space_locks')
@@ -1159,28 +1192,46 @@ export const supabaseReservations = {
       }
 
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-      const { data: newLock, error: insertErr } = await supabase
+      const insertPayload = {
+        space_id: params.space_id,
+        parking_id: params.parking_id,
+        user_id: validUserId,
+        session_id: params.session_id,
+        date: params.date,
+        start_time: params.start_time,
+        end_time: params.end_time,
+        status: 'active',
+        locked_at: nowIso,
+        expires_at: expiresAt,
+      };
+
+      let { data: newLock, error: insertErr } = await supabase
         .from('space_locks')
-        .insert({
-          space_id: params.space_id,
-          parking_id: params.parking_id,
-          user_id: params.user_id || null,
-          session_id: params.session_id,
-          date: params.date,
-          start_time: params.start_time,
-          end_time: params.end_time,
-          status: 'active',
-          locked_at: nowIso,
-          expires_at: expiresAt,
-        })
+        .insert(insertPayload)
         .select('id')
         .single();
 
-      if (insertErr) {
+      // Si la base de datos aún tiene la restricción estricta de FK en space_locks_user_id_fkey, reintentar con user_id null
+      if (insertErr && (insertErr.code === '23503' || insertErr.message?.includes('space_locks_user_id_fkey') || insertErr.message?.includes('foreign key'))) {
+        const retry = await supabase
+          .from('space_locks')
+          .insert({
+            ...insertPayload,
+            user_id: null,
+          })
+          .select('id')
+          .single();
+        if (!retry.error && retry.data) {
+          newLock = retry.data;
+          insertErr = null;
+        }
+      }
+
+      if (insertErr || !newLock) {
         return {
           success: false,
           code: 'LOCK_FAILED',
-          message: 'No se pudo bloquear la plaza: ' + insertErr.message,
+          message: 'No se pudo bloquear la plaza: ' + (insertErr?.message || 'Error al registrar bloqueo.'),
         };
       }
 
@@ -1259,14 +1310,24 @@ export const supabaseReservations = {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
     const userStr = localStorage.getItem('parkia_user');
-    const user = userStr ? JSON.parse(userStr) : { id: 1 };
+    const storedUser = userStr ? JSON.parse(userStr) : null;
+    let validUserId = await getValidSupabaseUserId(storedUser?.id, storedUser?.email);
+    if (!validUserId) {
+      const { data: defaultUser } = await supabase
+        .from('users')
+        .select('id')
+        .order('id', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      validUserId = defaultUser?.id || 1;
+    }
 
     // 1. Invocar RPC PostgreSQL con bloqueo transaccional
     try {
       const { data: rpcRes, error } = await supabase.rpc('confirm_reservation_with_lock', {
         p_lock_id: data.lock_id,
         p_session_id: data.session_id,
-        p_user_id: user.id,
+        p_user_id: validUserId,
         p_vehicle_plate: data.vehicle_plate,
         p_vehicle_model: data.vehicle_model || 'Auto Particular',
         p_payment_method: data.payment_method || 'Mercado Pago',
