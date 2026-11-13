@@ -331,7 +331,7 @@ export const ParkingDetailPage: React.FC = () => {
     paymentStatus: 'paid' | 'pending',
     reservationStatus: 'confirmed' | 'pending' = 'confirmed'
   ) => {
-    if (!parking) return;
+    if (!parking || isSubmitting) return;
     try {
       setIsSubmitting(true);
 
@@ -366,6 +366,9 @@ export const ParkingDetailPage: React.FC = () => {
         });
       }
 
+      setActiveLockId(null);
+      setLockExpiresAt(null);
+      setSelectedSpaceId(undefined);
       broadcastLockChange();
 
       confetti({
@@ -731,7 +734,7 @@ export const ParkingDetailPage: React.FC = () => {
                       }}
                       hasPermit={hasPermit}
                       gridClassName="grid-cols-4 max-h-36"
-                      showFloor={false}
+                      showFloor={true}
                     />
                   </div>
                 )}

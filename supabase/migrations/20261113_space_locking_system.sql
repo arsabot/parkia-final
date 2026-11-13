@@ -423,6 +423,22 @@ BEGIN
     -- Generar código único de reserva (formato PK-XXXXXX)
     v_booking_code := 'PK-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
 
+    -- Paso 3.5: Verificar que la plaza no haya sido confirmada por otra reserva previa
+    IF EXISTS (
+        SELECT 1 FROM reservations
+        WHERE space_id = v_lock.space_id
+          AND date = v_lock.date
+          AND status IN ('pending', 'confirmed')
+          AND start_time < v_lock.end_time
+          AND end_time > v_lock.start_time
+    ) THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'code', 'ALREADY_RESERVED',
+            'message', 'Esta plaza ya cuenta con una reserva confirmada en este horario.'
+        );
+    END IF;
+
     -- Paso 4: Insertar la reserva confirmada
     INSERT INTO reservations (
         booking_code,
@@ -508,4 +524,36 @@ BEGIN
     );
 END;
 $$;
+
+-- ----------------------------------------------------------------------------
+-- 9. TRIGGER DE INTEGRIDAD: previene solapamiento directo en reservations
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION check_reservation_no_overlap()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NEW.status IN ('pending', 'confirmed') AND NEW.space_id IS NOT NULL THEN
+        IF EXISTS (
+            SELECT 1 FROM reservations
+            WHERE space_id = NEW.space_id
+              AND date = NEW.date
+              AND id <> COALESCE(NEW.id, 0)
+              AND status IN ('pending', 'confirmed')
+              AND start_time < NEW.end_time
+              AND end_time > NEW.start_time
+        ) THEN
+            RAISE EXCEPTION 'La plaza ya se encuentra reservada para esa franja horaria.';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_reservation_overlap ON reservations;
+CREATE TRIGGER trg_prevent_reservation_overlap
+BEFORE INSERT OR UPDATE ON reservations
+FOR EACH ROW
+EXECUTE FUNCTION check_reservation_no_overlap();
+
 

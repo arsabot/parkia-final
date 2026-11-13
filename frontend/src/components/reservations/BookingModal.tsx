@@ -348,6 +348,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
       setActiveLockId(null);
       setLockExpiresAt(null);
+      setSelectedSpaceId(undefined);
       broadcastLockChange();
 
       confetti({
