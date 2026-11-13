@@ -573,6 +573,21 @@ export const supabaseReservations = {
       spaceId = availableSpace?.id || 1;
     }
 
+    // 2.5 Verificar que la plaza no esté ya reservada para esa franja horaria
+    const { data: overlapping } = await supabase
+      .from('reservations')
+      .select('id')
+      .eq('space_id', spaceId)
+      .eq('date', data.date)
+      .in('status', ['pending', 'confirmed'])
+      .lt('start_time', data.end_time)
+      .gt('end_time', data.start_time)
+      .limit(1);
+
+    if (overlapping && overlapping.length > 0) {
+      throw new Error('Esta plaza ya cuenta con una reserva confirmada para este horario.');
+    }
+
     // 3. Current user
     const userStr = localStorage.getItem('parkia_user');
     const user = userStr ? JSON.parse(userStr) : { id: 1 };
@@ -1243,9 +1258,11 @@ export const supabaseReservations = {
   }): Promise<{ message: string; reservation: Reservation }> {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
+    const userStr = localStorage.getItem('parkia_user');
+    const user = userStr ? JSON.parse(userStr) : { id: 1 };
+
+    // 1. Invocar RPC PostgreSQL con bloqueo transaccional
     try {
-      const userStr = localStorage.getItem('parkia_user');
-      const user = userStr ? JSON.parse(userStr) : { id: 1 };
       const { data: rpcRes, error } = await supabase.rpc('confirm_reservation_with_lock', {
         p_lock_id: data.lock_id,
         p_session_id: data.session_id,
@@ -1257,19 +1274,22 @@ export const supabaseReservations = {
         p_reservation_status: data.status || 'confirmed',
       });
 
-      if (!error && rpcRes && rpcRes.success) {
+      if (rpcRes) {
+        if (!rpcRes.success) {
+          throw new Error(rpcRes.message || 'No se pudo confirmar la reserva.');
+        }
         return { message: rpcRes.message, reservation: rpcRes.reservation };
       }
-      if (rpcRes && !rpcRes.success) {
-        throw new Error(rpcRes.message);
+
+      if (error && error.code !== 'PGRST202') {
+        throw new Error(error.message || 'Error al confirmar la reserva.');
       }
     } catch (e: any) {
-      if (e.message && e.message.includes('minutos')) {
-        throw e;
-      }
-      console.warn('RPC confirm_reservation_with_lock fallback:', e);
+      // Las fallas de validación deben propagarse inmediatamente para impedir duplicados
+      throw e;
     }
 
+    // 2. Solo si el RPC no existe en la base de datos (fallback excepcional)
     const res = await this.createReservation({
       ...data,
     });

@@ -98,6 +98,7 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
   };
 
   const handleProcessPayment = async () => {
+    if (processing) return;
     if (timeLeft <= 0) {
       alert('El tiempo para completar la reserva ha expirado. Por favor, vuelve a seleccionar una plaza disponible.');
       onClose();

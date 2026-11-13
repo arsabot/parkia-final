@@ -1230,3 +1230,34 @@ BEGIN
     );
 END;
 $$;
+
+-- ----------------------------------------------------------------------------
+-- TRIGGER DE INTEGRIDAD: previene solapamiento directo en reservations
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION check_reservation_no_overlap()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NEW.status IN ('pending', 'confirmed') AND NEW.space_id IS NOT NULL THEN
+        IF EXISTS (
+            SELECT 1 FROM reservations
+            WHERE space_id = NEW.space_id
+              AND date = NEW.date
+              AND id <> COALESCE(NEW.id, 0)
+              AND status IN ('pending', 'confirmed')
+              AND start_time < NEW.end_time
+              AND end_time > NEW.start_time
+        ) THEN
+            RAISE EXCEPTION 'La plaza ya se encuentra reservada para esa franja horaria.';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_reservation_overlap ON reservations;
+CREATE TRIGGER trg_prevent_reservation_overlap
+BEFORE INSERT OR UPDATE ON reservations
+FOR EACH ROW
+EXECUTE FUNCTION check_reservation_no_overlap();
