@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   MapPin, 
@@ -16,7 +16,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   Car,
-  Layers
+  Layers,
+  Lock,
+  Unlock,
+  Info
 } from 'lucide-react';
 import { Parking, ParkingSpace } from '../types';
 import { parkingService } from '../services/parkingService';
@@ -33,7 +36,28 @@ import { SpaceGrid, defaultSpace } from '../components/reservations/SpaceGrid';
 import { AccessibleSpotCard } from '../components/reservations/AccessibleSpotCard';
 import { PaymentMethodSelector } from '../components/reservations/PaymentMethodSelector';
 import { PaymentCheckoutModal, PaymentMethod } from '../components/reservations/PaymentCheckoutModal';
+import { useSpaceLocksRealtime } from '../hooks/useSpaceLocksRealtime';
 import confetti from 'canvas-confetti';
+
+const getSessionId = (): string => {
+  if (typeof window === 'undefined') return 'sess_default';
+  try {
+    let sid = sessionStorage.getItem('parkia_lock_session_id');
+    if (!sid) {
+      sid = 'sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      sessionStorage.setItem('parkia_lock_session_id', sid);
+    }
+    return sid;
+  } catch {
+    return 'sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+  }
+};
+
+const formatTimer = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+};
 
 export const ParkingDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,6 +72,9 @@ export const ParkingDetailPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<string>('');
 
+  // Stable session identifier for concurrency locks across reloads
+  const sessionId = useRef<string>(getSessionId()).current;
+
   // Booking widget form state
   const todayStr = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState<string>(todayStr);
@@ -57,6 +84,12 @@ export const ParkingDetailPage: React.FC = () => {
   const [vehiclePlate, setVehiclePlate] = useState<string>('AA123BB');
   const [vehicleModel, setVehicleModel] = useState<string>('');
   const [isAccessibleRequested, setIsAccessibleRequested] = useState<boolean>(hasPermit);
+
+  // Temporary Lock & Concurrency State
+  const [activeLockId, setActiveLockId] = useState<number | null>(null);
+  const [lockExpiresAt, setLockExpiresAt] = useState<string | null>(null);
+  const [lockSecondsLeft, setLockSecondsLeft] = useState<number>(300);
+  const [isLocking, setIsLocking] = useState<boolean>(false);
 
   // Payment state
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('Mercado Pago');
@@ -96,54 +129,104 @@ export const ParkingDetailPage: React.FC = () => {
     }
   }, [hasPermit]);
 
-  // Check dynamic availability when date/time changes
+  // Check dynamic availability with lock tracking
+  const checkSlots = useCallback(async () => {
+    if (!parking) return;
+    setValidationError(null);
+    if (startTime >= endTime) {
+      setValidationError('La hora de salida debe ser posterior a la de entrada.');
+      return;
+    }
+
+    try {
+      setIsChecking(true);
+      const res = await reservationService.checkAvailability({
+        parking_id: parking.id,
+        date,
+        start_time: startTime,
+        end_time: endTime,
+        session_id: sessionId,
+        user_id: user?.id,
+      });
+
+      const spaces = res.spaces || [];
+      setAvailableSpaces(spaces);
+      setDurationHours(res.duration_hours || 1.0);
+      setEstimatedPrice(res.estimated_price || Number(parking.price_per_hour));
+
+      // Verificar si nuestra plaza seleccionada fue bloqueada por otro
+      if (selectedSpaceId) {
+        const currentSpace = spaces.find((s: any) => s.id === selectedSpaceId);
+        if (currentSpace && (currentSpace.is_locked_by_other || currentSpace.status === 'locked_by_other')) {
+          toast('La plaza seleccionada fue tomada por otro usuario. Por favor elige otra.', 'warning');
+          setSelectedSpaceId(undefined);
+          setActiveLockId(null);
+          setLockExpiresAt(null);
+        }
+      }
+    } catch (err: any) {
+      setValidationError(err.message || 'Error al comprobar disponibilidad');
+    } finally {
+      setIsChecking(false);
+    }
+  }, [parking, date, startTime, endTime, sessionId, user?.id, selectedSpaceId, toast]);
+
+  // Sincronización en tiempo real vía Supabase
+  const { broadcastLockChange } = useSpaceLocksRealtime({
+    parkingId: parking?.id,
+    enabled: Boolean(parking?.id),
+    onLockChange: () => {
+      checkSlots();
+    },
+  });
+
+  // Re-evaluar disponibilidad cuando cambian los filtros de fecha u hora
   useEffect(() => {
     if (!parking) return;
+    const timer = setTimeout(checkSlots, 250);
+    return () => clearTimeout(timer);
+  }, [parking, date, startTime, endTime, checkSlots]);
 
-    const checkSlots = async () => {
-      setValidationError(null);
-      if (startTime >= endTime) {
-        setValidationError('La hora de salida debe ser posterior a la de entrada.');
-        return;
-      }
+  // Temporizador regresivo sincronizado con el servidor
+  useEffect(() => {
+    if (!lockExpiresAt || !activeLockId) {
+      setLockSecondsLeft(300);
+      return;
+    }
 
-      try {
-        setIsChecking(true);
-        const res = await reservationService.checkAvailability({
-          parking_id: parking.id,
-          date,
-          start_time: startTime,
-          end_time: endTime,
-        });
+    const updateTimer = () => {
+      const now = Date.now();
+      const target = new Date(lockExpiresAt).getTime();
+      const diff = Math.max(0, Math.floor((target - now) / 1000));
+      setLockSecondsLeft(diff);
 
-        const spaces = res.spaces || [];
-        setAvailableSpaces(spaces);
-        setDurationHours(res.duration_hours || 1.0);
-        setEstimatedPrice(res.estimated_price || Number(parking.price_per_hour));
-
-        // Auto select space respecting accessible preference
-        if (isAccessibleRequested) {
-          const accSpace = spaces.find((s: any) => (s.space_type === 'disabled' || s.is_accessible) && s.is_available);
-          if (accSpace) {
-            setSelectedSpaceId(accSpace.id);
-            return;
-          }
-        }
-
-        const firstFree = defaultSpace(spaces);
-        if (firstFree && !selectedSpaceId) {
-          setSelectedSpaceId(firstFree.id);
-        }
-      } catch (err: any) {
-        setValidationError(err.message || 'Error al comprobar disponibilidad');
-      } finally {
-        setIsChecking(false);
+      if (diff === 0) {
+        toast('El tiempo de 5 minutos para completar la reserva ha expirado. La plaza fue liberada.', 'error');
+        setActiveLockId(null);
+        setLockExpiresAt(null);
+        setSelectedSpaceId(undefined);
+        broadcastLockChange();
+        checkSlots();
       }
     };
 
-    const timer = setTimeout(checkSlots, 300);
-    return () => clearTimeout(timer);
-  }, [parking, date, startTime, endTime, isAccessibleRequested]);
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [lockExpiresAt, activeLockId, broadcastLockChange, checkSlots, toast]);
+
+  // Liberar bloqueo al abandonar la página
+  useEffect(() => {
+    return () => {
+      if (activeLockId) {
+        reservationService.releaseSpaceLock({
+          lock_id: activeLockId,
+          session_id: sessionId,
+          user_id: user?.id,
+        }).catch(() => {});
+      }
+    };
+  }, [activeLockId, sessionId, user?.id]);
 
   // Handle accessible spot toggle
   const handleAccessibleChange = (checked: boolean) => {
@@ -151,13 +234,72 @@ export const ParkingDetailPage: React.FC = () => {
     if (checked) {
       const accSpace = availableSpaces.find((s: any) => (s.space_type === 'disabled' || s.is_accessible) && s.is_available);
       if (accSpace) {
-        setSelectedSpaceId(accSpace.id);
+        handleSelectSpace(accSpace.id);
       }
     } else {
       const stdSpace = availableSpaces.find((s: any) => s.space_type !== 'disabled' && !s.is_accessible && s.is_available);
       if (stdSpace) {
-        setSelectedSpaceId(stdSpace.id);
+        handleSelectSpace(stdSpace.id);
       }
+    }
+  };
+
+  // Selección de plaza con bloqueo atómico en base de datos
+  const handleSelectSpace = async (spaceId: number) => {
+    if (spaceId === selectedSpaceId && activeLockId) return;
+    if (!parking) return;
+
+    try {
+      setIsLocking(true);
+      const res = await reservationService.acquireSpaceLock({
+        space_id: spaceId,
+        parking_id: parking.id,
+        user_id: user?.id,
+        session_id: sessionId,
+        date,
+        start_time: startTime,
+        end_time: endTime,
+      });
+
+      if (!res.success) {
+        toast(res.message, 'warning');
+        checkSlots();
+        return;
+      }
+
+      setActiveLockId(res.lock_id || null);
+      setLockExpiresAt(res.expires_at || null);
+      setSelectedSpaceId(spaceId);
+      broadcastLockChange();
+      checkSlots();
+      toast(res.message, 'info');
+    } catch (err: any) {
+      toast(err.message || 'No se pudo seleccionar la plaza.', 'error');
+      checkSlots();
+    } finally {
+      setIsLocking(false);
+    }
+  };
+
+  // Liberar bloqueo voluntariamente
+  const handleReleaseLock = async () => {
+    if (!activeLockId) return;
+    try {
+      await reservationService.releaseSpaceLock({
+        lock_id: activeLockId,
+        session_id: sessionId,
+        user_id: user?.id,
+      });
+      setActiveLockId(null);
+      setLockExpiresAt(null);
+      setSelectedSpaceId(undefined);
+      broadcastLockChange();
+      toast('Plaza liberada exitosamente.', 'info');
+      checkSlots();
+    } catch {
+      setActiveLockId(null);
+      setLockExpiresAt(null);
+      setSelectedSpaceId(undefined);
     }
   };
 
@@ -171,6 +313,11 @@ export const ParkingDetailPage: React.FC = () => {
     }
 
     if (!parking || validationError) return;
+
+    if (!selectedSpaceId) {
+      toast('Por favor selecciona una plaza antes de continuar.', 'warning');
+      return;
+    }
 
     if (selectedMethod === 'Efectivo') {
       createReservationAndFinish('Efectivo', 'pending', 'confirmed');
@@ -187,18 +334,39 @@ export const ParkingDetailPage: React.FC = () => {
     if (!parking) return;
     try {
       setIsSubmitting(true);
-      const res = await reservationService.createReservation({
-        parking: parking.id,
-        space: selectedSpaceId,
-        vehicle_plate: vehiclePlate.toUpperCase().trim(),
-        vehicle_model: vehicleModel.trim(),
-        date,
-        start_time: startTime,
-        end_time: endTime,
-        payment_method: method,
-        payment_status: paymentStatus,
-        status: reservationStatus,
-      });
+
+      let res;
+      if (activeLockId) {
+        res = await reservationService.confirmReservationWithLock({
+          lock_id: activeLockId,
+          session_id: sessionId,
+          parking: parking.id,
+          space: selectedSpaceId,
+          vehicle_plate: vehiclePlate.toUpperCase().trim(),
+          vehicle_model: vehicleModel.trim(),
+          date,
+          start_time: startTime,
+          end_time: endTime,
+          payment_method: method,
+          payment_status: paymentStatus,
+          status: reservationStatus,
+        });
+      } else {
+        res = await reservationService.createReservation({
+          parking: parking.id,
+          space: selectedSpaceId,
+          vehicle_plate: vehiclePlate.toUpperCase().trim(),
+          vehicle_model: vehicleModel.trim(),
+          date,
+          start_time: startTime,
+          end_time: endTime,
+          payment_method: method,
+          payment_status: paymentStatus,
+          status: reservationStatus,
+        });
+      }
+
+      broadcastLockChange();
 
       confetti({
         particleCount: 120,
@@ -439,6 +607,53 @@ export const ParkingDetailPage: React.FC = () => {
 
               {/* Form */}
               <form onSubmit={handleBookingSubmit} className="space-y-4">
+
+                {/* Active Locking Timer Banner */}
+                {activeLockId && lockExpiresAt && (
+                  <div className={`p-3.5 rounded-2xl border transition-all ${
+                    lockSecondsLeft <= 60 
+                      ? 'bg-amber-500/15 border-amber-500/50 text-amber-950 dark:text-amber-200 animate-pulse' 
+                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-200'
+                  }`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        {lockSecondsLeft <= 60 ? (
+                          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        )}
+                        <span className="text-xs font-bold">
+                          Tu plaza está protegida durante:{' '}
+                          <span className="font-mono text-sm font-black tracking-wider">
+                            {formatTimer(lockSecondsLeft)}
+                          </span>
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleReleaseLock}
+                        className="text-[11px] font-bold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Unlock className="w-3 h-3" />
+                        Liberar plaza
+                      </button>
+                    </div>
+                    {lockSecondsLeft <= 60 && (
+                      <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 mt-1">
+                        Atención: Quedan menos de 60 segundos para confirmar antes de que la plaza vuelva a estar disponible.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Info Note */}
+                <div className="p-3 bg-brand-50 dark:bg-brand-950/40 rounded-2xl border border-brand-100 dark:border-brand-900/60 flex items-start gap-2.5 text-xs text-brand-900 dark:text-brand-200">
+                  <Info className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+                  <div>
+                    Al seleccionar una plaza disponible, queda protegida exclusivamente para vos durante 5 minutos en tiempo real.
+                  </div>
+                </div>
+
                 <div>
                   <label htmlFor="detail-booking-date" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
@@ -501,11 +716,19 @@ export const ParkingDetailPage: React.FC = () => {
                         <Layers className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
                         Plaza asignada
                       </span>
+                      {isLocking && (
+                        <span className="text-[10px] text-teal-600 dark:text-teal-400 animate-pulse font-bold">
+                          Protegiendo plaza...
+                        </span>
+                      )}
                     </label>
                     <SpaceGrid
                       spaces={availableSpaces}
                       selectedId={selectedSpaceId}
-                      onSelect={setSelectedSpaceId}
+                      onSelect={handleSelectSpace}
+                      onSelectLocked={() => {
+                        toast('Esta plaza acaba de ser seleccionada por otro usuario. Elegí otra plaza disponible.', 'warning');
+                      }}
                       hasPermit={hasPermit}
                       gridClassName="grid-cols-4 max-h-36"
                       showFloor={false}
@@ -607,6 +830,7 @@ export const ParkingDetailPage: React.FC = () => {
           amount={estimatedPrice}
           parkingName={parking.name}
           durationHours={durationHours}
+          lockExpiresAt={lockExpiresAt}
           onPaymentSuccess={async (details) => {
             await createReservationAndFinish(details.method, details.status, 'confirmed');
             setIsCheckoutOpen(false);

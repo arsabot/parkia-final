@@ -10,6 +10,10 @@ interface UseSpaceLocksRealtimeProps {
 /**
  * Hook para sincronizar en tiempo real el estado de bloqueos y plazas
  * entre todos los usuarios conectados al mismo estacionamiento.
+ * Optimizado para dispositivos móviles (iOS Safari / Android) con:
+ * 1. Suscripción Supabase Realtime (postgres_changes + broadcast).
+ * 2. Detección de reconexión al volver a primer plano (visibilitychange/focus).
+ * 3. Polling de respaldo automático (cada 3.5s) para redes móviles inestables.
  */
 export const useSpaceLocksRealtime = ({
   parkingId,
@@ -17,18 +21,46 @@ export const useSpaceLocksRealtime = ({
   enabled = true,
 }: UseSpaceLocksRealtimeProps) => {
   const onLockChangeRef = useRef(onLockChange);
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     onLockChangeRef.current = onLockChange;
   }, [onLockChange]);
 
   useEffect(() => {
-    if (!enabled || !parkingId || !isSupabaseConfigured() || !supabase) {
-      return;
+    if (!enabled || !parkingId) return;
+
+    // Respaldo de polling para dispositivos móviles (Safari en iOS suspende WebSockets al bloquear o cambiar de app)
+    const pollInterval = setInterval(() => {
+      onLockChangeRef.current();
+    }, 3500);
+
+    // Detección de reactivación en primer plano en iPhone / móviles
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        onLockChangeRef.current();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+
+    if (!isSupabaseConfigured() || !supabase) {
+      return () => {
+        clearInterval(pollInterval);
+        window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+        window.removeEventListener('focus', handleVisibilityOrFocus);
+      };
     }
 
     const channelName = `parkia-locks-parking-${parkingId}`;
-    const channel = supabase.channel(channelName);
+    const channel = supabase.channel(channelName, {
+      config: {
+        broadcast: { ack: false, self: false },
+      },
+    });
+
+    channelRef.current = channel;
 
     // 1. Escuchar cambios directos en space_locks (INSERT, UPDATE, DELETE)
     channel
@@ -69,13 +101,18 @@ export const useSpaceLocksRealtime = ({
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          // Refrescar al conectar
           onLockChangeRef.current();
         }
       });
 
     return () => {
-      supabase?.removeChannel(channel);
+      clearInterval(pollInterval);
+      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      if (channelRef.current) {
+        supabase?.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [parkingId, enabled]);
 
@@ -83,14 +120,21 @@ export const useSpaceLocksRealtime = ({
    * Emite un evento broadcast inmediato a todos los navegadores conectados
    */
   const broadcastLockChange = async () => {
-    if (!parkingId || !isSupabaseConfigured() || !supabase) return;
+    if (!parkingId) return;
+
+    // Notificar localmente en caso de múltiples componentes en la misma ventana
+    onLockChangeRef.current();
+
+    if (!isSupabaseConfigured() || !supabase) return;
+
     try {
-      const channel = supabase.channel(`parkia-locks-parking-${parkingId}`);
-      await channel.send({
-        type: 'broadcast',
-        event: 'space_lock_updated',
-        payload: { parkingId, timestamp: Date.now() },
-      });
+      if (channelRef.current) {
+        await channelRef.current.send({
+          type: 'broadcast',
+          event: 'space_lock_updated',
+          payload: { parkingId, timestamp: Date.now() },
+        });
+      }
     } catch {
       // Ignorar si la red falla en el broadcast
     }
