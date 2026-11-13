@@ -733,7 +733,7 @@ export const ParkingDetailPage: React.FC = () => {
                         toast('Esta plaza acaba de ser seleccionada por otro usuario. Elegí otra plaza disponible.', 'warning');
                       }}
                       hasPermit={hasPermit}
-                      gridClassName="grid-cols-4 max-h-36"
+                      gridClassName="grid-cols-4 sm:grid-cols-5"
                       showFloor={true}
                     />
                   </div>
