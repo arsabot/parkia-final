@@ -168,7 +168,6 @@ export const LandingPage: React.FC = () => {
   const [step, setStep] = useState(0);
   const [hoverStep, setHoverStep] = useState(false);
   const [own, setOwn] = useState(-1);
-  const [cnt, setCnt] = useState(0);
   const [typed, setTyped] = useState('');
   const [sFocus, setSFocus] = useState(false);
   const [sVal, setSVal] = useState('');
@@ -187,6 +186,22 @@ export const LandingPage: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chipRef = useRef<HTMLDivElement | null>(null);
   const chipCodeRef = useRef<HTMLDivElement | null>(null);
+  const counterRefs = useRef<(HTMLElement | null)[]>([]);
+  const ringRef = useRef<SVGCircleElement | null>(null);
+  const minHandRef = useRef<SVGGElement | null>(null);
+  const hourHandRef = useRef<SVGGElement | null>(null);
+  const barRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const counterRaf = useRef(0);
+
+  useEffect(() => {
+    const sections = document.querySelectorAll<HTMLElement>('.pk-root .pk-motion-section');
+    if (!('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => entry.target.classList.toggle('pk-motion-paused', !entry.isIntersecting));
+    }, { rootMargin: '100px 0px' });
+    sections.forEach(section => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     hoverStepRef.current = hoverStep;
@@ -260,11 +275,11 @@ export const LandingPage: React.FC = () => {
       [0, 1, 2].forEach((k) => {
         if (rv[14 + k] && !f.litS[k]) {
           f.litS[k] = true;
-          later(() => { if (!hoverStepRef.current) setStep(k); }, 250);
+          later(() => { if (!hoverStepRef.current) setStep(k); }, k * 200);
         }
         if (rv[17 + k] && !f.litO[k]) {
           f.litO[k] = true;
-          later(() => { if (!ownHover.current) setOwn(k); }, 250);
+          later(() => { if (!ownHover.current) setOwn(k); }, k * 200);
         }
       });
     } else {
@@ -283,10 +298,15 @@ export const LandingPage: React.FC = () => {
         const t0 = performance.now();
         const run = () => {
           const t = Math.min(1, (performance.now() - t0) / 3000);
-          setCnt(t);
-          if (t < 1) requestAnimationFrame(run);
+          const value = 1 - Math.pow(1 - t, 2);
+          counterRefs.current.forEach((node, i) => { if (node) node.textContent = String(Math.round((i === 2 ? 40 : 30) * value)); });
+          ringRef.current?.setAttribute('stroke-dasharray', `${(201 * value).toFixed(1)} 201`);
+          minHandRef.current?.setAttribute('transform', `rotate(${(value * 180).toFixed(1)} 40 40)`);
+          hourHandRef.current?.setAttribute('transform', `rotate(${(value * 15).toFixed(1)} 40 40)`);
+          barRefs.current.forEach((node, i) => { if (node) node.style.width = `${Math.round((i === 1 ? 40 : 30) * value)}%`; });
+          if (t < 1) counterRaf.current = requestAnimationFrame(run);
         };
-        requestAnimationFrame(run);
+        counterRaf.current = requestAnimationFrame(run);
       }, 350);
     }
   }, [rv, mob, later]);
@@ -378,10 +398,10 @@ export const LandingPage: React.FC = () => {
   useEffect(() => () => {
     timers.current.forEach((t) => window.clearTimeout(t));
     window.clearTimeout(accTimer.current);
+    cancelAnimationFrame(counterRaf.current);
   }, []);
 
   // ---- valores para el render
-  const cntE = 1 - Math.pow(1 - cnt, 2);
   const f2 = (x: number) => x.toFixed(2) + 's';
   const seq = (g: number, idx: number, T: number) => {
     const vis = mob ? rv[idx] : rv[g];
@@ -494,6 +514,7 @@ export const LandingPage: React.FC = () => {
   const showAcc = (e: React.MouseEvent) => {
     e.stopPropagation();
     accUntil.current = performance.now() + 7000;
+    canvasRef.current?.dispatchEvent(new Event('pk-scene-invalidate'));
     setAccOn(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     window.clearTimeout(accTimer.current);
@@ -513,10 +534,10 @@ export const LandingPage: React.FC = () => {
     sa0: seq(8, 11, 0.1), sa1: seq(8, 12, 0.4), sa2: seq(8, 13, 0.7),
     ow0: seq(10, 17, 0.2), ow1: seq(10, 18, 1.4), ow2: seq(10, 19, 2.6),
     ownCls0: own === 0 ? 'on' : '', ownCls1: own === 1 ? 'on' : '', ownCls2: own === 2 ? 'on' : '',
-    c1: Math.round(30 * cntE), c2: Math.round(30 * cntE), c3: Math.round(40 * cntE),
-    ringDash: (201 * cntE).toFixed(1) + ' 201',
-    minRot: 'rotate(' + (cntE * 180).toFixed(1) + ' 40 40)',
-    hrRot: 'rotate(' + (cntE * 15).toFixed(1) + ' 40 40)',
+    c1: 0, c2: 0, c3: 0,
+    ringDash: '0 201',
+    minRot: 'rotate(0 40 40)',
+    hrRot: 'rotate(0 40 40)',
     steps,
     stepsLeave: () => setHoverStep(false),
     typed,
@@ -611,7 +632,7 @@ export const LandingPage: React.FC = () => {
     </div>
     </div>
     
-    <section id="por-que" className="pk-sec pk-page" style={{ background: "var(--bg1,#070B15)", padding: "90px 24px 60px 24px" }}>
+    <section id="por-que" className="pk-sec pk-page pk-lazy-section" style={{ background: "var(--bg1,#070B15)", padding: "90px 24px 60px 24px" }}>
     <div style={{ width: "100%", maxWidth: "1160px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "48px" }}>
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", textAlign: "center" }}>
     <span style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.18em", color: "var(--acc,#A3E635)" }}>EL PROBLEMA</span>
@@ -621,11 +642,11 @@ export const LandingPage: React.FC = () => {
     <div ref={reveal.set[11]} style={{ display: "flex", opacity: v.sa0.o, transform: v.sa0.t, transition: `opacity .7s ease ${v.sa0.d}, transform .8s cubic-bezier(.2,.8,.2,1) ${v.sa0.d}` }}>
     <div className={`pk-step on ${v.sa0.lap}`} style={{ '--lapd': v.sa0.ld, flex: "1", cursor: "default", transform: "none" } as React.CSSProperties}>
     <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-    <span style={{ fontSize: "60px", fontWeight: 900, lineHeight: "1", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums", textShadow: "0 0 26px rgba(var(--acc-rgb,163,230,53),.35)" }}>{v.c1}<span style={{ fontSize: "26px", color: "var(--acc,#A3E635)" }}> min</span></span>
+    <span style={{ fontSize: "60px", fontWeight: 900, lineHeight: "1", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums", textShadow: "0 0 26px rgba(var(--acc-rgb,163,230,53),.35)" }}><span ref={el => { counterRefs.current[0] = el; }}>0</span><span style={{ fontSize: "26px", color: "var(--acc,#A3E635)" }}> min</span></span>
     <svg width="64" height="64" viewBox="0 0 80 80" aria-hidden="true" style={{ flexShrink: 0, filter: "drop-shadow(0 0 12px rgba(var(--acc-rgb,163,230,53),.45))" }}>
     <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(var(--fg-rgb,255,255,255),0.1)" strokeWidth="7" />
-    <circle style={{ stroke: "var(--acc,#A3E635)" }} cx="40" cy="40" r="32" fill="none" strokeWidth="7" strokeLinecap="round" strokeDasharray={v.ringDash} transform="rotate(-90 40 40)" />
-    <g transform={v.minRot}><path style={{ stroke: "var(--tx,#FFFFFF)" }} d="M40 40V16" strokeWidth="4" strokeLinecap="round" /></g><g transform={v.hrRot}><path style={{ stroke: "var(--acc,#A3E635)" }} d="M40 40l11 6" strokeWidth="4" strokeLinecap="round" /></g>
+    <circle ref={ringRef} style={{ stroke: "var(--acc,#A3E635)" }} cx="40" cy="40" r="32" fill="none" strokeWidth="7" strokeLinecap="round" strokeDasharray="0 201" transform="rotate(-90 40 40)" />
+    <g ref={minHandRef} transform="rotate(0 40 40)"><path style={{ stroke: "var(--tx,#FFFFFF)" }} d="M40 40V16" strokeWidth="4" strokeLinecap="round" /></g><g ref={hourHandRef} transform="rotate(0 40 40)"><path style={{ stroke: "var(--acc,#A3E635)" }} d="M40 40l11 6" strokeWidth="4" strokeLinecap="round" /></g>
     <circle style={{ fill: "var(--acc,#A3E635)" }} cx="40" cy="40" r="4" />
     </svg>
     </span>
@@ -635,18 +656,18 @@ export const LandingPage: React.FC = () => {
     </div>
     <div ref={reveal.set[12]} style={{ display: "flex", opacity: v.sa1.o, transform: v.sa1.t, transition: `opacity .7s ease ${v.sa1.d}, transform .8s cubic-bezier(.2,.8,.2,1) ${v.sa1.d}` }}>
     <div className={`pk-step ${v.sa1.lap}`} style={{ '--lapd': v.sa1.ld, flex: "1", cursor: "default" } as React.CSSProperties}>
-    <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "60px", fontWeight: 900, lineHeight: "1", letterSpacing: "-0.04em" }}>{v.c2}<span style={{ color: "var(--tx,#FFFFFF)" }}>%</span></span>
+    <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "60px", fontWeight: 900, lineHeight: "1", letterSpacing: "-0.04em" }}><span ref={el => { counterRefs.current[1] = el; }}>0</span><span style={{ color: "var(--tx,#FFFFFF)" }}>%</span></span>
     <p style={{ margin: "0", fontSize: "18px", lineHeight: "1.5", color: "var(--tx2,#DCE3EE)" }}>de los autos que circulan por zonas comerciales están dando vueltas buscando lugar.</p>
     <p className="pk-lime" style={{ margin: "0", fontSize: "24px", fontWeight: 800, lineHeight: "1.2", letterSpacing: "-0.02em", color: "var(--acc,#A3E635)" }}>Parkia elimina las vueltas a la manzana</p>
-    <div aria-hidden="true" style={{ position: "relative", height: "12px", marginTop: "18px", borderRadius: "8px", background: "rgba(var(--fg-rgb,255,255,255),.07)" }}><div style={{ position: "absolute", left: "0", top: "0", bottom: "0", width: `${v.c2}%` }}><div className="pk-anim pk-fire" style={{ position: "absolute", inset: "0", borderRadius: "8px" }}></div></div></div>
+    <div aria-hidden="true" style={{ position: "relative", height: "12px", marginTop: "18px", borderRadius: "8px", background: "rgba(var(--fg-rgb,255,255,255),.07)" }}><div ref={el => { barRefs.current[0] = el; }} style={{ position: "absolute", left: "0", top: "0", bottom: "0", width: "0%" }}><div className="pk-anim pk-fire" style={{ position: "absolute", inset: "0", borderRadius: "8px" }}></div></div></div>
     </div>
     </div>
     <div ref={reveal.set[13]} style={{ display: "flex", opacity: v.sa2.o, transform: v.sa2.t, transition: `opacity .7s ease ${v.sa2.d}, transform .8s cubic-bezier(.2,.8,.2,1) ${v.sa2.d}` }}>
     <div className={`pk-step ${v.sa2.lap}`} style={{ '--lapd': v.sa2.ld, flex: "1", cursor: "default" } as React.CSSProperties}>
-    <span style={{ fontSize: "60px", fontWeight: 900, lineHeight: "1", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>{v.c3}<span style={{ color: "var(--tx,#FFFFFF)" }}>%</span></span>
+    <span style={{ fontSize: "60px", fontWeight: 900, lineHeight: "1", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}><span ref={el => { counterRefs.current[2] = el; }}>0</span><span style={{ color: "var(--tx,#FFFFFF)" }}>%</span></span>
     <p style={{ margin: "0", fontSize: "18px", lineHeight: "1.5", color: "var(--tx2,#DCE3EE)" }}>de las cocheras quedan vacías en horarios valle.</p>
     <p className="pk-lime" style={{ margin: "0", fontSize: "24px", fontWeight: 800, lineHeight: "1.2", letterSpacing: "-0.02em", color: "var(--acc,#A3E635)" }}>Parkia las conecta con quien las necesita</p>
-    <div aria-hidden="true" style={{ height: "8px", borderRadius: "8px", background: "rgba(var(--fg-rgb,255,255,255),.07)", overflow: "hidden" }}><div style={{ height: "100%", width: `${v.c3}%`, borderRadius: "8px", background: "linear-gradient(90deg, var(--acc2,#4ADE80), var(--acc,#A3E635))" }}></div></div>
+    <div aria-hidden="true" style={{ height: "8px", borderRadius: "8px", background: "rgba(var(--fg-rgb,255,255,255),.07)", overflow: "hidden" }}><div ref={el => { barRefs.current[1] = el; }} style={{ height: "100%", width: "0%", borderRadius: "8px", background: "linear-gradient(90deg, var(--acc2,#4ADE80), var(--acc,#A3E635))" }}></div></div>
     </div>
     </div>
     </div>
@@ -654,7 +675,7 @@ export const LandingPage: React.FC = () => {
     </div>
     </section>
     
-    <section id="como-funciona" className="pk-sec pk-page" style={{ position: "relative", overflow: "hidden", background: "var(--bg1,#070B15)", padding: "90px 24px 40px 24px" }}>
+    <section id="como-funciona" className="pk-sec pk-page pk-lazy-section pk-motion-section" style={{ position: "relative", overflow: "hidden", background: "var(--bg1,#070B15)", padding: "90px 24px 40px 24px" }}>
     <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "-140px", width: "900px", height: "480px", marginLeft: "-450px", background: "radial-gradient(ellipse at 50% 0, rgba(70,120,255,.40), transparent 65%)", filter: "blur(30px)", pointerEvents: "none" }}></div><div aria-hidden="true" style={{ position: "absolute", left: "50%", bottom: "40px", width: "640px", height: "320px", marginLeft: "-320px", background: "radial-gradient(ellipse, rgba(var(--acc-rgb,163,230,53),.10), transparent 65%)", filter: "blur(24px)", pointerEvents: "none" }}></div><div aria-hidden="true" style={{ position: "absolute", inset: "0", pointerEvents: "none" }}><span className="pk-anim pk-pt" style={{ position: "absolute", left: "83.4%", top: "73.3%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.0s", animationDelay: "-2.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "64.6%", top: "75.6%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.6s", animationDelay: "-0.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "60.3%", top: "73.6%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.9s", animationDelay: "-1.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "92.7%", top: "85.9%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.5s", animationDelay: "-0.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "67.9%", top: "92.2%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "4.0s", animationDelay: "-2.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "55.1%", top: "34.8%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.9s", animationDelay: "-3.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "42.0%", top: "87.3%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "4.4s", animationDelay: "-0.4s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "73.3%", top: "85.4%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "4.5s", animationDelay: "-2.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "81.7%", top: "64.7%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.1s", animationDelay: "-2.4s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "39.8%", top: "81.5%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.5s", animationDelay: "-3.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "65.8%", top: "36.8%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.3s", animationDelay: "-3.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "44.1%", top: "49.8%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "4.1s", animationDelay: "-2.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "49.0%", top: "5.7%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.5s", animationDelay: "-2.8s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "18.4%", top: "49.2%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.6s", animationDelay: "-3.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "51.3%", top: "90.6%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.7s", animationDelay: "-1.8s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "54.6%", top: "91.1%", width: "3px", height: "3px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "2.4s", animationDelay: "-3.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "76.6%", top: "21.9%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.5s", animationDelay: "-1.9s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "55.2%", top: "89.6%", width: "3px", height: "3px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "3.3s", animationDelay: "-3.3s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "2.2%", top: "52.7%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.1s", animationDelay: "-1.3s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "63.0%", top: "53.7%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "2.8s", animationDelay: "-0.4s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "82.8%", top: "64.9%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "2.6s", animationDelay: "-0.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "26.0%", top: "13.1%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "3.8s", animationDelay: "-1.4s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "17.3%", top: "51.5%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "2.8s", animationDelay: "-1.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "69.5%", top: "48.7%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "2.7s", animationDelay: "-1.2s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "78.4%", top: "26.8%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "3.0s", animationDelay: "-2.9s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "43.4%", top: "92.8%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.9s", animationDelay: "-1.6s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "94.1%", top: "44.0%", width: "3px", height: "3px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "3.5s", animationDelay: "-1.7s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "78.6%", top: "50.5%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.9s", animationDelay: "-2.6s" }}></span></div>
     <div style={{ position: "relative", maxWidth: "1160px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "56px" }}>
     <div ref={reveal.set[0]} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", textAlign: "center", opacity: v.rv0.o, transform: v.rv0.t, transition: "opacity .9s ease, transform .9s cubic-bezier(.2,.8,.2,1)" }}>
@@ -760,7 +781,7 @@ export const LandingPage: React.FC = () => {
     </section>
     )}
 
-    <section id="pagos" className="pk-sec pk-snap" style={{ background: "var(--bg1,#070B15)", padding: "90px 0 40px 0" }}>
+    <section id="pagos" className="pk-sec pk-snap pk-lazy-section pk-motion-section" style={{ background: "var(--bg1,#070B15)", padding: "90px 0 40px 0" }}>
     <div ref={reveal.set[3]} style={{ maxWidth: "1160px", margin: "0 auto", padding: "0 24px", display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: "16px", opacity: v.rv3.o, transform: v.rv3.t, transition: "opacity .9s ease, transform .9s cubic-bezier(.2,.8,.2,1)" }}>
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
     <h2 className="pk-h2" style={{ margin: "0", fontSize: "52px", fontWeight: 800, letterSpacing: "-0.03em" }}>Pagá como quieras</h2>
@@ -796,7 +817,7 @@ export const LandingPage: React.FC = () => {
     </div>
     </section>
     
-    <section id="duenos" className="pk-sec pk-page" style={{ background: "var(--bg0,#05080F)", padding: "110px 24px 120px 24px", position: "relative", overflow: "hidden" }}>
+    <section id="duenos" className="pk-sec pk-page pk-lazy-section pk-motion-section" style={{ background: "var(--bg0,#05080F)", padding: "110px 24px 120px 24px", position: "relative", overflow: "hidden" }}>
     <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "-140px", width: "900px", height: "480px", marginLeft: "-450px", background: "radial-gradient(ellipse at 50% 0, rgba(70,120,255,.40), transparent 65%)", filter: "blur(30px)", pointerEvents: "none" }}></div><div aria-hidden="true" style={{ position: "absolute", left: "50%", bottom: "40px", width: "640px", height: "320px", marginLeft: "-320px", background: "radial-gradient(ellipse, rgba(var(--acc-rgb,163,230,53),.10), transparent 65%)", filter: "blur(24px)", pointerEvents: "none" }}></div><div aria-hidden="true" style={{ position: "absolute", inset: "0", pointerEvents: "none" }}><span className="pk-anim pk-pt" style={{ position: "absolute", left: "10.1%", top: "79.9%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "4.0s", animationDelay: "-2.7s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "60.2%", top: "58.8%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "3.7s", animationDelay: "-0.6s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "39.8%", top: "69.5%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.6s", animationDelay: "-3.8s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "27.8%", top: "6.3%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.5s", animationDelay: "-1.9s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "42.7%", top: "84.3%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "2.8s", animationDelay: "-0.7s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "19.0%", top: "19.0%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.5s", animationDelay: "-1.4s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "78.5%", top: "70.6%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.4s", animationDelay: "-3.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "96.2%", top: "91.5%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "2.8s", animationDelay: "-3.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "52.9%", top: "48.1%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.4s", animationDelay: "-2.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "86.8%", top: "85.8%", width: "3px", height: "3px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "3.4s", animationDelay: "-2.3s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "65.3%", top: "89.5%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.2s", animationDelay: "-3.3s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "31.7%", top: "91.1%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "4.0s", animationDelay: "-2.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "72.2%", top: "48.0%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.2s", animationDelay: "-2.7s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "71.7%", top: "86.5%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "2.8s", animationDelay: "-3.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "64.7%", top: "28.1%", width: "3px", height: "3px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "2.9s", animationDelay: "-3.5s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "15.1%", top: "27.5%", width: "3px", height: "3px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "4.2s", animationDelay: "-3.8s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "88.2%", top: "72.9%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "2.5s", animationDelay: "-1.4s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "4.3%", top: "13.6%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.5s", animationDelay: "-0.2s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "26.5%", top: "77.8%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "2.7s", animationDelay: "-0.7s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "58.6%", top: "76.1%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "2.9s", animationDelay: "-3.9s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "92.1%", top: "60.8%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "4.0s", animationDelay: "-1.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "31.6%", top: "53.7%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "3.7s", animationDelay: "-0.2s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "84.8%", top: "67.9%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "3.4s", animationDelay: "-0.9s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "4.3%", top: "75.5%", width: "2px", height: "2px", borderRadius: "50%", background: "#FFFFFF", boxShadow: "0 0 6px #FFFFFF", animationDuration: "4.5s", animationDelay: "-2.1s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "51.4%", top: "16.2%", width: "2px", height: "2px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "4.5s", animationDelay: "-1.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "3.7%", top: "54.3%", width: "3px", height: "3px", borderRadius: "50%", background: "#7DA2FF", boxShadow: "0 0 6px #7DA2FF", animationDuration: "2.7s", animationDelay: "-0.2s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "17.5%", top: "11.8%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "3.8s", animationDelay: "-2.0s" }}></span><span className="pk-anim pk-pt" style={{ position: "absolute", left: "24.3%", top: "43.9%", width: "2px", height: "2px", borderRadius: "50%", background: "var(--acc,#A3E635)", boxShadow: "0 0 6px var(--acc,#A3E635)", animationDuration: "3.0s", animationDelay: "-2.4s" }}></span></div>
     <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "-160px", width: "900px", height: "420px", marginLeft: "-450px", background: "radial-gradient(ellipse, rgba(var(--acc-rgb,163,230,53),.10), transparent 65%)", pointerEvents: "none" }}></div>
     <div ref={reveal.set[9]} style={{ position: "relative", maxWidth: "1160px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "44px", opacity: v.rv9.o, transform: v.rv9.t, transition: "opacity .9s ease, transform 1s cubic-bezier(.2,.8,.2,1)" }}>
