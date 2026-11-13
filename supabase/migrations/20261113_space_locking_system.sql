@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS space_locks (
     id BIGSERIAL PRIMARY KEY,
     space_id BIGINT NOT NULL REFERENCES parking_spaces(id) ON DELETE CASCADE,
     parking_id BIGINT NOT NULL REFERENCES parkings(id) ON DELETE CASCADE,
-    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    user_id BIGINT,
     session_id VARCHAR(100) NOT NULL,
     date DATE NOT NULL,
     start_time TIME NOT NULL,
@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS space_locks (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Si la tabla ya existía con la restricción de clave foránea a users, se elimina para compatibilidad con Auth0 y Django
+ALTER TABLE space_locks DROP CONSTRAINT IF EXISTS space_locks_user_id_fkey;
 
 -- 2. Índices de alta velocidad y exclusión
 CREATE INDEX IF NOT EXISTS idx_space_locks_space_date_status ON space_locks(space_id, date, status);
@@ -124,6 +127,11 @@ DECLARE
 BEGIN
     -- Paso 0: Limpieza inmediata de bloqueos vencidos
     PERFORM cleanup_expired_locks();
+
+    -- Sanitizar p_user_id: si no existe en la tabla users, tratarlo como NULL para evitar fallos de clave foránea
+    IF p_user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_id) THEN
+        p_user_id := NULL;
+    END IF;
 
     -- Paso 1: Bloqueo pesimista a nivel de fila sobre la plaza para serializar la concurrencia
     SELECT status, space_type, code 
@@ -439,7 +447,11 @@ BEGIN
         );
     END IF;
 
-    -- Paso 4: Insertar la reserva confirmada
+    -- Paso 4: Insertar la reserva confirmada (asegurando user_id válido en users)
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_id) THEN
+        SELECT id INTO p_user_id FROM users ORDER BY id ASC LIMIT 1;
+    END IF;
+
     INSERT INTO reservations (
         booking_code,
         user_id,

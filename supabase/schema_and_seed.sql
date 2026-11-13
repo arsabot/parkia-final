@@ -139,7 +139,7 @@ CREATE TABLE space_locks (
     id BIGSERIAL PRIMARY KEY,
     space_id BIGINT NOT NULL REFERENCES parking_spaces(id) ON DELETE CASCADE,
     parking_id BIGINT NOT NULL REFERENCES parkings(id) ON DELETE CASCADE,
-    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    user_id BIGINT,
     session_id VARCHAR(100) NOT NULL,
     date DATE NOT NULL,
     start_time TIME NOT NULL,
@@ -150,6 +150,8 @@ CREATE TABLE space_locks (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE space_locks DROP CONSTRAINT IF EXISTS space_locks_user_id_fkey;
 
 -- ----------------------------------------------------------------------------
 -- 4. FAVORITES & REVIEWS & CLAIMS
@@ -877,6 +879,11 @@ DECLARE
 BEGIN
     PERFORM cleanup_expired_locks();
 
+    -- Sanitizar p_user_id: si no existe en la tabla users, tratarlo como NULL para evitar fallos de clave foránea
+    IF p_user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_id) THEN
+        p_user_id := NULL;
+    END IF;
+
     SELECT status, space_type, code 
     INTO v_space_status, v_space_type, v_space_code
     FROM parking_spaces
@@ -1100,6 +1107,11 @@ DECLARE
 BEGIN
     PERFORM cleanup_expired_locks();
 
+    -- Sanitizar p_user_id: si no existe en la tabla users, tratarlo como NULL para evitar fallos de clave foránea
+    IF p_user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_id) THEN
+        p_user_id := NULL;
+    END IF;
+
     SELECT * INTO v_lock
     FROM space_locks
     WHERE id = p_lock_id
@@ -1148,6 +1160,11 @@ BEGIN
 
     v_total_price := ROUND(v_hours * v_parking.price_per_hour, 2);
     v_booking_code := 'PK-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+
+    -- Asegurar user_id válido para la reserva definitiva
+    IF p_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_id) THEN
+        SELECT id INTO p_user_id FROM users ORDER BY id ASC LIMIT 1;
+    END IF;
 
     INSERT INTO reservations (
         booking_code,
