@@ -79,6 +79,7 @@ class Parking(models.Model):
 class ParkingSpace(models.Model):
     class Status(models.TextChoices):
         AVAILABLE = 'available', 'Disponible'
+        LOCKED = 'locked', 'Bloqueado temporalmente'
         OCCUPIED = 'occupied', 'Ocupado'
         RESERVED = 'reserved', 'Reservado'
         MAINTENANCE = 'maintenance', 'Fuera de servicio'

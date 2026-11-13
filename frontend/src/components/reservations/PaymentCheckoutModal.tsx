@@ -27,6 +27,7 @@ interface PaymentCheckoutModalProps {
   amount: number;
   parkingName: string;
   durationHours: number;
+  lockExpiresAt?: string | null;
   onPaymentSuccess: (paymentDetails: { method: PaymentMethod; status: 'paid' | 'pending'; providerPayload?: any }) => Promise<void>;
 }
 
@@ -37,6 +38,7 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
   amount,
   parkingName,
   durationHours,
+  lockExpiresAt,
   onPaymentSuccess,
 }) => {
   const [processing, setProcessing] = useState(false);
@@ -61,11 +63,20 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
       setProcessing(false);
       return;
     }
+
+    const calcTime = () => {
+      if (lockExpiresAt) {
+        return Math.max(0, Math.floor((new Date(lockExpiresAt).getTime() - Date.now()) / 1000));
+      }
+      return 300; // 5 minutos por defecto para bloqueo de plaza
+    };
+
+    setTimeLeft(calcTime());
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft(calcTime());
     }, 1000);
     return () => clearInterval(timer);
-  }, [isOpen]);
+  }, [isOpen, lockExpiresAt]);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -87,6 +98,11 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
   };
 
   const handleProcessPayment = async () => {
+    if (timeLeft <= 0) {
+      alert('El tiempo para completar la reserva ha expirado. Por favor, vuelve a seleccionar una plaza disponible.');
+      onClose();
+      return;
+    }
     try {
       setProcessing(true);
       setStep('processing');

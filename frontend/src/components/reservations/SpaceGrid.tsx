@@ -38,12 +38,24 @@ export interface SpaceOption {
   floor: string;
   space_type?: string;
   is_available: boolean;
+  status?: string;
+  is_locked_by_me?: boolean;
+  is_locked_by_other?: boolean;
+  lock_info?: {
+    lock_id: number;
+    is_mine: boolean;
+    expires_at: string;
+    seconds_remaining: number;
+  } | null;
 }
 
 export const isAccessibleSpace = (s: SpaceOption) => s.space_type === 'disabled';
 
+export const isLockedByOther = (s: SpaceOption) =>
+  Boolean(s.is_locked_by_other || s.status === 'locked_by_other' || (s.status === 'locked' && !s.is_locked_by_me));
+
 export const canPickSpace = (s: SpaceOption, hasPermit: boolean) =>
-  s.is_available && (!isAccessibleSpace(s) || hasPermit);
+  s.is_available && (!isAccessibleSpace(s) || hasPermit) && !isLockedByOther(s);
 
 /**
  * Plaza que se preselecciona: siempre una común. Las accesibles no se
@@ -51,7 +63,7 @@ export const canPickSpace = (s: SpaceOption, hasPermit: boolean) =>
  * (el usuario con credencial puede elegirlas a mano).
  */
 export const defaultSpace = (spaces: SpaceOption[]) =>
-  spaces.find((s) => s.is_available && !isAccessibleSpace(s));
+  spaces.find((s) => s.is_available && !isAccessibleSpace(s) && !isLockedByOther(s));
 
 /** Fila de la leyenda: ejemplo del color + qué significa (mismo estilo que las filas de estado del admin) */
 const LegendRow: React.FC<{ sample: React.ReactNode; title: string; detail: string }> = ({ sample, title, detail }) => (
@@ -94,13 +106,15 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
       >
         {spaces.map((s) => {
           const isSelected = selectedId === s.id;
-          const isFree = s.is_available;
+          const isLockedOther = isLockedByOther(s);
+          const isFree = s.is_available && !isLockedOther;
           const isAccessible = isAccessibleSpace(s);
-          // Plaza accesible libre, pero el usuario no tiene credencial verificada
           const isRestricted = isFree && isAccessible && !hasPermit;
 
           const stateLabel = isSelected
-            ? 'seleccionada'
+            ? 'seleccionada y protegida'
+            : isLockedOther
+            ? 'bloqueada temporalmente por otro usuario'
             : isRestricted
             ? 'solo para personas con credencial de discapacidad'
             : isFree
@@ -113,17 +127,25 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
               type="button"
               disabled={!canPickSpace(s, hasPermit)}
               onClick={() => onSelect(s.id)}
-              title={isRestricted ? 'Plaza accesible: solo para personas con credencial de discapacidad verificada' : undefined}
+              title={
+                isLockedOther
+                  ? 'Esta plaza acaba de ser seleccionada por otro usuario. Elegí otra plaza disponible.'
+                  : isRestricted
+                  ? 'Plaza accesible: solo para personas con credencial de discapacidad verificada'
+                  : undefined
+              }
               aria-label={`Plaza ${s.code}${isAccessible ? ' accesible' : ''}, ${s.floor}, ${stateLabel}`}
               aria-pressed={isSelected}
               className={`relative py-2 px-1 min-h-[44px] rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center cursor-pointer ${
-                // Los colores salen de src/styles/parkia-colores.css (claro y oscuro)
                 isSelected && isAccessible
                   ? // Tu plaza accesible: azul con la rayita lima
                     'bg-plaza-accesible-elegida text-plaza-accesible-elegida-texto border-b-4 border-plaza-franja shadow-md scale-105'
                   : isSelected
                   ? // Tu plaza: azul marino con la rayita lima (como el logo de Parkia)
                     'bg-plaza-elegida text-plaza-elegida-texto border-b-4 border-plaza-franja shadow-md scale-105'
+                  : isLockedOther
+                  ? // Bloqueada por otro usuario (amarillo / ámbar de advertencia)
+                    'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border-2 border-amber-400 dark:border-amber-500/80 cursor-not-allowed opacity-90 shadow-sm'
                   : isRestricted
                   ? // Accesible, pero sin credencial: apagada y punteada
                     'bg-plaza-accesible/50 text-plaza-accesible-texto/50 border border-dashed border-plaza-accesible-borde/50 cursor-not-allowed'
@@ -138,7 +160,7 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
               }`}
             >
               <span>{s.code}</span>
-              {(isAccessible || showFloor) && (
+              {(isAccessible || showFloor || isLockedOther) && (
                 <span className="flex items-center gap-1 mt-0.5">
                   {/* Cartel de accesibilidad debajo del código, sin taparlo */}
                   {isAccessible && (
@@ -147,6 +169,8 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
                       fondo={
                         isSelected
                           ? 'text-plaza-accesible-elegida-texto'
+                          : isLockedOther
+                          ? 'text-amber-800'
                           : isFree
                           ? 'text-plaza-simbolo'
                           : 'text-plaza-ocupada-texto'
@@ -154,9 +178,14 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
                       figura={isSelected ? 'text-plaza-accesible-elegida' : 'text-plaza-simbolo-figura'}
                     />
                   )}
-                  {showFloor && (
+                  {showFloor && !isLockedOther && (
                     <span className="text-[9px] opacity-80 font-normal">
                       {s.floor === 'Planta Baja' ? 'PB' : 'P1'}
+                    </span>
+                  )}
+                  {isLockedOther && (
+                    <span className="text-[8px] font-extrabold uppercase tracking-tight text-amber-800 dark:text-amber-300">
+                      Ocupando
                     </span>
                   )}
                 </span>
@@ -172,7 +201,12 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
         <LegendRow
           sample={<span className="w-7 h-6 rounded-md bg-plaza border-2 border-plaza-libre-borde" />}
           title="Libre"
-          detail="Podés reservarla"
+          detail="Disponible para reservar"
+        />
+        <LegendRow
+          sample={<span className="w-7 h-6 rounded-md bg-amber-100 dark:bg-amber-900/60 border-2 border-amber-400 flex items-center justify-center text-[9px] font-bold text-amber-900 dark:text-amber-200">A2</span>}
+          title="Bloqueada"
+          detail="Seleccionada temporalmente por otro usuario"
         />
         <LegendRow
           sample={<span className="w-7 h-6 rounded-md bg-plaza-ocupada flex items-center justify-center text-[9px] font-bold text-plaza-ocupada-texto line-through">A4</span>}
@@ -182,7 +216,7 @@ export const SpaceGrid: React.FC<SpaceGridProps> = ({
         <LegendRow
           sample={<span className="w-7 h-6 rounded-md bg-plaza-elegida border-b-[3px] border-plaza-franja" />}
           title="Tu plaza"
-          detail="La que elegiste para reservar"
+          detail="Protegida durante tu reserva"
         />
         {hasAccessibleSpaces && (
           <LegendRow
