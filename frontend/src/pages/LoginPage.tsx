@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, Car, Building2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -20,20 +20,23 @@ export const LoginPage: React.FC = () => {
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const handledOAuth = useRef(false);
 
   const rawFrom = (location.state as any)?.from?.pathname || '/search';
   // Evitar redireccionar a conductores o invitados a rutas protegidas de administración
   const from = rawFrom.startsWith('/admin') ? '/search' : rawFrom;
 
   useEffect(() => {
+    if (handledOAuth.current) return;
+    const isCallback =
+      window.location.hash.includes('access_token') ||
+      window.location.search.includes('code=') ||
+      Boolean(sessionStorage.getItem('parkia_oauth_pending'));
+
+    if (!isCallback) return;
+    handledOAuth.current = true;
+
     const handleOAuth = async () => {
-      const isCallback =
-        window.location.hash.includes('access_token') ||
-        window.location.search.includes('code=') ||
-        Boolean(sessionStorage.getItem('parkia_oauth_pending'));
-
-      if (!isCallback) return;
-
       try {
         setLoading(true);
         const res = await authService.handleOAuthCallback();
