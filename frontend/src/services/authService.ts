@@ -1,6 +1,6 @@
 import { api } from './api';
 import { AuthResponse, User, UserRole } from '../types';
-import { isSupabaseConfigured } from './supabaseClient';
+import { isSupabaseConfigured, supabase } from './supabaseClient';
 import { supabaseAuth } from './supabaseService';
 
 export const authService = {
@@ -93,7 +93,24 @@ export const authService = {
     return api.post<{ message: string }>('/auth/password-reset/confirm/', data);
   },
 
+  async signInWithGoogle(role?: UserRole): Promise<void> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.signInWithGoogle(role);
+    }
+    throw new Error('Supabase no está configurado para inicio de sesión con Google.');
+  },
+
+  async handleOAuthCallback(): Promise<AuthResponse | null> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.handleOAuthCallback();
+    }
+    return null;
+  },
+
   logout(): void {
+    if (isSupabaseConfigured() && supabase) {
+      supabase.auth.signOut().catch(() => {});
+    }
     localStorage.removeItem('parkia_token');
     localStorage.removeItem('parkia_refresh');
     localStorage.removeItem('parkia_user');

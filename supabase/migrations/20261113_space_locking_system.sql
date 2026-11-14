@@ -568,4 +568,16 @@ BEFORE INSERT OR UPDATE ON reservations
 FOR EACH ROW
 EXECUTE FUNCTION check_reservation_no_overlap();
 
+-- Asegurar permisos de inserción en user_roles para asignación de roles OAuth
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'user_roles' AND policyname = 'Public Modify UserRoles'
+    ) THEN
+        CREATE POLICY "Public Modify UserRoles" ON user_roles FOR ALL USING (true);
+    END IF;
+END $$;
+
+
 
