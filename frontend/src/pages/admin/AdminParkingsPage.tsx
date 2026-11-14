@@ -23,11 +23,14 @@ import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
 import { parkingService } from '../../services/parkingService';
 import { Parking } from '../../types';
+import { Pagination } from '../../components/common/Pagination';
 
 export const AdminParkingsPage: React.FC = () => {
   const [parkings, setParkings] = useState<Parking[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingParking, setEditingParking] = useState<Parking | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<Parking | null>(null);
@@ -185,6 +188,11 @@ export const AdminParkingsPage: React.FC = () => {
       p.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const paginatedParkings = filteredParkings.slice(
+    (currentPage - 1) * pageSize,
+    (currentPage - 1) * pageSize + pageSize
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark py-8 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -231,7 +239,7 @@ export const AdminParkingsPage: React.FC = () => {
 
             {/* Tablet Portrait & Mobile Cards List (<lg) */}
             <div className="lg:hidden divide-y divide-slate-100 dark:divide-parkia-line-dark bg-white dark:bg-parkia-card-dark rounded-3xl border border-slate-100 dark:border-parkia-line-dark shadow-sm overflow-hidden transition-colors">
-              {filteredParkings.map((p) => (
+              {paginatedParkings.map((p) => (
                 <div key={p.id} className="p-4 sm:p-5 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -329,7 +337,7 @@ export const AdminParkingsPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-parkia-line-dark text-slate-700 dark:text-slate-300 font-medium">
-                    {filteredParkings.map((p) => (
+                    {paginatedParkings.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
@@ -421,6 +429,24 @@ export const AdminParkingsPage: React.FC = () => {
                 </table>
               </div>
             </div>
+
+            {/* Pagination Controls */}
+            {filteredParkings.length > 0 && (
+              <div className="pt-2">
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredParkings.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setCurrentPage(1);
+                  }}
+                  pageSizeOptions={[5, 10, 15]}
+                  itemLabel="cocheras"
+                />
+              </div>
+            )}
 
           </div>
         </div>

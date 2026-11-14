@@ -19,6 +19,7 @@ import { ParkingCardSkeleton } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 import { BookingModal } from '../components/reservations/BookingModal';
 import { Button } from '../components/common/Button';
+import { Pagination } from '../components/common/Pagination';
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,6 +35,10 @@ export const SearchPage: React.FC = () => {
   const [selectedParkingId, setSelectedParkingId] = useState<number | null>(null);
   const [activeBookingParking, setActiveBookingParking] = useState<Parking | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+
+  // Pagination state (5, 10 o 15 para evitar scroll infinito)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   // View mode for mobile (list or map)
   const [viewMode, setViewMode] = useState<'split' | 'list' | 'map'>('split');
@@ -68,7 +73,24 @@ export const SearchPage: React.FC = () => {
 
   useEffect(() => {
     loadParkings();
+    setCurrentPage(1);
   }, [filters]);
+
+  const paginatedParkings = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return parkings.slice(startIndex, startIndex + pageSize);
+  }, [parkings, currentPage, pageSize]);
+
+  const handleSelectParking = (p: Parking) => {
+    setSelectedParkingId(p.id);
+    const index = parkings.findIndex((item) => item.id === p.id);
+    if (index !== -1) {
+      const targetPage = Math.floor(index / pageSize) + 1;
+      if (targetPage !== currentPage) {
+        setCurrentPage(targetPage);
+      }
+    }
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,7 +219,7 @@ export const SearchPage: React.FC = () => {
             </div>
 
             <div className="hidden lg:block text-xs font-semibold text-slate-600 dark:text-slate-300">
-              Mostrando <strong className="text-navy-900 dark:text-white font-extrabold">{parkings.length}</strong> estacionamientos
+              Mostrando <strong className="text-navy-900 dark:text-white font-extrabold">{parkings.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, parkings.length)}</strong> de <strong className="text-navy-900 dark:text-white font-extrabold">{parkings.length}</strong> cocheras
             </div>
           </div>
         </div>
@@ -251,15 +273,35 @@ export const SearchPage: React.FC = () => {
                 onAction={handleResetFilters}
               />
             ) : (
-              parkings.map((p) => (
-                <ParkingCard
-                  key={p.id}
-                  parking={p}
-                  isSelected={p.id === selectedParkingId}
-                  onHover={(id) => setSelectedParkingId(id)}
-                  onQuickBook={(parking) => setActiveBookingParking(parking)}
-                />
-              ))
+              <>
+                {paginatedParkings.map((p) => (
+                  <ParkingCard
+                    key={p.id}
+                    parking={p}
+                    isSelected={p.id === selectedParkingId}
+                    onHover={(id) => setSelectedParkingId(id)}
+                    onQuickBook={(parking) => setActiveBookingParking(parking)}
+                  />
+                ))}
+
+                <div className="pt-2 pb-6">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={parkings.length}
+                    pageSize={pageSize}
+                    onPageChange={(page) => {
+                      setCurrentPage(page);
+                      window.scrollTo({ top: 80, behavior: 'smooth' });
+                    }}
+                    onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setCurrentPage(1);
+                    }}
+                    pageSizeOptions={[5, 10, 15]}
+                    itemLabel="cocheras"
+                  />
+                </div>
+              </>
             )}
           </div>
 
@@ -272,7 +314,7 @@ export const SearchPage: React.FC = () => {
             <LeafletMap
               parkings={parkings}
               selectedParkingId={selectedParkingId}
-              onSelectParking={(p) => setSelectedParkingId(p.id)}
+              onSelectParking={handleSelectParking}
               userCoords={userCoords}
             />
           </div>
