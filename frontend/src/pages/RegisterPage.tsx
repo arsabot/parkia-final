@@ -23,7 +23,8 @@ import { PasswordField } from '../components/auth/PasswordField';
 import { PasswordStrength } from '../components/auth/PasswordStrength';
 import { isPasswordValid } from '../components/auth/passwordScore';
 import { UserRole } from '../types';
-import { Auth0GoogleButton } from '../auth0/Auth0GoogleButton';
+import { GoogleLoginButton } from '../components/auth/GoogleLoginButton';
+import { isSupabaseConfigured } from '../services/supabaseClient';
 
 export const RegisterPage: React.FC = () => {
   const [firstName, setFirstName] = useState('');
@@ -210,7 +211,22 @@ export const RegisterPage: React.FC = () => {
               </div>
             </div>
 
-            <Auth0GoogleButton role={role === 'owner' ? 'owner' : 'driver'} />
+            <div className="mb-2">
+              <GoogleLoginButton
+                role={role === 'owner' ? 'owner' : 'driver'}
+                onError={(msg) => error(msg)}
+              />
+            </div>
+
+            {isSupabaseConfigured() && (
+              <div className="relative flex py-1 items-center mb-4">
+                <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
+                <span className="flex-shrink mx-3 text-slate-400 dark:text-slate-500 text-[11px] uppercase tracking-wider font-semibold">
+                  O completá tus datos
+                </span>
+                <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
+              </div>
+            )}
 
             {/* Accessibility / CUD Disability Option */}
             <div className={`rounded-2xl border transition-all p-3.5 sm:p-4 ${

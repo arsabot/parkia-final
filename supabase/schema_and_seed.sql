@@ -234,6 +234,7 @@ CREATE POLICY "Public Modify Users" ON users FOR ALL USING (true);
 
 CREATE POLICY "Public Read Roles" ON roles FOR SELECT USING (true);
 CREATE POLICY "Public Read UserRoles" ON user_roles FOR SELECT USING (true);
+CREATE POLICY "Public Modify UserRoles" ON user_roles FOR ALL USING (true);
 
 CREATE POLICY "Public Read Reservations" ON reservations FOR SELECT USING (true);
 CREATE POLICY "Public Modify Reservations" ON reservations FOR ALL USING (true);

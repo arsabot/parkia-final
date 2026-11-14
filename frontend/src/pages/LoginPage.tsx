@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, Car, Building2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -6,8 +6,9 @@ import { useToast } from '../context/ToastContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { UserRole } from '../types';
-import { Auth0GoogleButton } from '../auth0/Auth0GoogleButton';
-import { auth0Enabled } from '../auth0/Auth0Setup';
+import { GoogleLoginButton } from '../components/auth/GoogleLoginButton';
+import { authService } from '../services/authService';
+import { isSupabaseConfigured } from '../services/supabaseClient';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
 
-  const { login, demoLogin, user } = useAuth();
+  const { login, demoLogin, refreshUser, user } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,6 +24,34 @@ export const LoginPage: React.FC = () => {
   const rawFrom = (location.state as any)?.from?.pathname || '/search';
   // Evitar redireccionar a conductores o invitados a rutas protegidas de administración
   const from = rawFrom.startsWith('/admin') ? '/search' : rawFrom;
+
+  useEffect(() => {
+    const handleOAuth = async () => {
+      const isCallback =
+        window.location.hash.includes('access_token') ||
+        window.location.search.includes('code=') ||
+        Boolean(sessionStorage.getItem('parkia_oauth_pending'));
+
+      if (!isCallback) return;
+
+      try {
+        setLoading(true);
+        const res = await authService.handleOAuthCallback();
+        if (res?.user) {
+          success(`¡Bienvenido de vuelta, ${res.user.first_name}!`);
+          await refreshUser();
+          const destino = res.user.role === 'admin' ? '/admin' : res.user.role === 'owner' ? '/admin/gate' : from;
+          navigate(destino, { replace: true });
+        }
+      } catch (err: any) {
+        error(err.message || 'Error al autenticar con Google');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    handleOAuth();
+  }, [from, navigate, refreshUser, success, error]);
   
   // Si ya hay sesión, no tiene sentido mostrar el login: va directo a su pantalla.
   if (user) {
@@ -138,8 +167,10 @@ export const LoginPage: React.FC = () => {
               </button>
             </div>
           </div>
-          <Auth0GoogleButton />
-          {auth0Enabled && (
+          <div className="mb-4">
+            <GoogleLoginButton onError={(msg) => error(msg)} />
+          </div>
+          {isSupabaseConfigured() && (
             <div className="relative flex py-2 items-center mb-6">
               <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
               <span className="flex-shrink mx-3 text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider font-semibold">

@@ -237,6 +237,164 @@ export const supabaseAuth = {
     };
   },
 
+  async signInWithGoogle(role?: UserRole): Promise<void> {
+    if (!supabase) throw new Error('Supabase no está configurado.');
+    if (role) {
+      sessionStorage.setItem('parkia_oauth_role', role);
+    }
+    sessionStorage.setItem('parkia_oauth_pending', '1');
+
+    const redirectUrl = `${window.location.origin}/login`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+
+    if (error) {
+      sessionStorage.removeItem('parkia_oauth_pending');
+      sessionStorage.removeItem('parkia_oauth_role');
+      throw new Error(error.message || 'Error al conectar con Google en Supabase.');
+    }
+  },
+
+  async handleOAuthCallback(): Promise<AuthResponse | null> {
+    if (!supabase) return null;
+
+    // Supabase PKCE: si hay un code en la URL, intercambiarlo por sesión si no se hizo
+    if (typeof window !== 'undefined' && window.location.search.includes('code=')) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code);
+        }
+      } catch {
+        // Ignorar si el cliente ya lo intercambió automáticamente
+      }
+    }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session || !session.user) {
+      return null;
+    }
+
+    const authUser = session.user;
+    const email = authUser.email ? authUser.email.trim().toLowerCase() : '';
+    if (!email) return null;
+
+    // 1. Buscar si el usuario ya existe en public.users
+    let { data: existingUser } = await supabase
+      .from('users')
+      .select('*, user_roles(role:roles(*))')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (!existingUser) {
+      // 2. Si no existe en la tabla users, crearlo
+      const pendingRole = (sessionStorage.getItem('parkia_oauth_role') as UserRole) || 'driver';
+      const metadata = authUser.user_metadata || {};
+      const fullName = (metadata.full_name || metadata.name || '').trim();
+      let firstName = (metadata.given_name || '').trim();
+      let lastName = (metadata.family_name || '').trim();
+
+      if (!firstName && fullName) {
+        const parts = fullName.split(' ');
+        firstName = parts[0] || 'Usuario';
+        lastName = parts.slice(1).join(' ') || '';
+      }
+      if (!firstName) {
+        firstName = email.split('@')[0] || 'Usuario';
+      }
+      if (!lastName) {
+        lastName = 'Google';
+      }
+
+      const rawAvatar = metadata.avatar_url || metadata.picture || null;
+      const avatarUrl = rawAvatar ? String(rawAvatar).substring(0, 490) : null;
+
+      const { data: insertedUser, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          password: `oauth-google-${authUser.id}`,
+          phone: authUser.phone || '',
+          avatar_url: avatarUrl,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error insertando usuario OAuth:', insertError);
+        throw new Error(insertError.message || 'Error al registrar la cuenta de Google en Supabase.');
+      }
+
+      // Asignar rol
+      const { data: roleData } = await supabase.from('roles').select('id').eq('code', pendingRole).maybeSingle();
+      if (roleData) {
+        await supabase.from('user_roles').insert({ user_id: insertedUser.id, role_id: roleData.id });
+      }
+
+      const { data: fullNewUser } = await supabase
+        .from('users')
+        .select('*, user_roles(role:roles(*))')
+        .eq('id', insertedUser.id)
+        .single();
+
+      existingUser = fullNewUser;
+    }
+
+    sessionStorage.removeItem('parkia_oauth_pending');
+    sessionStorage.removeItem('parkia_oauth_role');
+
+    // Limpiar hash o query de la barra de direcciones para evitar reintentos con códigos usados
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (!existingUser) return null;
+
+    const rolesList = existingUser.user_roles?.map((ur: any) => ur.role?.code) || ['driver'];
+    const primaryRole = (rolesList.find((r: string) => ['admin', 'owner', 'driver'].includes(r)) as UserRole) || 'driver';
+
+    const formattedUser: User = {
+      id: existingUser.id,
+      email: existingUser.email,
+      first_name: existingUser.first_name,
+      last_name: existingUser.last_name,
+      full_name: `${existingUser.first_name} ${existingUser.last_name}`.trim(),
+      role: primaryRole,
+      roles: rolesList,
+      phone: existingUser.phone || '',
+      avatar_url: existingUser.avatar_url || authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null,
+      cud_number: existingUser.cud_number,
+      cud_verified: existingUser.cud_verified,
+      cud_expiration: existingUser.cud_expiration,
+      created_at: existingUser.created_at,
+    };
+
+    localStorage.setItem('parkia_token', session.access_token || `supabase-token-${existingUser.id}`);
+    localStorage.setItem('parkia_refresh', session.refresh_token || '');
+    localStorage.setItem('parkia_user', JSON.stringify(formattedUser));
+
+    return {
+      message: 'Ingreso exitoso con Google',
+      user: formattedUser,
+      tokens: {
+        access: session.access_token || `supabase-token-${existingUser.id}`,
+        refresh: session.refresh_token || '',
+      },
+    };
+  },
+
   async getMe(): Promise<User> {
     const stored = localStorage.getItem('parkia_user');
     if (stored) {
