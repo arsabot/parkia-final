@@ -7,6 +7,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { UserRole } from '../types';
 import { Auth0GoogleButton } from '../auth0/Auth0GoogleButton';
+import { auth0Enabled } from '../auth0/Auth0Setup';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -138,13 +139,15 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
           <Auth0GoogleButton />
-          <div className="relative flex py-2 items-center mb-6">
-            <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
-            <span className="flex-shrink mx-3 text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider font-semibold">
-              O con tu email
-            </span>
-            <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
-          </div>
+          {auth0Enabled && (
+            <div className="relative flex py-2 items-center mb-6">
+              <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
+              <span className="flex-shrink mx-3 text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                O con tu email
+              </span>
+              <div className="flex-grow border-t border-slate-200 dark:border-parkia-line-dark" />
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
