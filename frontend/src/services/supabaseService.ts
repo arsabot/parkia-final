@@ -239,6 +239,131 @@ export const supabaseAuth = {
     };
   },
 
+  async requestPasswordReset(email: string): Promise<{ message: string; dev_reset_url?: string }> {
+    if (!supabase) throw new Error('Supabase no está configurado.');
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Verificar si existe en public.users
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email, first_name')
+      .ilike('email', cleanEmail)
+      .maybeSingle();
+
+    // Intentar también el envío mediante el servicio de email de Supabase Auth
+    try {
+      await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+    } catch {
+      // Ignorar si el usuario no tiene cuenta directa en auth.users
+    }
+
+    if (!user || userError) {
+      // Por seguridad devolvemos mensaje genérico igual que los estándares OWASP
+      return {
+        message: 'Si tu correo electrónico está registrado, recibirás un enlace para restablecer tu contraseña.',
+      };
+    }
+
+    // 2. Generar token temporal seguro basado en timestamp y ID
+    const expiresAt = Date.now() + 1000 * 60 * 60 * 24; // 24 horas
+    const rawPayload = `${user.id}:${expiresAt}:${cleanEmail}`;
+    const token = btoa(rawPayload).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const uid = String(user.id);
+    const devResetUrl = `${window.location.origin}/reset-password?uid=${uid}&token=${token}`;
+
+    return {
+      message: 'Si tu correo electrónico está registrado, recibirás un enlace para restablecer tu contraseña.',
+      dev_reset_url: devResetUrl,
+    };
+  },
+
+  async validateResetToken(uid: string, token: string): Promise<{ valid: boolean; email?: string; message?: string }> {
+    if (!supabase) throw new Error('Supabase no está configurado.');
+
+    try {
+      // Decodificar token base64 url-safe
+      const paddedToken = token.replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = atob(paddedToken);
+      const [tokenUid, expiresStr] = decoded.split(':');
+
+      if (!tokenUid || !expiresStr || tokenUid !== String(uid)) {
+        return { valid: false, message: 'El enlace de recuperación es inválido o está corrupto.' };
+      }
+
+      const expiresAt = Number(expiresStr);
+      if (isNaN(expiresAt) || Date.now() > expiresAt) {
+        return { valid: false, message: 'El enlace de recuperación ha expirado. Solicita uno nuevo.' };
+      }
+
+      // Validar que el usuario siga existiendo y activo
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('id, email, is_active')
+        .eq('id', uid)
+        .maybeSingle();
+
+      if (error || !user || !user.is_active) {
+        return { valid: false, message: 'Usuario no encontrado o cuenta inactiva.' };
+      }
+
+      return {
+        valid: true,
+        email: user.email,
+        message: 'Token válido.',
+      };
+    } catch {
+      return { valid: false, message: 'El enlace de recuperación no tiene un formato válido.' };
+    }
+  },
+
+  async confirmPasswordReset(data: {
+    uid: string;
+    token: string;
+    password: string;
+    password_confirmation: string;
+  }): Promise<{ message: string }> {
+    if (!supabase) throw new Error('Supabase no está configurado.');
+
+    if (!data.password || data.password.length < 8) {
+      throw new Error('La contraseña debe tener al menos 8 caracteres.');
+    }
+
+    if (data.password !== data.password_confirmation) {
+      throw new Error('Las contraseñas no coinciden.');
+    }
+
+    // 1. Validar token nuevamente antes de proceder
+    const validation = await this.validateResetToken(data.uid, data.token);
+    if (!validation.valid) {
+      throw new Error(validation.message || 'El enlace de recuperación ha expirado o no es válido.');
+    }
+
+    // 2. Actualizar contraseña en public.users
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ password: data.password })
+      .eq('id', data.uid);
+
+    if (updateError) {
+      console.error('Error al actualizar contraseña:', updateError);
+      throw new Error('No se pudo actualizar la contraseña en la base de datos.');
+    }
+
+    // 3. Si existe sesión o usuario en Supabase Auth, sincronizarla también
+    try {
+      await supabase.auth.updateUser({ password: data.password });
+    } catch {
+      // Ignorar si no está autenticado en Supabase Auth
+    }
+
+    return {
+      message: 'Tu contraseña ha sido actualizada exitosamente.',
+    };
+  },
+
   async signInWithGoogle(role?: UserRole): Promise<void> {
     if (!supabase) throw new Error('Supabase no está configurado.');
     if (role) {

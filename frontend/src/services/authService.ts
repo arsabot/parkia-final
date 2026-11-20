@@ -77,10 +77,16 @@ export const authService = {
   },
 
   async requestPasswordReset(email: string): Promise<{ message: string; dev_reset_url?: string }> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.requestPasswordReset(email);
+    }
     return api.post<{ message: string; dev_reset_url?: string }>('/auth/password-reset/', { email });
   },
 
   async validateResetToken(uid: string, token: string): Promise<{ valid: boolean; email?: string; message?: string }> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.validateResetToken(uid, token);
+    }
     return api.post<{ valid: boolean; email?: string; message?: string }>('/auth/password-reset/validate/', { uid, token });
   },
 
@@ -90,6 +96,9 @@ export const authService = {
     password: string;
     password_confirmation: string;
   }): Promise<{ message: string }> {
+    if (isSupabaseConfigured()) {
+      return supabaseAuth.confirmPasswordReset(data);
+    }
     return api.post<{ message: string }>('/auth/password-reset/confirm/', data);
   },
 
