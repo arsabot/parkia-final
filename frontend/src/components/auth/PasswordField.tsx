@@ -25,7 +25,7 @@ export const PasswordField = React.forwardRef<HTMLInputElement, PasswordFieldPro
 
     return (
       <div className="space-y-2">
-        <label htmlFor={inputId} className="block text-xs font-bold text-slate-700 tracking-wide">
+        <label htmlFor={inputId} className="block text-xs font-bold text-slate-700 dark:text-slate-300 tracking-wide">
           {label}
           {required && <span className="text-rose-500 ml-1" aria-hidden="true">*</span>}
         </label>
@@ -41,10 +41,10 @@ export const PasswordField = React.forwardRef<HTMLInputElement, PasswordFieldPro
             aria-describedby={error ? errorId : undefined}
             spellCheck={false}
             autoCapitalize="none"
-            className={`w-full min-h-[44px] pl-12 pr-12 py-2 bg-slate-50 border rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:bg-white transition-[border-color,background-color,box-shadow] duration-150 ${
+            className={`pk-autofill-themed w-full min-h-[44px] pl-12 pr-12 py-2 bg-slate-50 dark:bg-[#465456] border rounded-xl text-sm font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:bg-white dark:focus:bg-[#465456] transition-[border-color,background-color,box-shadow] duration-150 pk-no-native-reveal ${
               error
-                ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20'
-                : 'border-slate-200 hover:border-slate-300 focus:border-brand-500 focus:ring-brand-500/20'
+                ? 'border-rose-300 dark:border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                : 'border-slate-200 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-500 focus:border-brand-500 focus:ring-brand-500/20'
             } ${className}`}
             {...props}
           />
@@ -63,7 +63,7 @@ export const PasswordField = React.forwardRef<HTMLInputElement, PasswordFieldPro
 
         <div className="pk-collapse" data-open={!!error}>
           <div>
-            <p id={errorId} role="alert" className="text-xs font-semibold text-rose-600">
+            <p id={errorId} role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">
               {error}
             </p>
           </div>
