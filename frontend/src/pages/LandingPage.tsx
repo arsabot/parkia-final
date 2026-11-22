@@ -5,7 +5,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
+import { useTheme } from '../context/ThemeContext';
 import { BookingModal } from '../components/reservations/BookingModal';
+import { ThemeSwitch } from '../components/common/ThemeSwitch';
 import { parkingService } from '../services/parkingService';
 import type { Parking } from '../types';
 import { CheckoutDemo } from './landing/CheckoutDemo';
@@ -15,7 +17,6 @@ import './landing/landing.css';
 
 const N_REVEAL = 24;
 const MOBILE_MAX = 760;
-const THEME_KEY = 'parkia-landing-theme';
 const PHRASES = ['¿A dónde vas?', 'Av. Corrientes 1200', 'Obelisco', 'Palermo Soho', 'Estadio Monumental', 'Aeroparque'];
 
 const STEPS_DATA: Array<[string, string, string]> = [
@@ -47,14 +48,6 @@ function createReveal(n: number) {
   });
   return reg;
 }
-
-const readTheme = (): boolean => {
-  try {
-    return window.localStorage.getItem(THEME_KEY) === 'light';
-  } catch {
-    return false;
-  }
-};
 
 const FALLBACK_PARKINGS: Parking[] = [
   {
@@ -159,12 +152,13 @@ export const LandingPage: React.FC = () => {
   const [garIdx, setGarIdx] = useState(0);
   const dragX = useRef<number | null>(null);
   const { isAuthenticated, isSuperAdmin, isOwner } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const light = theme === 'light';
 
   // ---- estado
   const [rv, setRv] = useState<boolean[]>(() => Array(N_REVEAL).fill(false));
   const [mob, setMob] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [light, setLight] = useState(readTheme);
   const [step, setStep] = useState(0);
   const [hoverStep, setHoverStep] = useState(false);
   const [own, setOwn] = useState(-1);
@@ -217,14 +211,6 @@ export const LandingPage: React.FC = () => {
     // El asistente (ChatWidget) vive fuera de la landing: se le avisa el tema por una clase en <html>.
     document.documentElement.classList.toggle('pk-landing-light', light);
     return () => document.documentElement.classList.remove('pk-landing-light');
-  }, [light]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(THEME_KEY, light ? 'light' : 'dark');
-    } catch {
-      // Sin almacenamiento (modo privado): el tema vuelve a oscuro al recargar.
-    }
   }, [light]);
 
   // ---- las páginas "encastran" al scrollear (solo en la landing, se limpia al salir)
@@ -553,8 +539,7 @@ export const LandingPage: React.FC = () => {
     },
     themeCls: light ? 'pk-light' : '',
     isLight: light,
-    themeLabel: light ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro',
-    toggleTheme: () => setLight((x) => !x),
+    toggleTheme,
     menuCls: menu ? 'open' : '',
     menuOpen: menu,
     toggleMenu: () => setMenu((x) => !x),
@@ -565,7 +550,7 @@ export const LandingPage: React.FC = () => {
   return (
     <div className={`pk-root ${v.themeCls}`} style={{ width: "100%", background: "var(--bg0,#05080F)", fontFamily: "'Albert Sans', sans-serif", color: "var(--tx,#FFFFFF)", overflow: "hidden" }}>
     
-    <header className="pk-dark pk-hdr" style={{ position: "relative", zIndex: 5, borderBottom: "1px solid rgba(var(--fg-rgb,255,255,255),0.07)", background: "rgba(5,8,15,0.96)", backdropFilter: "blur(14px)" }}>
+    <header className={v.isLight ? "pk-hdr" : "pk-dark pk-hdr"} style={{ position: "relative", zIndex: 5, borderBottom: "1px solid rgba(var(--fg-rgb,255,255,255),0.07)", background: v.isLight ? "rgba(255,255,255,0.96)" : "rgba(5,8,15,0.96)", backdropFilter: "blur(14px)" }}>
     <div style={{ position: "relative", maxWidth: "1280px", margin: "0 auto", padding: "16px 24px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
     <Link to="/" aria-label="Parkia, inicio" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "var(--tx,#FFFFFF)" }}>
     <img src={logoIcon} alt="" style={{ width: "42px", height: "42px" }} />
@@ -576,7 +561,7 @@ export const LandingPage: React.FC = () => {
     <Link to="/" aria-current="page" style={{ color: "var(--tx,#FFFFFF)", textDecoration: "none", fontWeight: 600 }}>Inicio</Link>
     <a href="#como-funciona" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Cómo funciona</a>
     <a href="#duenos" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Tengo un estacionamiento</a>
-    <button type="button" className="pk-theme" onClick={v.toggleTheme} aria-pressed={v.isLight} aria-label={v.themeLabel} title={v.themeLabel}><span className="pk-theme-k" aria-hidden="true"></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ stroke: "#DBEAFE", position: "relative" }}><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg><svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true" style={{ stroke: "#DBEAFE", position: "relative" }}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg></button>
+    <ThemeSwitch isDark={!v.isLight} onToggle={v.toggleTheme} />
     {v.authLinks}
     
     </nav>

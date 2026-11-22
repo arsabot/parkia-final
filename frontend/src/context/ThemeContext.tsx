@@ -13,6 +13,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
+    const landingTheme = localStorage.getItem('parkia-landing-theme');
+    if (landingTheme === 'dark' || landingTheme === 'light') return landingTheme;
+
     const saved = localStorage.getItem('parkia_theme');
     if (saved === 'dark' || saved === 'light') return saved;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -26,6 +29,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.classList.remove('dark');
     }
     localStorage.setItem('parkia_theme', theme);
+    localStorage.setItem('parkia-landing-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

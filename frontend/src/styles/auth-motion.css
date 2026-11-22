@@ -61,6 +61,7 @@
     transform var(--pk-fast) var(--pk-out);
 }
 .pk-eye:hover { color: #0f172a; background: #f1f5f9; }
+.dark .pk-eye:hover { color: #e2e8f0; background: #334155; }
 .pk-eye:active { transform: scale(0.92); }
 .pk-eye > svg {
   position: absolute;

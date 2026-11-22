@@ -1,0 +1,386 @@
+/*
+ * Card de autenticación con el mismo efecto que el buscador de la landing
+ * (.pk-search): una luz que recorre el borde girando alrededor de la card.
+ *
+ * Se anima el ángulo del conic-gradient (con @property) en vez de rotar un
+ * cuadrado grande, así el haz cruza un lado por vez en lugar de iluminar
+ * todo el perímetro a la vez.
+ */
+@property --pk-card-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.pk-glow-card {
+  --pk-card-acc: #a3e635;
+  --pk-card-acc-rgb: 163, 230, 53;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 24px;
+  animation: pkAuthGlow 2.8s ease-in-out 1.2s infinite;
+}
+
+@keyframes pkAuthGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--pk-card-acc-rgb), 0), 0 18px 50px rgba(15, 23, 42, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(var(--pk-card-acc-rgb), 0.12), 0 0 50px rgba(var(--pk-card-acc-rgb), 0.35);
+  }
+}
+
+/* Haz de luz que recorre el borde */
+.pk-glow-card::before {
+  content: '';
+  --pk-card-angle: 0deg;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--pk-card-angle),
+    rgba(var(--pk-card-acc-rgb), 0.1) 0deg 290deg,
+    rgba(var(--pk-card-acc-rgb), 0.4) 320deg,
+    rgba(var(--pk-card-acc-rgb), 0.9) 342deg,
+    #f7fee7 352deg,
+    rgba(var(--pk-card-acc-rgb), 0.9) 356deg,
+    rgba(var(--pk-card-acc-rgb), 0.1) 360deg
+  );
+  animation: pkAuthTravel 3s linear infinite;
+  z-index: -2;
+}
+
+/* Interior de la card (deja ver el haz solo en el borde) */
+.pk-glow-card::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 22px;
+  background: #ffffff;
+  z-index: -1;
+}
+
+.dark .pk-glow-card::after {
+  background: #111a2e;
+}
+
+.pk-glow-card:focus-within::before {
+  animation-duration: 1.4s;
+}
+
+@keyframes pkAuthTravel {
+  to {
+    --pk-card-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pk-glow-card,
+  .pk-glow-card::before {
+    animation: none;
+  }
+}
+
+/*
+ * Fondo de la pantalla de login, igual al hero de la landing:
+ * base #05080F + glow lima desde abajo + grilla que se desvanece.
+ */
+.pk-auth-bg {
+  position: relative;
+  overflow: hidden;
+  background-color: #05080f;
+  background-image:
+    linear-gradient(rgba(5, 8, 15, 0.12), rgba(5, 8, 15, 0.12)),
+    url('../assets/auth-background.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.pk-auth-light-bg {
+  background-color: #f8fafc;
+  background-image: url('../assets/auth-background-light.png');
+}
+
+.pk-auth-bg.pk-auth-light-bg::before {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.02) 35%, rgba(248, 250, 252, 0.12));
+}
+
+.dark .pk-auth-light-bg {
+  background-color: #05080f;
+  background-image:
+    linear-gradient(rgba(5, 8, 15, 0.12), rgba(5, 8, 15, 0.12)),
+    url('../assets/auth-background.png');
+}
+
+.dark .pk-auth-light-bg::before {
+  background: linear-gradient(180deg, rgba(5, 8, 15, 0.04) 35%, rgba(5, 8, 15, 0.18));
+}
+
+.pk-auth-light-bg .pk-auth-intro h1 {
+  color: #0f172a;
+}
+
+.pk-auth-light-bg .pk-auth-intro p,
+.pk-auth-light-bg .pk-auth-intro-brandline > span {
+  color: #475569;
+}
+
+.dark .pk-auth-light-bg .pk-auth-intro h1 {
+  color: #f8fafc;
+}
+
+.dark .pk-auth-light-bg .pk-auth-intro p,
+.dark .pk-auth-light-bg .pk-auth-intro-brandline > span {
+  color: #a8b3c7;
+}
+
+.pk-auth-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 8, 15, 0.04) 35%, rgba(5, 8, 15, 0.18));
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pk-auth-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pk-auth-layout {
+  display: grid;
+  width: min(100%, 1160px);
+  margin-inline: auto;
+  align-items: center;
+}
+
+.pk-auth-form-column {
+  display: grid;
+  width: min(100%, 440px);
+  gap: 2.5rem;
+  margin-inline: auto;
+}
+
+.pk-auth-mobile-brand {
+  display: block;
+  margin-inline: auto;
+}
+
+.pk-auth-mobile-brand img {
+  display: block;
+  width: 12rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.pk-auth-intro {
+  display: none;
+}
+
+.pk-auth-intro p {
+  max-width: 27rem;
+  margin-top: 0.75rem;
+  color: #a8b3c7;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.pk-auth-intro h1 {
+  margin-top: 0;
+  color: #f8fafc;
+  font-size: clamp(1.75rem, 2.8vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.pk-auth-intro-brandline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.pk-auth-intro-brandline > span {
+  color: #a8b3c7;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.pk-auth-intro-brandline > .pk-auth-intro-brand {
+  display: inline-block;
+  color: #a3e635;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.pk-auth-light-bg .pk-auth-intro-brandline > .pk-auth-intro-brand {
+  color: #38bdf8;
+}
+
+.dark .pk-auth-light-bg .pk-auth-intro-brandline > .pk-auth-intro-brand {
+  color: #a3e635;
+}
+
+@media (min-width: 768px) {
+  .pk-auth-bg {
+    display: flex;
+    align-items: center;
+  }
+
+  .pk-auth-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+  }
+
+  .pk-auth-intro {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-right: clamp(0rem, 2vw, 2rem);
+    text-align: center;
+  }
+
+  .pk-auth-form-column {
+    gap: 1.1rem;
+  }
+
+  .pk-auth-form-column .pk-auth-mobile-brand {
+    display: none;
+  }
+
+  .pk-auth-form-column .pk-auth-heading {
+    display: none;
+  }
+
+  .pk-auth-form-column .pk-glow-card {
+    padding: 1.35rem;
+  }
+
+  .pk-auth-form-column .pk-auth-demo {
+    margin-bottom: 0.9rem;
+    padding: 0.7rem;
+  }
+
+  .pk-auth-demo-grid button {
+    padding: 0.5rem 0.35rem;
+  }
+
+  .pk-auth-form-column .pk-auth-divider {
+    margin-bottom: 0.85rem;
+    padding-block: 0;
+  }
+
+  .pk-auth-form-column .pk-auth-form {
+    gap: 0.65rem;
+  }
+
+}
+
+.pk-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .pk-auth-register-page .pk-auth-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pk-auth-register-page .pk-auth-intro {
+    display: none;
+  }
+
+  .pk-auth-register-page .pk-auth-form-column {
+    width: min(100%, 1080px);
+    gap: 1.5rem;
+  }
+
+  .pk-auth-register-page .pk-auth-mobile-brand {
+    display: block;
+  }
+
+  .pk-auth-register-page .pk-auth-heading {
+    display: block;
+  }
+
+  .pk-auth-register-page .pk-glow-card {
+    padding: 1.5rem;
+  }
+
+  .pk-register-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .pk-register-form > * {
+    margin: 0;
+  }
+
+  .pk-register-role,
+  .pk-register-google,
+  .pk-register-accessibility,
+  .pk-register-names,
+  .pk-register-form > button {
+    grid-column: 1 / -1;
+  }
+
+  .pk-register-google:empty {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .pk-auth-register-page .pk-auth-layout {
+    width: min(100%, 1440px);
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    gap: clamp(2.5rem, 5vw, 5rem);
+  }
+
+  .pk-auth-register-page .pk-auth-intro {
+    display: flex;
+  }
+
+  .pk-auth-register-page .pk-auth-form-column {
+    width: min(92%, 1080px);
+  }
+
+  .pk-auth-register-page .pk-auth-mobile-brand,
+  .pk-auth-register-page .pk-auth-heading {
+    display: none;
+  }
+}
+
+.pk-auth-recovery-page .pk-auth-layout {
+  grid-template-columns: minmax(0, 440px);
+  justify-content: center;
+}
+
+.pk-auth-recovery-page .pk-auth-form-column {
+  width: min(100%, 440px);
+  gap: 1.5rem;
+}
+
+.pk-auth-recovery-page .pk-auth-mobile-brand,
+.pk-auth-recovery-page .pk-auth-heading {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .pk-auth-recovery-page .pk-auth-layout {
+    width: min(100%, 440px);
+  }
+
+  .pk-auth-recovery-page .pk-glow-card {
+    padding: 1.5rem;
+  }
+}

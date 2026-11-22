@@ -59,3 +59,5 @@ frontend/.env
 # Bases de datos locales
 *.sqlite3
 *.sqlite3-journal
+# Script local de arranque (maquina del dev)
+dev.bat

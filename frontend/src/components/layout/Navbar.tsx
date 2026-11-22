@@ -16,12 +16,11 @@ import {
   ScanLine,
   Building2,
   Crown,
-  Sun,
-  Moon
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../common/Button';
+import { ThemeSwitch } from '../common/ThemeSwitch';
 import { UserRole } from '../../types';
 
 export const Navbar: React.FC = () => {
@@ -31,6 +30,12 @@ export const Navbar: React.FC = () => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isSearchPage = location.pathname === '/search';
+  const isLoginPage = location.pathname === '/login';
+  const isRegisterPage = location.pathname === '/register';
+  const showLoginAction = !isLoginPage;
+  const showRegisterAction = !isRegisterPage;
 
   const handleLogout = () => {
     logout();
@@ -63,7 +68,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-parkia-navy/95 backdrop-blur-md border-b border-slate-200 dark:border-parkia-line-dark transition-all">
-      <div className="max-w-7xl xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={`${isSearchPage ? 'max-w-7xl xl:max-w-[1600px] px-4 sm:px-6 lg:px-8' : 'max-w-[1280px] px-4 sm:px-6'} mx-auto`}>
         <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Brand Logo */}
@@ -71,19 +76,19 @@ export const Navbar: React.FC = () => {
             <img
               src={isDark ? "/logo-parkia-oscuro.png" : "/logo-parkia.png"}
               alt="PARKIA"
-              className="h-8 sm:h-9 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+              className="h-9 sm:h-[42px] w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
             />
           </Link>
 
           {/* Navigation Links (Visible on Tablet md+ and Desktop) */}
-          <nav className="hidden md:flex items-center gap-1 xl:gap-1.5">
+          <nav className="hidden md:flex items-center gap-1 xl:gap-2">
             {!isAdmin ? (
               <>
                 <Link
                   to="/search"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                     isActive('/search')
-                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -221,61 +226,57 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* User / Auth Actions */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
-            {/* Theme Toggle */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-              title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-              className="p-2 rounded-xl border border-slate-200 dark:border-parkia-line-dark bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-parkia-blue dark:hover:text-parkia-lime hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700 dark:text-slate-300" />}
-            </button>
-
+          <div className="hidden md:ml-auto md:flex items-center gap-2 lg:gap-3">
             {!isAuthenticated ? (
               <div className="flex items-center gap-2">
                 {/* Demo Logins for fast testing */}
-                <div className="hidden xl:flex items-center gap-1.5 mr-2">
+                <div className="hidden xl:flex items-center gap-2">
                   <button
                     onClick={() => handleQuickDemo('driver')}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors flex items-center gap-1 cursor-pointer"
+                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-blue-200 bg-white px-3 py-2 text-xs font-bold text-blue-800 shadow-[0_0_12px_rgba(37,99,235,0.12)] transition-all hover:border-blue-400 hover:bg-blue-50 hover:shadow-[0_0_18px_rgba(37,99,235,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:border-blue-400/40 dark:bg-blue-950/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
                     title="Entrar rápido como conductor demo"
                   >
-                    <Car className="w-3 h-3 text-brand-600" />
+                    <Car className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                     Conductor
                   </button>
                   <button
                     onClick={() => handleQuickDemo('owner')}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold transition-colors flex items-center gap-1 border border-teal-200 cursor-pointer"
+                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50/80 px-3 py-2 text-xs font-bold text-teal-800 shadow-[0_0_12px_rgba(20,184,166,0.12)] transition-all hover:border-teal-400 hover:bg-teal-100 hover:shadow-[0_0_18px_rgba(20,184,166,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 dark:border-teal-400/40 dark:bg-teal-950/40 dark:text-teal-200 dark:hover:bg-teal-900/50"
                     title="Entrar rápido como Dueño de Estacionamiento (Roberto Garaje Central)"
                   >
-                    <Building2 className="w-3 h-3 text-teal-600" />
+                    <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     Dueño Garaje
                   </button>
                   <button
                     onClick={() => handleQuickDemo('admin')}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition-colors flex items-center gap-1 border border-amber-200 cursor-pointer"
+                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs font-bold text-amber-800 shadow-[0_0_12px_rgba(245,158,11,0.12)] transition-all hover:border-amber-400 hover:bg-amber-100 hover:shadow-[0_0_18px_rgba(245,158,11,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-900/50"
                     title="Entrar rápido como Super Admin Ariel (Alta/Baja de Garajes)"
                   >
-                    <Crown className="w-3 h-3 text-amber-600" />
+                    <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     Super Admin
                   </button>
                 </div>
 
-                <Link to="/login">
-                  <Button variant="ghost" size="sm">
-                    Iniciar Sesión
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="primary" size="sm">
-                    Registrarse
-                  </Button>
-                </Link>
+                <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
+
+                {showLoginAction && (
+                  <Link to="/login">
+                    <Button variant={isRegisterPage ? 'primary' : 'ghost'} size="sm">
+                      Iniciar Sesión
+                    </Button>
+                  </Link>
+                )}
+                {showRegisterAction && (
+                  <Link to="/register">
+                    <Button variant="primary" size="sm">
+                      Registrarse
+                    </Button>
+                  </Link>
+                )}
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative flex items-center gap-2">
+                <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -450,14 +451,7 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Menu Toggle & Theme Button (Visible only on mobile <md) */}
           <div className="flex md:hidden items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-slate-200 dark:border-parkia-line-dark bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-parkia-blue dark:hover:text-parkia-lime transition-colors cursor-pointer"
-            >
-              {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
-            </button>
+            <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -587,8 +581,9 @@ export const Navbar: React.FC = () => {
                       handleQuickDemo('driver');
                       setMobileMenuOpen(false);
                     }}
-                    className="p-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 text-center"
+                    className="p-2 text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark text-slate-800 dark:text-slate-200 text-center flex flex-col items-center gap-1"
                   >
+                    <Car className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                     Conductor
                   </button>
                   <button
@@ -596,8 +591,9 @@ export const Navbar: React.FC = () => {
                       handleQuickDemo('owner');
                       setMobileMenuOpen(false);
                     }}
-                    className="p-2 text-xs font-bold rounded-xl bg-teal-50 text-teal-800 text-center border border-teal-200"
+                    className="p-2 text-xs font-bold rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 text-center border border-teal-200 dark:border-teal-800/60 flex flex-col items-center gap-1"
                   >
+                    <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     Dueño Garaje
                   </button>
                   <button
@@ -605,21 +601,26 @@ export const Navbar: React.FC = () => {
                       handleQuickDemo('admin');
                       setMobileMenuOpen(false);
                     }}
-                    className="p-2 text-xs font-bold rounded-xl bg-amber-50 text-amber-800 text-center border border-amber-200"
+                    className="p-2 text-xs font-bold rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 text-center border border-amber-200 dark:border-amber-800/60 flex flex-col items-center gap-1"
                   >
+                    <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     Super Admin
                   </button>
                 </div>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Iniciar Sesión
-                  </Button>
-                </Link>
-                <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="primary" className="w-full">
-                    Registrarse
-                  </Button>
-                </Link>
+                {showLoginAction && (
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant={isRegisterPage ? 'primary' : 'outline'} className="w-full">
+                      Iniciar Sesión
+                    </Button>
+                  </Link>
+                )}
+                {showRegisterAction && (
+                  <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="primary" className="w-full">
+                      Registrarse
+                    </Button>
+                  </Link>
+                )}
               </>
             ) : (
               <div className="space-y-2">

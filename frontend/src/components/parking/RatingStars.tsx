@@ -41,13 +41,13 @@ export const RatingStars: React.FC<RatingStarsProps> = ({
                   ? 'fill-amber-400 text-amber-400'
                   : half
                   ? 'fill-amber-200 text-amber-400'
-                  : 'text-slate-200 fill-slate-100'
+                  : 'text-slate-200 fill-slate-100 dark:text-slate-600 dark:fill-slate-700'
               }`}
             />
           );
         })}
       </div>
-      <span className={`font-bold text-slate-800 ${textSizes[size]}`}>
+      <span className={`font-bold text-slate-800 dark:text-slate-200 ${textSizes[size]}`}>
         {Number(rating).toFixed(1)}
       </span>
       {showCount && reviewsCount !== undefined && (

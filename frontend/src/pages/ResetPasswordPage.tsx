@@ -13,6 +13,8 @@ export const ResetPasswordPage: React.FC = () => {
 
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordConfirmationError, setPasswordConfirmationError] = useState('');
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(true);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
@@ -20,7 +22,7 @@ export const ResetPasswordPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const { error, success } = useToast();
+  const { success } = useToast();
   const navigate = useNavigate();
 
   // Validate token on mount
@@ -55,19 +57,20 @@ export const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextPasswordError = !password
+      ? 'Ingresa una contraseña.'
+      : password.length < 8
+        ? 'La contraseña debe tener al menos 8 caracteres.'
+        : '';
+    const nextPasswordConfirmationError = !passwordConfirmation
+      ? 'Confirma tu contraseña.'
+      : password !== passwordConfirmation
+        ? 'Las contraseñas no coinciden.'
+        : '';
+    setPasswordError(nextPasswordError);
+    setPasswordConfirmationError(nextPasswordConfirmationError);
 
-    if (!password || !passwordConfirmation) {
-      error('Por favor completa ambos campos de contraseña');
-      return;
-    }
-
-    if (password.length < 8) {
-      error('La contraseña debe tener al menos 8 caracteres');
-      return;
-    }
-
-    if (password !== passwordConfirmation) {
-      error('Las contraseñas no coinciden');
+    if (nextPasswordError || nextPasswordConfirmationError) {
       return;
     }
 
@@ -82,7 +85,7 @@ export const ResetPasswordPage: React.FC = () => {
       setIsSuccess(true);
       success('¡Contraseña actualizada exitosamente!');
     } catch (err: any) {
-      error(err.message || 'No se pudo restablecer la contraseña. El enlace puede haber expirado.');
+      setPasswordError(err.message || 'No se pudo restablecer la contraseña. El enlace puede haber expirado.');
     } finally {
       setLoading(false);
     }
@@ -172,7 +175,7 @@ export const ResetPasswordPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {userEmail && (
                 <div className="p-3 bg-brand-50/70 border border-brand-200/60 rounded-2xl text-xs text-brand-900 mb-2">
                   Restableciendo contraseña para: <strong>{userEmail}</strong>
@@ -185,7 +188,11 @@ export const ResetPasswordPage: React.FC = () => {
                 required
                 placeholder="Mínimo 8 caracteres"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                error={passwordError}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError('');
+                }}
                 leftIcon={<Lock className="w-4 h-4" />}
                 hint="Debe contener al menos 8 caracteres"
               />
@@ -196,7 +203,11 @@ export const ResetPasswordPage: React.FC = () => {
                 required
                 placeholder="Repite tu nueva contraseña"
                 value={passwordConfirmation}
-                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                error={passwordConfirmationError}
+                onChange={(e) => {
+                  setPasswordConfirmation(e.target.value);
+                  setPasswordConfirmationError('');
+                }}
                 leftIcon={<KeyRound className="w-4 h-4" />}
               />
 

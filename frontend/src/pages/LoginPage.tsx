@@ -3,21 +3,28 @@ import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, Car, Building2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useTheme } from '../context/ThemeContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { UserRole } from '../types';
 import { GoogleLoginButton } from '../components/auth/GoogleLoginButton';
 import { authService } from '../services/authService';
 import { isSupabaseConfigured } from '../services/supabaseClient';
+import '../styles/auth-card.css';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   const { login, demoLogin, refreshUser, user } = useAuth();
   const { success, error } = useToast();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handledOAuth = useRef(false);
@@ -64,8 +71,17 @@ export const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      error('Por favor ingresa tu correo y contraseña');
+    const nextEmailError = !email.trim()
+      ? 'Ingresa tu correo electrónico.'
+      : emailRef.current && !emailRef.current.validity.valid
+        ? 'Ingresa un correo electrónico válido.'
+        : '';
+    const nextPasswordError = password ? '' : 'Ingresa tu contraseña.';
+    setEmailError(nextEmailError);
+    setPasswordError(nextPasswordError);
+    setFormError('');
+
+    if (nextEmailError || nextPasswordError) {
       return;
     }
 
@@ -81,7 +97,7 @@ export const LoginPage: React.FC = () => {
         navigate(from);
       }
     } catch (err: any) {
-      error(err.message || 'Credenciales incorrectas');
+      setFormError(err.message || 'Credenciales incorrectas');
     } finally {
       setLoading(false);
     }
@@ -101,42 +117,46 @@ export const LoginPage: React.FC = () => {
         navigate('/search');
       }
     } catch (err: any) {
-      error(err.message || 'Error en login demo');
+      setFormError(err.message || 'Error en login demo');
     } finally {
       setDemoLoading(null);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-slate-50 dark:bg-parkia-page-dark py-12 px-4 sm:px-6 lg:px-8 transition-colors">
-      <div className="max-w-md w-full space-y-8 animate-fade-in">
-        
-        {/* Header */}
-        <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-            <img
-              src="/logo-icon.png"
-              alt="PARKIA"
-              className="w-14 h-14 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
-            />
-          </Link>
-          <h2 className="text-3xl font-extrabold text-navy-900 dark:text-white tracking-tight">
-            Iniciar Sesión
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
-            Ingresa a tu cuenta para gestionar tus reservas o estacionamientos.
-          </p>
-        </div>
+    <div className="pk-auth-bg pk-auth-light-bg min-h-[calc(100vh-5rem)] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="pk-auth-layout">
+        <section className="pk-auth-intro" aria-labelledby="pk-auth-intro-title">
+          <h1 id="pk-auth-intro-title">
+            <span>Iniciá sesión</span>
+            <span className="pk-auth-intro-brandline">
+              <span>en</span>
+              <span className="pk-auth-intro-brand">PARKIA</span>
+            </span>
+          </h1>
+          <p>Ingresa a tu cuenta para gestionar tus reservas o estacionamientos.</p>
+        </section>
 
-        {/* Card */}
-        <div className="bg-white dark:bg-parkia-card-dark rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-parkia-line-dark shadow-xl shadow-slate-200/50 dark:shadow-none transition-colors">
+        <div className="pk-auth-form-column animate-fade-in">
+          <Link to="/" className="pk-auth-mobile-brand group" aria-label="PARKIA - inicio">
+            <img src={isDark ? '/logo-parkia-oscuro.png' : '/logo-parkia.png'} alt="PARKIA" />
+          </Link>
+          <div className="pk-glow-card p-6 sm:p-8">
+            <div className="pk-auth-heading text-center">
+              <h2 className="text-2xl font-extrabold text-navy-900 dark:text-white tracking-tight">
+                Iniciar Sesión
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                Ingresa a tu cuenta para gestionar tus reservas o estacionamientos.
+              </p>
+            </div>
           
           {/* Quick Demo Logins Box with 3 roles */}
-          <div className="mb-6 p-4 bg-slate-50 dark:bg-parkia-navy/40 rounded-2xl border border-slate-200/80 dark:border-parkia-line-dark">
+          <div className="pk-auth-demo mb-6 p-4 bg-slate-50 dark:bg-parkia-navy/40 rounded-2xl border border-slate-200/80 dark:border-parkia-line-dark">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2 text-center">
               Accesos Demo para pruebas rápidas
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="pk-auth-demo-grid grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => handleQuickDemo('driver')}
@@ -184,15 +204,21 @@ export const LoginPage: React.FC = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="pk-auth-form space-y-4">
             <Input
+              ref={emailRef}
               type="email"
               label="Correo Electrónico"
               required
               autoComplete="email"
               placeholder="tu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              error={emailError}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError('');
+                setFormError('');
+              }}
               leftIcon={<Mail className="w-4 h-4" />}
             />
 
@@ -204,7 +230,12 @@ export const LoginPage: React.FC = () => {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                error={passwordError}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError('');
+                  setFormError('');
+                }}
                 leftIcon={<Lock className="w-4 h-4" />}
               />
               <div className="flex justify-end mt-1.5">
@@ -227,10 +258,15 @@ export const LoginPage: React.FC = () => {
             >
               Iniciar Sesión
             </Button>
+            {formError && (
+              <p className="text-xs font-semibold text-rose-600 dark:text-rose-400" role="alert">
+                {formError}
+              </p>
+            )}
           </form>
 
           {/* Register Link */}
-          <div className="text-center pt-6 mt-6 border-t border-slate-100 dark:border-parkia-line-dark text-xs text-slate-500 dark:text-slate-400">
+          <div className="pk-auth-register text-center pt-6 mt-6 border-t border-slate-100 dark:border-parkia-line-dark text-xs text-slate-500 dark:text-slate-400">
             ¿Aún no tienes cuenta?{' '}
             <Link to="/register" className="font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300">
               Registrate gratis aquí
@@ -238,6 +274,7 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
+        </div>
       </div>
     </div>
   );

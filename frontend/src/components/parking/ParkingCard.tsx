@@ -18,6 +18,7 @@ import { Button } from '../common/Button';
 interface ParkingCardProps {
   parking: Parking;
   isSelected?: boolean;
+  isPreview?: boolean;
   onHover?: (parkingId: number | null) => void;
   onQuickBook?: (parking: Parking) => void;
 }
@@ -25,6 +26,7 @@ interface ParkingCardProps {
 export const ParkingCard: React.FC<ParkingCardProps> = ({
   parking,
   isSelected = false,
+  isPreview = false,
   onHover,
   onQuickBook,
 }) => {
@@ -41,6 +43,11 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
 
   const isHighOccupancy = parking.available_spaces <= 3 && parking.available_spaces > 0;
   const isFull = parking.available_spaces === 0;
+  const title = (
+    <h3 className="text-lg font-extrabold text-navy-900 dark:text-white group-hover:text-brand-500 transition-colors line-clamp-1 mb-1">
+      {parking.name}
+    </h3>
+  );
 
   return (
     <div
@@ -62,14 +69,16 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
 
         {/* Favorite Button */}
         <button
-          onClick={(e) => {
+          onClick={isPreview ? undefined : (e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleFavorite(parking.id);
           }}
           className="absolute top-3 right-3 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-white/95 dark:bg-parkia-navy/95 backdrop-blur-md text-slate-700 dark:text-slate-200 hover:text-rose-500 shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-          aria-label={favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
-          title={favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
+          aria-label={isPreview ? 'Favorito de muestra' : favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
+          aria-disabled={isPreview}
+          tabIndex={isPreview ? -1 : undefined}
+          title={isPreview ? 'Favorito de muestra' : favorited ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
         >
           <Heart
             className={`w-4.5 h-4.5 transition-colors ${
@@ -81,8 +90,8 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
 
         {/* 24 Hours / Hours Badge */}
         <div className="absolute bottom-3 left-3">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-navy-950/85 backdrop-blur-md text-white border border-white/20">
-            <Clock className="w-3.5 h-3.5 text-brand-300" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-navy-950/55 backdrop-blur-md text-white border border-white/15">
+            <Clock className="w-3.5 h-3.5 text-lime-400" aria-hidden="true" />
             {parking.is_24_hours
               ? 'Abierto 24hs'
               : `${parking.opening_time ? parking.opening_time.slice(0, 5) : '08:00'} - ${parking.closing_time ? parking.closing_time.slice(0, 5) : '22:00'}`}
@@ -95,7 +104,7 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
         <div>
           {/* Top meta: Location & Distance */}
           <div className="flex items-start justify-between gap-2 mb-1">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-600">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-cyan-400">
               <MapPin className="w-3.5 h-3.5 shrink-0" />
               <span className="line-clamp-1">{parking.city}</span>
             </div>
@@ -107,11 +116,7 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
           </div>
 
           {/* Title */}
-          <Link to={`/parking/${parking.id}`} className="block">
-            <h3 className="text-lg font-extrabold text-navy-900 dark:text-white group-hover:text-brand-500 transition-colors line-clamp-1 mb-1">
-              {parking.name}
-            </h3>
-          </Link>
+          {isPreview ? title : <Link to={`/parking/${parking.id}`} className="block">{title}</Link>}
 
           <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 mb-3 font-medium">{parking.address}</p>
 
@@ -165,12 +170,30 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Link to={`/parking/${parking.id}`} className="shrink-0">
-              <Button variant="outline" size="sm" className="px-3 py-1.5 text-xs whitespace-nowrap">
+            {isPreview ? (
+              <Button type="button" variant="outline" size="sm" className="px-3 py-1.5 text-xs whitespace-nowrap" aria-disabled="true" tabIndex={-1}>
                 Ver detalle
               </Button>
-            </Link>
-            {onQuickBook && !isFull && (
+            ) : (
+              <Link to={`/parking/${parking.id}`} className="shrink-0">
+                <Button variant="outline" size="sm" className="px-3 py-1.5 text-xs whitespace-nowrap">
+                  Ver detalle
+                </Button>
+              </Link>
+            )}
+            {isPreview ? (
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                className="px-3.5 py-1.5 text-xs shrink-0 whitespace-nowrap"
+                aria-disabled="true"
+                tabIndex={-1}
+              >
+                Reservar
+              </Button>
+            ) : onQuickBook && !isFull && (
               <Button
                 variant="primary"
                 size="sm"

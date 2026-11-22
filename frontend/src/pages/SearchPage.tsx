@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
-  Search, 
   MapPin, 
   Navigation, 
   SlidersHorizontal, 
   Map as MapIcon, 
   List, 
-  Car, 
   Frown 
 } from 'lucide-react';
 import { Parking, SearchFilters } from '../types';
@@ -18,11 +16,23 @@ import { FilterSidebar } from '../components/parking/FilterSidebar';
 import { ParkingCardSkeleton } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 import { BookingModal } from '../components/reservations/BookingModal';
-import { Button } from '../components/common/Button';
 import { Pagination } from '../components/common/Pagination';
+import { useTheme } from '../context/ThemeContext';
+import '../styles/search-page.css';
+
+const SEARCH_TYPEWRITER_PHRASES = [
+  '¿A dónde vas?',
+  'Av. Corrientes 1200',
+  'Obelisco',
+  'Palermo Soho',
+  'Estadio Monumental',
+  'Aeroparque',
+];
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isDark } = useTheme();
 
   // URL state
   const initialSearch = searchParams.get('q') || '';
@@ -32,6 +42,12 @@ export const SearchPage: React.FC = () => {
   const [parkings, setParkings] = useState<Parking[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [animatedSearch, setAnimatedSearch] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(REDUCED_MOTION_QUERY).matches
+      ? SEARCH_TYPEWRITER_PHRASES[0]
+      : ''
+  );
+  const typingPaused = useRef(Boolean(initialSearch));
   const [selectedParkingId, setSelectedParkingId] = useState<number | null>(null);
   const [activeBookingParking, setActiveBookingParking] = useState<Parking | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -92,6 +108,50 @@ export const SearchPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    let phraseIndex = 0;
+    let characterIndex = 0;
+    let deleting = false;
+    let timer = 0;
+
+    const typeNextCharacter = () => {
+      if (typingPaused.current) {
+        timer = window.setTimeout(typeNextCharacter, 100);
+        return;
+      }
+
+      const phrase = SEARCH_TYPEWRITER_PHRASES[phraseIndex];
+      let delay = deleting ? 35 : 75;
+
+      if (!deleting) {
+        characterIndex += 1;
+        if (characterIndex >= phrase.length) {
+          characterIndex = phrase.length;
+          deleting = true;
+          delay = 1500;
+        }
+      } else {
+        characterIndex -= 1;
+        if (characterIndex <= 0) {
+          characterIndex = 0;
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % SEARCH_TYPEWRITER_PHRASES.length;
+          delay = 350;
+        }
+      }
+
+      setAnimatedSearch(phrase.slice(0, characterIndex));
+      timer = window.setTimeout(typeNextCharacter, delay);
+    };
+
+    if (window.matchMedia(REDUCED_MOTION_QUERY).matches) {
+      return;
+    }
+
+    timer = window.setTimeout(typeNextCharacter, 900);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFilters((prev) => ({ ...prev, search: searchTerm.trim() }));
@@ -126,6 +186,7 @@ export const SearchPage: React.FC = () => {
 
   const handleResetFilters = () => {
     setSearchTerm('');
+    typingPaused.current = false;
     setFilters({
       search: '',
       sort_by: 'recommended',
@@ -138,47 +199,60 @@ export const SearchPage: React.FC = () => {
     }
     return null;
   }, [filters.lat, filters.lng]);
-
   return (
-    <div className="min-h-[calc(100vh-5rem)] bg-slate-50 dark:bg-parkia-page-dark flex flex-col transition-colors">
+    <div className="pk-search-page min-h-[calc(100vh-5rem)] flex flex-col transition-colors">
+      <div className="pk-search-page__stars" aria-hidden="true" />
       
       {/* Top Search Bar & Controls */}
-      <div className="bg-white dark:bg-parkia-navy border-b border-slate-200 dark:border-parkia-line-dark sticky top-16 sm:top-20 z-30 px-4 sm:px-6 lg:px-8 py-3.5 shadow-sm">
-        <div className="max-w-7xl xl:max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="pk-search-toolbar bg-white dark:bg-parkia-navy sticky top-16 sm:top-20 z-30 py-3.5">
+        <div className="max-w-7xl xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-3">
           
           {/* Search form */}
-          <form onSubmit={handleSearchSubmit} className="flex-1 w-full flex items-center gap-2">
-            <div className="relative flex-1">
-              <MapPin className="w-4 h-4 text-brand-600 dark:text-brand-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Buscar por barrio, calle o nombre (ej: Palermo, Obelisco...)"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-100/80 dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-slate-800 transition-all"
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              variant="secondary" 
-              size="md" 
-              className="shrink-0"
-              aria-label="Buscar estacionamientos"
-            >
-              <Search className="w-4 h-4" aria-hidden="true" />
-            </Button>
-
-            <button
-              type="button"
-              onClick={handleUseMyLocation}
-              disabled={isLocating}
-              className="min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-parkia-line-dark bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 text-xs font-bold shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 shadow-sm"
-              title="Centrar en mi ubicación"
-              aria-label="Usar mi ubicación actual para encontrar estacionamientos cercanos"
-            >
-              <Navigation className={`w-4 h-4 text-brand-600 dark:text-brand-400 ${isLocating ? 'animate-spin' : ''}`} aria-hidden="true" />
-              <span className="hidden sm:inline">Mi ubicación</span>
+          <form onSubmit={handleSearchSubmit} className="pk-search-hero-form">
+            <label className="pk-search-hero-label" htmlFor="parking-destination">
+              <MapPin className="pk-search-hero-pin" aria-hidden="true" />
+              <span className="pk-search-hero-input-wrap">
+                <input
+                  id="parking-destination"
+                  type="text"
+                  value={searchTerm}
+                  autoComplete="off"
+                  aria-label="¿A dónde vas?"
+                  onFocus={() => {
+                    typingPaused.current = true;
+                    setAnimatedSearch('');
+                  }}
+                  onBlur={() => {
+                    typingPaused.current = searchTerm.length > 0;
+                  }}
+                  onChange={(event) => {
+                    typingPaused.current = true;
+                    setAnimatedSearch('');
+                    setSearchTerm(event.target.value);
+                  }}
+                  className="pk-search-hero-input"
+                />
+                {!searchTerm && (
+                  <span className="pk-search-hero-typing" aria-hidden="true">
+                    {animatedSearch}
+                    <span className="pk-search-hero-caret" />
+                  </span>
+                )}
+              </span>
+              <button
+                type="button"
+                className="pk-search-hero-geo"
+                onClick={handleUseMyLocation}
+                disabled={isLocating}
+                title="Usar mi ubicación actual"
+                aria-label="Usar mi ubicación actual"
+              >
+                <Navigation className={isLocating ? 'pk-search-hero-geo-spin' : ''} aria-hidden="true" />
+                <span>Cerca de mí</span>
+              </button>
+            </label>
+            <button type="submit" className="pk-search-hero-submit">
+              Buscar estacionamiento
             </button>
           </form>
 
@@ -219,14 +293,14 @@ export const SearchPage: React.FC = () => {
             </div>
 
             <div className="hidden lg:block text-xs font-semibold text-slate-600 dark:text-slate-300">
-              Mostrando <strong className="text-navy-900 dark:text-white font-extrabold">{parkings.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, parkings.length)}</strong> de <strong className="text-navy-900 dark:text-white font-extrabold">{parkings.length}</strong> cocheras
+              Mostrando <strong className="pk-search-result-count text-navy-900 dark:text-white font-extrabold">{parkings.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, parkings.length)}</strong> de <strong className="pk-search-result-count text-navy-900 dark:text-white font-extrabold">{parkings.length}</strong> cocheras
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content Layout */}
-      <div className="max-w-7xl xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+      <div className="pk-search-page__content max-w-7xl xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
         
         {/* Mobile Filter Drawer */}
         {mobileFilterOpen && (
@@ -235,6 +309,7 @@ export const SearchPage: React.FC = () => {
               filters={filters}
               onChange={setFilters}
               onReset={handleResetFilters}
+              className="pk-search-filter"
             />
           </div>
         )}
@@ -248,13 +323,14 @@ export const SearchPage: React.FC = () => {
                 filters={filters}
                 onChange={setFilters}
                 onReset={handleResetFilters}
+                className="pk-search-filter"
               />
             </div>
           </div>
 
           {/* Center Column: Results List (6 cols on 2xl, 5 on xl, or 8 cols without map) */}
           <div
-            className={`space-y-4 min-w-0 ${
+            className={`pk-search-results space-y-4 min-w-0 ${
               viewMode === 'map' ? 'hidden lg:block' : 'block'
             } lg:col-span-8 xl:col-span-5 2xl:col-span-5`}
           >
@@ -271,6 +347,7 @@ export const SearchPage: React.FC = () => {
                 description="Intenta ajustar los filtros de precio o distancia, o busca por otra dirección."
                 actionText="Restablecer filtros"
                 onAction={handleResetFilters}
+                className="pk-search-empty-state"
               />
             ) : (
               <>
@@ -307,7 +384,7 @@ export const SearchPage: React.FC = () => {
 
           {/* Right Column: Sticky Interactive Leaflet Map (4 cols on xl) */}
           <div
-            className={`h-[450px] lg:h-[calc(100vh-14rem)] sticky top-36 ${
+            className={`pk-search-map h-[450px] lg:h-[calc(100vh-14rem)] sticky top-36 ${
               viewMode === 'list' ? 'hidden lg:block' : 'block'
             } lg:col-span-8 xl:col-span-4 2xl:col-span-4 lg:hidden xl:block`}
           >
@@ -316,6 +393,8 @@ export const SearchPage: React.FC = () => {
               selectedParkingId={selectedParkingId}
               onSelectParking={handleSelectParking}
               userCoords={userCoords}
+              zoom={12}
+              darkTiles={isDark}
             />
           </div>
 

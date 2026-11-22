@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { 
   Mail, 
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useTheme } from '../context/ThemeContext';
 import { authService } from '../services/authService';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
@@ -25,6 +26,7 @@ import { isPasswordValid } from '../components/auth/passwordScore';
 import { UserRole } from '../types';
 import { GoogleLoginButton } from '../components/auth/GoogleLoginButton';
 import { isSupabaseConfigured } from '../services/supabaseClient';
+import '../styles/auth-card.css';
 
 export const RegisterPage: React.FC = () => {
   const [firstName, setFirstName] = useState('');
@@ -34,9 +36,17 @@ export const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<UserRole>('driver');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordConfirmError, setPasswordConfirmError] = useState('');
+  const [cudNumberError, setCudNumberError] = useState('');
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(0);
   const mismatch = passwordConfirm.length > 0 && password !== passwordConfirm;
+  const emailRef = useRef<HTMLInputElement>(null);
 
   // Disability & CUD Verification states
   const [hasDisabilityPermit, setHasDisabilityPermit] = useState(false);
@@ -48,7 +58,8 @@ export const RegisterPage: React.FC = () => {
   const [cudVerificationMessage, setCudVerificationMessage] = useState('');
 
   const { register, user } = useAuth();
-  const { success, error, info } = useToast();
+  const { success, info, error } = useToast();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   // Si ya hay sesión, redirigir según su rol
@@ -70,9 +81,10 @@ export const RegisterPage: React.FC = () => {
   // Validar CUD contra el endpoint de verificación
   const handleVerifyCudOnline = async () => {
     if (!cudNumber.trim()) {
-      error('Por favor ingresá el número de CUD impreso en tu certificado.');
+      setCudNumberError('Ingresá el número de CUD impreso en tu certificado.');
       return;
     }
+    setCudNumberError('');
     try {
       setIsVerifyingCud(true);
       const res = await authService.verifyCud({
@@ -86,11 +98,11 @@ export const RegisterPage: React.FC = () => {
         success('¡Certificado CUD verificado con éxito! Habilitado para plazas accesibles.');
       } else {
         setCudVerifiedSuccess(false);
-        error('El CUD ingresado no pudo ser validado.');
+        setCudNumberError('El CUD ingresado no pudo ser validado.');
       }
     } catch (err: any) {
       setCudVerifiedSuccess(false);
-      error(err.message || 'Error al validar el CUD. Verificá los datos ingresados.');
+      setCudNumberError(err.message || 'Error al validar el CUD. Verificá los datos ingresados.');
     } finally {
       setIsVerifyingCud(false);
     }
@@ -98,21 +110,44 @@ export const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nextFirstNameError = firstName.trim() ? '' : 'Ingresa tu nombre.';
+    const nextLastNameError = lastName.trim() ? '' : 'Ingresa tu apellido.';
+    const nextEmailError = !email.trim()
+      ? 'Ingresa tu correo electrónico.'
+      : emailRef.current && !emailRef.current.validity.valid
+        ? 'Ingresa un correo electrónico válido.'
+        : '';
+    const nextPasswordError = !password
+      ? 'Ingresa una contraseña.'
+      : !isPasswordValid(password)
+        ? 'La contraseña no cumple los requisitos indicados abajo.'
+        : '';
+    const nextPasswordConfirmError = !passwordConfirm
+      ? 'Confirma tu contraseña.'
+      : password !== passwordConfirm
+        ? 'Las contraseñas no coinciden.'
+        : '';
+    const nextCudNumberError = hasDisabilityPermit && !cudNumber.trim()
+      ? 'Ingresá tu número de CUD.'
+      : '';
 
-    if (password !== passwordConfirm) {
-      error('Las contraseñas no coinciden.');
-      setShake((n) => n + 1);
-      return;
-    }
+    setFirstNameError(nextFirstNameError);
+    setLastNameError(nextLastNameError);
+    setEmailError(nextEmailError);
+    setPasswordError(nextPasswordError);
+    setPasswordConfirmError(nextPasswordConfirmError);
+    setCudNumberError(nextCudNumberError);
+    setFormError('');
 
-    if (!isPasswordValid(password)) {
-      error('La contraseña no cumple los requisitos.');
-      setShake((n) => n + 1);
-      return;
-    }
-
-    if (hasDisabilityPermit && !cudNumber.trim()) {
-      error('Para acceder a plazas accesibles, debés ingresar tu número de CUD.');
+    if (
+      nextFirstNameError ||
+      nextLastNameError ||
+      nextEmailError ||
+      nextPasswordError ||
+      nextPasswordConfirmError ||
+      nextCudNumberError
+    ) {
+      if (nextPasswordError || nextPasswordConfirmError) setShake((n) => n + 1);
       return;
     }
 
@@ -146,40 +181,44 @@ export const RegisterPage: React.FC = () => {
         navigate('/search');
       }
     } catch (err: any) {
-      error(err.message || 'Error al registrar el usuario.');
+      setFormError(err.message || 'Error al registrar el usuario.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-slate-50 dark:bg-parkia-page-dark py-12 px-4 sm:px-6 lg:px-8 transition-colors">
-      <div className="max-w-md w-full space-y-8 animate-fade-in">
-        
-        {/* Header */}
-        <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-            <img
-              src="/logo-icon.png"
-              alt="PARKIA"
-              className="w-14 h-14 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
-            />
-          </Link>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Crear Cuenta en PARKIA
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
-            Únete a la comunidad de movilidad inteligente.
-          </p>
-        </div>
+    <div className="pk-auth-bg pk-auth-light-bg pk-auth-register-page min-h-[calc(100vh-5rem)] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="pk-auth-layout">
+        <section className="pk-auth-intro" aria-labelledby="pk-register-intro-title">
+          <h1 id="pk-register-intro-title">
+            <span>Crear Cuenta</span>
+            <span className="pk-auth-intro-brandline">
+              <span>en</span>
+              <span className="pk-auth-intro-brand">PARKIA</span>
+            </span>
+          </h1>
+          <p>Únete a la comunidad de movilidad inteligente.</p>
+        </section>
 
-        {/* Card */}
-        <div className="bg-white dark:bg-parkia-card-dark rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-parkia-line-dark shadow-xl shadow-slate-200/50 dark:shadow-none transition-colors">
+        <div className="pk-auth-form-column animate-fade-in">
+          <Link to="/" className="pk-auth-mobile-brand group" aria-label="PARKIA - inicio">
+            <img src={isDark ? '/logo-parkia-oscuro.png' : '/logo-parkia.png'} alt="PARKIA" />
+          </Link>
+          <div className="pk-glow-card p-6 sm:p-8">
+            <div className="pk-auth-heading text-center">
+              <h2 className="text-2xl font-extrabold text-navy-900 dark:text-white tracking-tight">
+                Crear Cuenta en PARKIA
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                Únete a la comunidad de movilidad inteligente.
+              </p>
+            </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="pk-auth-form pk-register-form">
             
             {/* Role Switcher */}
-            <div>
+            <div className="pk-register-role">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 Tipo de Cuenta
               </label>
@@ -229,7 +268,7 @@ export const RegisterPage: React.FC = () => {
             )}
 
             {/* Accessibility / CUD Disability Option */}
-            <div className={`rounded-2xl border transition-all p-3.5 sm:p-4 ${
+            <div className={`pk-register-accessibility rounded-2xl border transition-all p-3.5 sm:p-4 ${
               hasDisabilityPermit 
                 ? 'border-blue-400/80 dark:border-blue-500/60 bg-blue-50/50 dark:bg-blue-950/20' 
                 : 'border-slate-200 dark:border-parkia-line-dark bg-slate-50/60 dark:bg-slate-800/40'
@@ -264,6 +303,8 @@ export const RegisterPage: React.FC = () => {
                     checked={hasDisabilityPermit}
                     onChange={(e) => {
                       setHasDisabilityPermit(e.target.checked);
+                      setCudNumberError('');
+                      setFormError('');
                       if (!e.target.checked) {
                         setCudVerifiedSuccess(false);
                       }
@@ -300,14 +341,25 @@ export const RegisterPage: React.FC = () => {
                       <input
                         type="text"
                         required={hasDisabilityPermit}
+                        aria-invalid={!!cudNumberError}
+                        aria-describedby={cudNumberError ? 'cud-number-error' : undefined}
                         placeholder="Ej: 04-38912456-7"
                         value={cudNumber}
                         onChange={(e) => {
                           setCudNumber(e.target.value.toUpperCase());
+                          setCudNumberError('');
+                          setFormError('');
                           setCudVerifiedSuccess(false);
                         }}
-                        className="w-full text-xs font-mono font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px]"
+                        className={`w-full text-xs font-mono font-bold bg-white dark:bg-slate-800 border rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px] ${
+                          cudNumberError ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-parkia-line-dark'
+                        }`}
                       />
+                      {cudNumberError && (
+                        <p id="cud-number-error" className="mt-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400" role="alert">
+                          {cudNumberError}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -373,14 +425,19 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             {/* Name and Last Name */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="pk-register-names grid grid-cols-2 gap-3">
               <Input
                 label="Nombre"
                 required
                 autoComplete="given-name"
                 placeholder="Carlos"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                error={firstNameError}
+                onChange={(e) => {
+                  setFirstName(e.target.value);
+                  setFirstNameError('');
+                  setFormError('');
+                }}
               />
               <Input
                 label="Apellido"
@@ -388,19 +445,30 @@ export const RegisterPage: React.FC = () => {
                 autoComplete="family-name"
                 placeholder="Méndez"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                error={lastNameError}
+                onChange={(e) => {
+                  setLastName(e.target.value);
+                  setLastNameError('');
+                  setFormError('');
+                }}
               />
             </div>
 
             {/* Email */}
             <Input
+              ref={emailRef}
               type="email"
               label="Correo Electrónico"
               required
               autoComplete="email"
               placeholder="carlos@ejemplo.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              error={emailError}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError('');
+                setFormError('');
+              }}
               leftIcon={<Mail className="w-4 h-4" />}
             />
 
@@ -423,7 +491,13 @@ export const RegisterPage: React.FC = () => {
               autoComplete="new-password"
               placeholder="Mínimo 8 caracteres"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              error={passwordError || undefined}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setPasswordError('');
+                setPasswordConfirmError('');
+                setFormError('');
+              }}
             >
               <PasswordStrength password={password} email={email} />
             </PasswordField>
@@ -436,10 +510,20 @@ export const RegisterPage: React.FC = () => {
               autoComplete="new-password"
               placeholder="Repite la contraseña"
               value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              error={mismatch ? 'Las contraseñas no coinciden.' : undefined}
+              onChange={(e) => {
+                setPasswordConfirm(e.target.value);
+                setPasswordConfirmError('');
+                setFormError('');
+              }}
+              error={passwordConfirmError || (mismatch ? 'Las contraseñas no coinciden.' : undefined)}
               shakeSignal={shake}
             />
+
+            {formError && (
+              <p className="text-xs font-semibold text-rose-600 dark:text-rose-400" role="alert">
+                {formError}
+              </p>
+            )}
 
             <Button
               type="submit"
@@ -462,6 +546,7 @@ export const RegisterPage: React.FC = () => {
           </div>
         </div>
 
+        </div>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ interface LeafletMapProps {
   userCoords?: { lat: number; lng: number } | null;
   center?: [number, number];
   zoom?: number;
+  darkTiles?: boolean;
 }
 
 // Controller component to smoothly move map center
@@ -24,11 +25,15 @@ const MapController: React.FC<{
 
   useEffect(() => {
     if (selectedParking) {
-      map.flyTo([selectedParking.latitude, selectedParking.longitude], 16, {
-        duration: 0.8,
-      });
+      map.flyTo(
+        [selectedParking.latitude, selectedParking.longitude],
+        Math.min(map.getZoom(), zoom + 1),
+        {
+          duration: 0.8,
+        }
+      );
     }
-  }, [selectedParking, map]);
+  }, [selectedParking, map, zoom]);
 
   return null;
 };
@@ -40,8 +45,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   userCoords,
   center = [-34.6037, -58.3816], // Default Buenos Aires
   zoom = 13,
+  darkTiles = false,
 }) => {
   const selectedParking = parkings.find((p) => p.id === selectedParkingId);
+  const tileStyle = 'voyager';
 
   // Custom marker icon helper
   const createCustomIcon = (parking: Parking, isSelected: boolean) => {
@@ -60,9 +67,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     return L.divIcon({
       className: 'custom-map-pin',
       html,
-      iconSize: [60, 30],
-      iconAnchor: [30, 15],
-      popupAnchor: [0, -15],
+      iconSize: [76, 42],
+      iconAnchor: [38, 21],
+      popupAnchor: [0, -24],
     });
   };
 
@@ -74,7 +81,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   });
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner border border-slate-200">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner border border-slate-200 dark:border-parkia-line-dark">
       <MapContainer
         center={center}
         zoom={zoom}
@@ -82,11 +89,12 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         className="w-full h-full"
       >
         <TileLayer
+          className={darkTiles ? 'pk-map-dark-tiles' : ''}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url={
             import.meta.env.VITE_CARTO_API_KEY
-              ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${import.meta.env.VITE_CARTO_API_KEY}`
-              : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+              ? `https://{s}.basemaps.cartocdn.com/rastertiles/${tileStyle}/{z}/{x}/{y}{r}.png?key=${import.meta.env.VITE_CARTO_API_KEY}`
+              : `https://{s}.basemaps.cartocdn.com/rastertiles/${tileStyle}/{z}/{x}/{y}{r}.png`
           }
         />
 
@@ -122,7 +130,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                 },
               }}
             >
-              <Popup className="custom-popup" maxWidth={300} minWidth={240}>
+              <Popup className={`custom-popup ${darkTiles ? 'custom-popup-dark' : ''}`} maxWidth={300} minWidth={240}>
                 <div className="p-1">
                   {p.image_url && (
                     <img
@@ -131,8 +139,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                       className="w-full h-28 object-cover rounded-xl mb-2.5"
                     />
                   )}
-                  <h4 className="font-bold text-sm text-slate-900 line-clamp-1 mb-1">{p.name}</h4>
-                  <p className="text-xs text-slate-500 line-clamp-1 mb-2">{p.address}</p>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 mb-1">{p.name}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mb-2">{p.address}</p>
 
                   <div className="flex items-center justify-between text-xs font-semibold mb-3">
                     <span className="text-brand-600 font-bold text-sm">
@@ -144,8 +152,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                    <span className="text-emerald-600 font-medium">
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-parkia-line-dark">
+                    <span className="text-emerald-600 dark:text-parkia-lime font-medium">
                       {p.available_spaces > 0 ? `${p.available_spaces} libres` : 'Completo'}
                     </span>
                     <Link
