@@ -51,8 +51,8 @@ export const GreenPointsCard: React.FC<GreenPointsCardProps> = ({
   const progressPercent = Math.min(100, Math.round((balance % 100) || (hasDiscount ? 100 : 0)));
 
   const causes = summary?.causes;
-  const totalEnv = causes?.total_donated_environment ?? 12500;
-  const totalInc = causes?.total_donated_inclusion ?? 12500;
+  const totalEnv = causes?.total_donated_environment ?? 0;
+  const totalInc = causes?.total_donated_inclusion ?? 0;
 
   return (
     <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-500/20 relative overflow-hidden space-y-6">
@@ -236,6 +236,10 @@ export const GreenPointsCard: React.FC<GreenPointsCardProps> = ({
             </div>
           </div>
         </div>
+
+        <p className="text-[11px] text-slate-400 pt-1">
+          Calculado con las reservas del sistema, que en esta versión son de demostración. No se transfirió dinero real a ninguna ONG.
+        </p>
       </div>
 
       {/* History Modal */}
