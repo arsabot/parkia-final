@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Reservation, ReservationStatus, LockAcquireResult } from '../types';
+import { Reservation, ReservationStatus, LockAcquireResult, GreenPointsAvailabilityInfo } from '../types';
 import { isSupabaseConfigured } from './supabaseClient';
 import { supabaseReservations } from './supabaseService';
 
@@ -73,6 +73,7 @@ export const reservationService = {
     has_availability: boolean;
     duration_hours: number;
     estimated_price: number;
+    green_points?: GreenPointsAvailabilityInfo;
     spaces: Array<{
       id: number;
       code: string;

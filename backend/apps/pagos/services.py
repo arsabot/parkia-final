@@ -172,6 +172,11 @@ def _apply_provider_payment(payment, data):
         reservation.payment_expires_at = None
     elif payment.status == Payment.Status.REFUNDED:
         reservation.payment_status = 'refunded'
+        try:
+            from apps.green_points.services import handle_reservation_cancellation_or_refund
+            handle_reservation_cancellation_or_refund(reservation)
+        except Exception:
+            pass
     else:
         reservation.payment_status = 'pending'
         if reservation.status != Reservation.Status.CANCELLED:

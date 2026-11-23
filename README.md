@@ -49,7 +49,10 @@ parkia/
 │   │   ├── parking/          # Modelos Parking, ParkingSpace, ParkingFavorite, Seed Command
 │   │   ├── reservations/     # Motor de Reservas, validación de no-superposición, códigos PK-XXXXXX
 │   │   ├── reviews/          # Reseñas y calificaciones con auto-cálculo
-│   │   └── admin_stats/      # Endpoints de agregados estadísticos y KPIs para Recharts
+│   │   ├── admin_stats/      # Endpoints de agregados estadísticos y KPIs para Recharts
+│   │   ├── claims/           # Gestión de reclamos y soporte
+│   │   ├── pagos/            # Integración de pasarelas de pago y webhooks
+│   │   └── green_points/     # Programa Park for Good: libro contable de puntos, impacto ambiental y causas
 │   ├── requirements.txt      # Dependencias Python
 │   ├── manage.py
 │   └── .env.example
@@ -62,6 +65,7 @@ parkia/
 │   │   │   ├── map/          # LeafletMap interactivo con pines de precios y popups
 │   │   │   ├── parking/      # ParkingCard, FilterSidebar, AmenityBadge, RatingStars
 │   │   │   ├── reservations/ # BookingModal, CancelModal, Ticket Card
+│   │   │   ├── greenPoints/  # GreenPointsCard, ParkForGoodModal (impacto ecológico y causas)
 │   │   │   └── admin/        # AdminSidebar, KPICard
 │   │   ├── context/          # AuthContext, FavoritesContext, ToastContext
 │   │   ├── pages/            # LandingPage, SearchPage, ParkingDetailPage, BookingConfirmationPage,
@@ -144,14 +148,27 @@ Para ejecutar la suite de pruebas unitarias y de integración de backend:
 ```bash
 cd backend
 source venv/bin/activate
-python manage.py test apps.users.test_users apps.parking.test_parking apps.reservations.test_reservations
+python manage.py test apps.green_points
 ```
 
-*Resultados: 13 tests ejecutados y aprobados (Autenticación JWT, listado y filtros, favoritos, creación de reservas con código PK, prevención de superposición de reservas en mismo espacio, validación de horario de cierre, cancelaciones).*
+*Resultados: 8 tests de Green Points ejecutados y aprobados (acreditación con check-in, prevención de duplicación, rechazo de check-in en reservas canceladas, canje de 10% de descuento a los 100 pts, reintegro de puntos ante cancelación y descuento de puntos sin saldo negativo).*
 
 ---
 
-## 7. Endpoints de la API REST
+## 7. Programa Park for Good & Green Points
+
+**Park for Good** es el programa de triple impacto de Parkia que premia a los usuarios por reservar con anticipación e ir directo al estacionamiento:
+* **Ahorro Estimado por Reserva**: Cada llegada directa con check-in validado por QR ahorra **5 km de tráfico urbano**, **1 kg de emisiones de CO₂** y suma **10 Green Points**.
+* **10% de Descuento Automático**: Al acumular **100 puntos**, la siguiente reserva recibe un 10% de descuento automático. **Parkia absorbe el 100% del descuento**, garantizando que el dueño del garaje perciba su 85% sobre el precio completo.
+* **Causas Sociales y Ambientales**: Cada reserva destina automáticamente el **5% de la comisión de Parkia** a dos causas:
+  1. **Ambiente**: Reforestación nativa en Argentina (ONGs: *PlantArg*, *Plantarse*).
+  2. **Inclusión**: Accesibilidad universal para personas con discapacidad visual, auditiva e intelectual (ONGs: *Fundación Rumbos*, *Acceso Ya*, *Fundación TINC*).
+
+> Para más detalles técnicos, fórmulas y flujos, consultar [docs/green-points-tecnico.md](file:///c:/Users/PC/Desktop/parkia%204/docs/green-points-tecnico.md).
+
+---
+
+## 8. Endpoints de la API REST
 
 ### Autenticación & Perfil
 * `POST /api/auth/register/` — Registro de conductor o administrador.
@@ -171,18 +188,23 @@ python manage.py test apps.users.test_users apps.parking.test_parking apps.reser
 * `GET  /api/parking/favorites/` — Listar estacionamientos favoritos del usuario.
 
 ### Motor de Reservas
-* `GET  /api/reservations/check_availability/` — Verificación en tiempo real de espacios disponibles y cálculo de precio por franja horaria.
+* `GET  /api/reservations/check_availability/` — Verificación en tiempo real de espacios disponibles, cálculo de precio y estado de elegibilidad de descuento Green Points.
 * `GET  /api/reservations/` — Reservas del conductor o todas las reservas para administradores.
-* `POST /api/reservations/` — Creación de reserva con validación de no solapamiento y generación de código `PK-XXXXXX`.
-* `PATCH /api/reservations/<id>/cancel/` — Cancelación de reserva con motivo.
-* `PATCH /api/reservations/<id>/change_status/` — [Admin] Actualizar estado (`confirmed`, `completed`, `cancelled`).
+* `POST /api/reservations/` — Creación de reserva con validación de no solapamiento, generación de código `PK-XXXXXX` y aplicación automática de 10% de descuento por Green Points.
+* `PATCH /api/reservations/<id>/cancel/` — Cancelación de reserva con motivo y reintegro/ajuste de puntos.
+* `POST  /api/reservations/<id>/check_in/` — Validación de ingreso por QR (bloqueado si está cancelada) y acreditación de puntos al completar.
+* `POST  /api/reservations/<id>/check_out/` — Registro de egreso vehicular y acreditación de puntos.
+
+### Green Points & Park for Good
+* `GET  /api/green-points/` — Consulta de saldo, progreso al 10% de descuento, CO₂ evitado, km no conducidos e historial del usuario.
+* `GET  /api/green-points/causes/` — Total general acumulado y causas apoyadas (Ambiente e Inclusión).
 
 ### Panel de Administración
-* `GET  /api/admin/dashboard/` — Métricas clave (KPIs), ocupación en tiempo real, reservas por día (últimos 7 días), horas pico y distribución de estados para gráficos Recharts.
+* `GET  /api/admin/dashboard/` — Métricas clave (KPIs), recaudación neta del dueño (85% precio completo sin verse afectada por descuentos de Parkia) y comisión de Parkia.
 
 ---
 
-## 8. Roadmap & Futuras Funcionalidades
+## 9. Roadmap & Futuras Funcionalidades
 
 * [ ] Integración de pasarela de pagos digitales (Mercado Pago / Stripe).
 * [ ] Conectividad con sensores IoT y cámaras con reconocimiento de matrícula (LPR / ANPR).
@@ -192,6 +214,6 @@ python manage.py test apps.users.test_users apps.parking.test_parking apps.reser
 
 ---
 
-## 9. Licencia
+## 10. Licencia
 
 Desarrollado como MVP de alta fidelidad para el ecosistema de movilidad urbana **PARKIA**. Todos los derechos reservados.

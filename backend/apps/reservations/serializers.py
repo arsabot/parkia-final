@@ -1,5 +1,6 @@
 from datetime import datetime, date, time, timedelta
 from decimal import Decimal
+from django.conf import settings
 from rest_framework import serializers
 from apps.parking.models import Parking, ParkingSpace
 from apps.parking.serializers import ParkingListSerializer, ParkingSpaceSerializer
@@ -23,6 +24,32 @@ class ReservationSerializer(serializers.ModelSerializer):
     user_email = serializers.CharField(source='user.email', read_only=True)
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    green_points_discount = serializers.SerializerMethodField()
+    has_check_in = serializers.SerializerMethodField()
+    green_points_earned = serializers.SerializerMethodField()
+
+    def get_green_points_discount(self, obj):
+        try:
+            if hasattr(obj, 'green_points_discount'):
+                disc = obj.green_points_discount
+                return {
+                    'points_redeemed': disc.points_redeemed,
+                    'original_price': float(disc.original_price),
+                    'discount_amount': float(disc.discount_amount),
+                    'discount_percent': float(disc.discount_percent),
+                    'final_price': float(disc.final_price),
+                }
+        except Exception:
+            pass
+        return None
+
+    def get_has_check_in(self, obj):
+        return bool(obj.check_in_time)
+
+    def get_green_points_earned(self, obj):
+        if obj.check_in_time and obj.status == Reservation.Status.COMPLETED and obj.payment_status != 'refunded':
+            return getattr(settings, 'GREEN_POINTS_PER_RESERVATION', 10)
+        return 0
 
     class Meta:
         model = Reservation
@@ -61,8 +88,11 @@ class ReservationSerializer(serializers.ModelSerializer):
             'staff_notes',
             'created_at',
             'updated_at',
+            'green_points_discount',
+            'has_check_in',
+            'green_points_earned',
         ]
-        read_only_fields = ['id', 'booking_code', 'user', 'total_price', 'total_hours', 'created_at', 'updated_at', 'payment_expires_at']
+        read_only_fields = ['id', 'booking_code', 'user', 'total_price', 'total_hours', 'created_at', 'updated_at', 'payment_expires_at', 'green_points_discount', 'has_check_in', 'green_points_earned']
 
 
 class ReservationCreateSerializer(serializers.ModelSerializer):
@@ -178,9 +208,35 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
                 data['space'] = chosen_space
 
         # Calcular precio total
-        total_price = Decimal(str(round(duration_hours * float(parking.price_per_hour), 2)))
+        base_price = Decimal(str(round(duration_hours * float(parking.price_per_hour), 2)))
         data['total_hours'] = Decimal(str(round(duration_hours, 2)))
-        data['total_price'] = total_price
+        data['total_price'] = base_price
+
+        # Descuento Green Points automático si el usuario tiene >= 100 puntos
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated:
+            from apps.green_points.services import get_user_points_balance, sync_user_points
+            sync_user_points(user)
+            balance = get_user_points_balance(user)
+            threshold = getattr(settings, 'GREEN_POINTS_REDEMPTION_THRESHOLD', 100)
+            discount_percent = Decimal(str(getattr(settings, 'GREEN_POINTS_DISCOUNT_PERCENT', 10)))
+
+            if balance >= threshold:
+                discount_amount = round(base_price * (discount_percent / Decimal('100.0')), 2)
+                final_price = base_price - discount_amount
+                data['total_price'] = final_price
+                self._green_points_discount_data = {
+                    'points_redeemed': threshold,
+                    'original_price': base_price,
+                    'discount_amount': discount_amount,
+                    'discount_percent': discount_percent,
+                    'final_price': final_price,
+                }
+            else:
+                self._green_points_discount_data = None
+        else:
+            self._green_points_discount_data = None
 
         return data
 
@@ -218,6 +274,27 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
             validated_data['payment_expires_at'] = timezone.now() + timedelta(minutes=15)
 
         reservation = super().create(validated_data)
+
+        # Si correspondía descuento por Green Points, registrar el descuento y debitar los 100 puntos
+        disc_data = getattr(self, '_green_points_discount_data', None)
+        if disc_data:
+            from apps.green_points.models import GreenPointsDiscount, GreenPointLedger
+            GreenPointsDiscount.objects.create(
+                reservation=reservation,
+                user=user,
+                points_redeemed=disc_data['points_redeemed'],
+                original_price=disc_data['original_price'],
+                discount_amount=disc_data['discount_amount'],
+                discount_percent=disc_data['discount_percent'],
+                final_price=disc_data['final_price']
+            )
+            GreenPointLedger.objects.create(
+                user=user,
+                reservation=reservation,
+                points=-disc_data['points_redeemed'],
+                transaction_type=GreenPointLedger.TransactionType.REDEEMED,
+                description=f"Descuento automático del {disc_data['discount_percent']}% en reserva {reservation.booking_code}"
+            )
 
         # Si habia un bloqueo temporal, convertirlo y marcar plaza como reservada
         if lock_id:

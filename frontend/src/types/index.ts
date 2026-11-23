@@ -131,6 +131,9 @@ export interface Reservation {
   staff_notes?: string;
   created_at: string;
   updated_at: string;
+  green_points_discount?: GreenPointsDiscountInfo | null;
+  has_check_in?: boolean;
+  green_points_earned?: number;
 }
 
 export interface Review {
@@ -216,3 +219,64 @@ export interface AuthResponse {
     refresh: string;
   };
 }
+
+export interface GreenPointsDiscountInfo {
+  points_redeemed: number;
+  original_price: number;
+  discount_amount: number;
+  discount_percent: number;
+  final_price: number;
+}
+
+export interface GreenPointsAvailabilityInfo {
+  eligible: boolean;
+  user_balance: number;
+  threshold: number;
+  discount_percent: number;
+  original_price: number;
+  discount_amount: number;
+  final_price: number;
+}
+
+export interface GreenPointsTransaction {
+  id: number;
+  points: number;
+  transaction_type: 'earned' | 'redeemed' | 'refunded' | 'restored' | 'adjustment';
+  transaction_type_display: string;
+  description: string;
+  booking_code?: string | null;
+  parking_name?: string | null;
+  created_at: string;
+}
+
+export interface GreenPointsCause {
+  id: string;
+  name: string;
+  ong_options: string[];
+  tagline: string;
+  description: string;
+  total_donated: number;
+  share_percent: number;
+}
+
+export interface CausesSummary {
+  total_donated_environment: number;
+  total_donated_inclusion: number;
+  parkia_commission_percent: number;
+  cause_share_percent: number;
+  causes: GreenPointsCause[];
+}
+
+export interface GreenPointsSummary {
+  balance: number;
+  points_to_next_discount: number;
+  has_discount_available: boolean;
+  discount_percent: number;
+  redemption_threshold: number;
+  km_saved: number;
+  co2_saved_kg: number;
+  completed_direct_trips: number;
+  history: GreenPointsTransaction[];
+  causes: CausesSummary;
+}
+
