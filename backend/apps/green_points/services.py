@@ -143,12 +143,14 @@ def calculate_causes_totals():
     Regla:
     Cada reserva destina el 5% de la comisión de Parkia (15%) a cada causa.
     (5% de 15% = 0.75% del valor total de la reserva).
-    En el MVP se incluye una base inicial simulada para mostrar impacto tangible en la plataforma.
+    El total se calcula solo con las reservas del sistema. En esta versión esas reservas
+    son de demostración (seed_data) y no se transfiere dinero real a ninguna ONG.
     """
     from apps.reservations.models import Reservation
 
     commission_percent = getattr(settings, 'PARKIA_COMMISSION_PERCENT', 15)
-    cause_share_percent = getattr(settings, 'CAUSE_ENVIRONMENT_COMMISSION_SHARE', 5.0)
+    environment_share_percent = getattr(settings, 'CAUSE_ENVIRONMENT_COMMISSION_SHARE', 5.0)
+    inclusion_share_percent = getattr(settings, 'CAUSE_INCLUSION_COMMISSION_SHARE', 5.0)
 
     # Reservas activas/completadas que generaron ingreso
     revenue_qs = Reservation.objects.filter(
@@ -161,19 +163,15 @@ def calculate_causes_totals():
     # Comisión total de Parkia
     parkia_commission = float(total_rev) * (commission_percent / 100.0)
 
-    # Cada causa recibe el 5% de la comisión de Parkia
-    calc_per_cause = parkia_commission * (cause_share_percent / 100.0)
-
-    # Base simulada inicial para el MVP Park for Good (según requerimiento)
-    mvp_base_simulation = 12500.00
-    total_environment = round(mvp_base_simulation + calc_per_cause, 2)
-    total_inclusion = round(mvp_base_simulation + calc_per_cause, 2)
+    # Cada causa recibe un porcentaje de la comisión de Parkia (5% por defecto)
+    total_environment = round(parkia_commission * (environment_share_percent / 100.0), 2)
+    total_inclusion = round(parkia_commission * (inclusion_share_percent / 100.0), 2)
 
     return {
         'total_donated_environment': total_environment,
         'total_donated_inclusion': total_inclusion,
         'parkia_commission_percent': commission_percent,
-        'cause_share_percent': cause_share_percent,
+        'cause_share_percent': environment_share_percent,
         'causes': [
             {
                 'id': 'ambiente',
@@ -182,7 +180,7 @@ def calculate_causes_totals():
                 'tagline': 'Plantación de árboles nativos de Argentina',
                 'description': 'Apoyamos a ONGs ambientales para reforestar bosques nativos en Argentina, absorbiendo CO2 y regenerando la biodiversidad.',
                 'total_donated': total_environment,
-                'share_percent': cause_share_percent,
+                'share_percent': environment_share_percent,
             },
             {
                 'id': 'inclusion',
@@ -191,7 +189,7 @@ def calculate_causes_totals():
                 'tagline': 'Accesibilidad universal para personas con discapacidad',
                 'description': 'Apoyamos la accesibilidad para personas con discapacidad visual, auditiva e intelectual, eliminando barreras en la movilidad y los estacionamientos.',
                 'total_donated': total_inclusion,
-                'share_percent': cause_share_percent,
+                'share_percent': inclusion_share_percent,
             }
         ]
     }
