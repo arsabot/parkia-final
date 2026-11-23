@@ -7,6 +7,10 @@ import type { Parking } from '../../types';
 import { parkingService } from '../../services/parkingService';
 import { reservationService } from '../../services/reservationService';
 import { createClaim, getClaim, listClaims } from '../../services/chatbotApi';
+import {
+  aiRecommendationService,
+  RecommendationPriority,
+} from '../../services/aiRecommendationService';
 import logo from '../../assets/landing/parkia-icono.png';
 import './chatWidget.css';
 
@@ -14,7 +18,16 @@ type Msg = { id: number; from: 'bot' | 'user' | 'typing'; text: string };
 type Step = 'cat' | 'res' | 'desc' | 'cont' | 'conf';
 type Flow = { step: Step; cat?: string; res?: string; desc?: string; cont?: string };
 
-const MAIN = ['Cómo reservar', 'Problemas con un pago', 'Presentar un reclamo', 'Ver mi reclamo', 'Preguntas frecuentes', 'Hablar con una persona'];
+const MAIN = [
+  '🎯 Recomendame un estacionamiento',
+  'Cómo reservar',
+  'Problemas con un pago',
+  'Presentar un reclamo',
+  'Ver mi reclamo',
+  'Preguntas frecuentes',
+  'Hablar con una persona',
+];
+
 const FAQS: string[] = [
   '¿Cómo buscar y reservar un lugar?',
   '¿Cómo pagar con Mercado Pago?',
@@ -29,6 +42,16 @@ const FAQS: string[] = [
 const PAGO = ['Cobro duplicado', 'Pago rechazado', 'No recibí el comprobante', 'Reembolso', 'Menú'];
 const CATS = ['Pago', 'Reserva', 'Garage o servicio', 'App o web', 'Otro', 'Cancelar'];
 const STATES = ['Recibido', 'En revisión', 'Resuelto'];
+
+const RECOM_CHIPS = [
+  '🎯 Mejor opción (IA)',
+  '💰 Más económico',
+  '🛡️ Techado y seguro',
+  '⚡ Con carga EV',
+  '♿ Accesible CUD',
+  '⭐ Mejor valorado',
+  'Menú',
+];
 
 // Tu API pagina las listas ({ results: [...] }) en algunos casos: esto soporta ambos formatos.
 const asList = <T,>(r: T[] | { results?: T[] }): T[] => (Array.isArray(r) ? r : (r.results ?? []));
@@ -78,7 +101,7 @@ export function ChatWidget() {
     prevUser.current = cur;
   }, [user?.id]);
 
-  // Burbuja "¿Te ayudo...?" que aparece a los 4 segundos si todavía no se abrió el chat.
+  // Burbuja "¿Buscás cochera?" que aparece a los 4 segundos si todavía no se abrió el chat.
   useEffect(() => {
     if (seen) return;
     const t = window.setTimeout(() => setTip(true), 4000);
@@ -100,11 +123,163 @@ export function ChatWidget() {
     }, 600);
   };
 
+  /**
+   * Sección de recomendación inteligente con IA y personalización para el conductor
+   */
+  const recommendParking = async (priority: RecommendationPriority = 'smart', userQuery?: string) => {
+    setChips([]);
+    const g = gen.current;
+
+    // 1. Extraer contexto de la página
+    const searchParams = new URLSearchParams(window.location.search);
+    const q = searchParams.get('q') || undefined;
+    const latStr = searchParams.get('lat');
+    const lngStr = searchParams.get('lng');
+    const lat = latStr ? parseFloat(latStr) : undefined;
+    const lng = lngStr ? parseFloat(lngStr) : undefined;
+
+    let currentParkingId: number | undefined = undefined;
+    if (pathname.startsWith('/parking/')) {
+      const parts = pathname.split('/');
+      const idNum = parseInt(parts[2], 10);
+      if (!isNaN(idNum)) {
+        currentParkingId = idNum;
+      }
+    }
+
+    // 2. Extraer contexto del conductor
+    const hasDisabledPermit = Boolean(
+      user?.roles?.includes('disabled') || user?.cud_verified || user?.cud_number
+    );
+
+    let favIds: number[] = [];
+    try {
+      const favs = await parkingService.getFavorites();
+      favIds = (Array.isArray(favs) ? favs : []).map((f: any) => f.parking?.id || f.id);
+    } catch {
+      // modo offline / sin sesión
+    }
+
+    let recentBookings: Array<{ parkingId?: number; parkingName?: string }> = [];
+    try {
+      const res = asList(await reservationService.getReservations()).slice(0, 3);
+      recentBookings = res.map((r: any) => ({
+        parkingId: r.parking,
+        parkingName: r.parking_name,
+      }));
+    } catch {
+      // ignore
+    }
+
+    try {
+      const result = await aiRecommendationService.getRecommendation({
+        driver: {
+          id: user?.id,
+          name: user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : undefined,
+          email: user?.email,
+          role: user?.role,
+          hasDisabledPermit,
+          cudNumber: user?.cud_number,
+          favorites: favIds,
+          recentBookings,
+        },
+        pageContext: {
+          pathname,
+          searchQuery: q,
+          currentParkingId,
+          lat,
+          lng,
+        },
+        priority,
+        userQuery,
+      });
+
+      if (g !== gen.current) return;
+
+      const p = result.primary.parking;
+      const total = p.total_spaces || p.capacity || 20;
+      const avail = p.available_spaces ?? 5;
+      const pct = total > 0 ? Math.round((avail / total) * 100) : 50;
+      const c = avail === 0 ? '#e5484d' : pct < 20 ? '#f5a524' : '#36c9a0';
+
+      let html = `
+        <div class="ai-header-pill">
+          <span>🤖 ParkIA · Asistente IA</span>
+          <span class="ai-ctx-note">${esc(result.contextNote)}</span>
+        </div>
+        <div class="ai-text">${result.aiExplanation}</div>
+        <div class="ai-recom-card">
+          <div class="ai-badge">${esc(result.primary.badge)}</div>
+          <div class="row" style="margin-top:6px">
+            <b>${esc(p.name)}</b>
+            <b class="ai-price">${money(Number(p.price_per_hour))}/h</b>
+          </div>
+          <span class="ai-meta">${esc(p.address)} · ⭐ ${p.rating} (${p.reviews_count || 12} reseñas)</span>
+          <div class="bar" style="margin: 8px 0 4px">
+            <i style="width:${pct}%;background:${c}"></i>
+          </div>
+          <div class="ai-avail">
+            <span>${avail} de ${total} lugares libres</span>
+            <span style="color:${c};font-weight:700">${pct}% disponible</span>
+          </div>
+          <div class="ai-tags">
+            ${result.primary.highlights.map((h) => `<span class="ai-tag">${esc(h)}</span>`).join('')}
+          </div>
+          <ul class="ai-reasons">
+            ${result.primary.reasons.map((r) => `<li>${r}</li>`).join('')}
+          </ul>
+          <div class="ai-actions">
+            <button type="button" class="pk-card-btn primary" data-nav="/parking/${p.id}">
+              Ver cochera y reservar →
+            </button>
+            <button type="button" class="pk-card-btn secondary" data-nav="/search?q=${encodeURIComponent(p.name)}">
+              Ver en mapa 📍
+            </button>
+          </div>
+        </div>
+      `;
+
+      if (result.alternative) {
+        const altP = result.alternative.parking;
+        html += `
+          <div class="ai-alt-card">
+            <div class="row">
+              <b>Alternativa: ${esc(altP.name)}</b>
+              <b>${money(Number(altP.price_per_hour))}/h</b>
+            </div>
+            <span class="ai-meta">${esc(altP.address)} · ${altP.available_spaces} libres · ${esc(result.alternative.badge)}</span>
+            <div style="margin-top:6px">
+              <button type="button" class="pk-card-btn secondary sm" data-nav="/parking/${altP.id}">
+                Ver alternativa →
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      bot(html, [
+        `Reservar ${p.name}`,
+        '💰 Más económico',
+        '🛡️ Techado y seguro',
+        '⚡ Con carga EV',
+        '♿ Accesible CUD',
+        '⭐ Mejor valorado',
+        'Menú',
+      ]);
+    } catch (err) {
+      console.error('Error al generar recomendación:', err);
+      bot('No pude generar la recomendación en este instante. Probá con los filtros de búsqueda.', [
+        '🎯 Recomendame un estacionamiento',
+        'Menú',
+      ]);
+    }
+  };
+
   const R = {
     reservar: () =>
       bot(
         'Reservar en PARKIA es muy simple:<ol class="steps"><li><div><b>Buscá</b><br>Ingresá a dónde vas o usá tu ubicación.</div></li><li><div><b>Compará y elegí</b><br>Mirá tarifas y disponibilidad en tiempo real.</div></li><li><div><b>Reservá y pagá</b><br>Confirmá y recibí tu código de acceso en <b>Mis Reservas</b>.</div></li></ol>',
-        ['Tarifas y garages', 'Cancelar o modificar', 'Menú'],
+        ['🎯 Recomendame un estacionamiento', 'Tarifas y garages', 'Cancelar o modificar', 'Menú'],
       ),
     pagos: () => bot('Lamento que hayas tenido un problema con tu pago. ¿Qué te pasó?', PAGO),
     doble: () => bot('Si ves dos cargos por la misma reserva, uno suele ser una <b>retención temporal</b> del banco que se libera en <b>3 a 5 días hábiles</b>. Si pasado ese plazo sigue duplicado, lo reintegramos.', ['Presentar un reclamo', 'Hablar con una persona', 'Menú']),
@@ -123,7 +298,7 @@ export function ChatWidget() {
     setChips([]);
     try {
       const list = asList(await parkingService.getParkings({ sort_by: 'recommended' })).filter((x) => x.is_active).slice(0, 4);
-      if (!list.length) return bot('No encontré garages disponibles en este momento.', ['Cómo reservar', 'Menú']);
+      if (!list.length) return bot('No encontré garages disponibles en este momento.', ['🎯 Recomendame un estacionamiento', 'Cómo reservar', 'Menú']);
       const cards = list
         .map((x) => {
           const pct = x.total_spaces ? Math.round((x.available_spaces / x.total_spaces) * 100) : 0;
@@ -131,9 +306,9 @@ export function ChatWidget() {
           return `<div class="card"><div class="row"><b>${esc(x.name)}</b><b>${money(Number(x.price_per_hour))}/h</b></div><span>${esc(x.address)} · ${x.available_spaces} de ${x.total_spaces} lugares libres${x.is_24_hours ? ' · 24 h' : ''}</span><div class="bar"><i style="width:${pct}%;background:${c}"></i></div></div>`;
         })
         .join('');
-      bot('Disponibilidad en tiempo real de nuestros garages:' + cards, ['Cómo reservar', 'Menú']);
+      bot('Disponibilidad en tiempo real de nuestros garages:' + cards, ['🎯 Recomendame un estacionamiento', 'Cómo reservar', 'Menú']);
     } catch {
-      bot('No pude consultar la disponibilidad en este momento. Probá de nuevo o buscá desde la página principal.', ['Cómo reservar', 'Menú']);
+      bot('No pude consultar la disponibilidad en este momento. Probá de nuevo o buscá desde la página principal.', ['🎯 Recomendame un estacionamiento', 'Cómo reservar', 'Menú']);
     }
   };
 
@@ -156,7 +331,7 @@ export function ChatWidget() {
     bot(
       'Elegí una pregunta frecuente o escribí tu consulta abajo:' +
         FAQS.map((q) => `<button type="button" class="faq" data-q="${q}">${q}</button>`).join(''),
-      ['Menú'],
+      ['🎯 Recomendame un estacionamiento', 'Menú'],
     );
 
   const showAmenities = async () => {
@@ -170,10 +345,10 @@ export function ChatWidget() {
           : '<div class="card"><span>Por ahora no hay garages con este servicio.</span></div>');
       bot(
         block('Con carga eléctrica', asList(ev).filter((x) => x.is_active && x.has_ev_charging)) + '<br>' + block('Techadas', asList(cov).filter((x) => x.is_active && x.is_covered)) + '<br>Para ver más, usá los filtros en <b>Buscar</b>.',
-        ['Preguntas frecuentes', 'Menú'],
+        ['🎯 Recomendame un estacionamiento', 'Preguntas frecuentes', 'Menú'],
       );
     } catch {
-      bot('No pude consultar los garages en este momento. Probá con los filtros de <b>Buscar</b> (techada, carga eléctrica, seguridad).', ['Preguntas frecuentes', 'Menú']);
+      bot('No pude consultar los garages en este momento. Probá con los filtros de <b>Buscar</b> (techada, carga eléctrica, seguridad).', ['🎯 Recomendame un estacionamiento', 'Preguntas frecuentes', 'Menú']);
     }
   };
 
@@ -188,6 +363,14 @@ export function ChatWidget() {
 
   // Respuesta exacta de cada pregunta frecuente (botones del menú).
   const F: Record<string, () => void> = {
+    '🎯 Recomendame un estacionamiento': () => void recommendParking('smart'),
+    'Recomendame un estacionamiento': () => void recommendParking('smart'),
+    '🎯 Mejor opción (IA)': () => void recommendParking('smart'),
+    '💰 Más económico': () => void recommendParking('cheapest'),
+    '🛡️ Techado y seguro': () => void recommendParking('security'),
+    '⚡ Con carga EV': () => void recommendParking('ev'),
+    '♿ Accesible CUD': () => void recommendParking('accessible'),
+    '⭐ Mejor valorado': () => void recommendParking('top_rated'),
     '¿Cómo buscar y reservar un lugar?': () => R.reservar(),
     '¿Cómo pagar con Mercado Pago?': () => A.mp(),
     '¿Cómo ingreso con el código QR?': () => A.qr(),
@@ -297,10 +480,30 @@ export function ChatWidget() {
       return bot('¿En qué más puedo ayudarte?');
     }
     if (waiting.current || /rc-?\s?\d{4}/.test(t)) return void lookup(raw);
+
+    // Detección de intenciones de recomendación inteligente e IA
+    if (/(recom(end|ienda)|donde estacion|suger|elegir estacionamiento|buscar cochera|mejor garage|que cochera|ayudame a elegir|donde dejo|donde me conviene)/.test(t)) {
+      return void recommendParking('smart', raw);
+    }
+    if (/(mas barat|economico|precio bajo|menos plata|ahorrar|tarifa baja)/.test(t)) {
+      return void recommendParking('cheapest', raw);
+    }
+    if (/(techad|segurid|vigilan|camara|cubierto)/.test(t)) {
+      return void recommendParking('security', raw);
+    }
+    if (/(carga ev|electrico|hibrid|enchufe)/.test(t)) {
+      return void recommendParking('ev', raw);
+    }
+    if (/(cud|discapacit|accesib|rampa|silla de rueda)/.test(t)) {
+      return void recommendParking('accessible', raw);
+    }
+    if (/(mejor calificado|mejor puntu|estrellas|excelente)/.test(t)) {
+      return void recommendParking('top_rated', raw);
+    }
+
     if (/preguntas frecuentes|^faq/.test(t)) return faqMenu();
     if (/\bqr\b/.test(t)) return A.qr();
     if (/llego (antes|despues|tarde|temprano)|antes o despues|retras/.test(t)) return A.timing();
-    if (/electric|techad|cubiert/.test(t)) return A.amenities();
     if (/(registr|sumar|agregar|publicar).*(estacionamiento|cochera|garage)|propietario|duen/.test(t)) return A.owner();
     if (/como pagar|mercado pago/.test(t)) return A.mp();
     if (/como reserv|reservar|reserva/.test(t) && !/problema|cancel|modific|reclamo/.test(t)) return R.reservar();
@@ -314,9 +517,19 @@ export function ChatWidget() {
     if (/cancel|modific|cambiar/.test(t)) return R.cancel();
     if (/tarifa|precio|cuesta|garage|disponib|lugar/.test(t)) return R.tarifas();
     if (/persona|humano|asesor|agente|ayuda/.test(t)) return R.humano();
-    if (/gracias|genial|perfecto/.test(t)) return bot('¡De nada! Que tengas un excelente día.', ['Menú']);
-    if (/hola|buen(a|o)s|que tal/.test(t)) return bot('¡Hola! Soy el asistente de Parkia. ¿En qué puedo ayudarte?');
-    bot('No estoy seguro de haber entendido. Elegí una opción del menú o escribime con otras palabras; si preferís, te paso con una persona.');
+    if (/gracias|genial|perfecto/.test(t)) return bot('¡De nada! Que tengas un excelente viaje.', ['🎯 Recomendame un estacionamiento', 'Menú']);
+    if (/hola|buen(a|o)s|que tal/.test(t)) return bot(`¡Hola${user ? ', ' + esc(user.first_name) : ''}! Soy ParkIA, tu copiloto inteligente de estacionamiento. ¿Querés que te recomiende la mejor cochera según tu destino o necesitás ayuda?`, ['🎯 Recomendame un estacionamiento', 'Menú']);
+    
+    // Si no reconoció un comando tradicional, intentamos ofrecer una recomendación según el texto
+    if (t.length > 5) {
+      return void recommendParking('smart', raw);
+    }
+
+    bot('No estoy seguro de haber entendido. Podés elegir una opción del menú o pedirme directamente: <i>"Recomendame un garage en Palermo"</i> o <i>"El más barato"</i>.', [
+      '🎯 Recomendame un estacionamiento',
+      'Preguntas frecuentes',
+      'Hablar con una persona',
+    ]);
   };
 
   const send = (x: string) => {
@@ -327,6 +540,20 @@ export function ChatWidget() {
       navigate('/login');
       return;
     }
+    if (v.startsWith('Reservar ')) {
+      const gName = v.replace('Reservar ', '').trim().toLowerCase();
+      // Si el usuario presionó el chip rápido de reservar
+      void (async () => {
+        const parkings = await aiRecommendationService.getAvailableParkings();
+        const found = parkings.find((p) => p.name.toLowerCase().includes(gName));
+        if (found) {
+          setOpen(false);
+          navigate(`/parking/${found.id}`);
+          return;
+        }
+      })();
+    }
+
     setMsgs((m) => [...m, { id: ++uid.current, from: 'user', text: v }]);
     if (flow.current) return flowStep(v);
     if (F[v]) return F[v]();
@@ -339,7 +566,10 @@ export function ChatWidget() {
     setSeen(true);
     if (!started.current) {
       started.current = true;
-      bot(`¡Hola${user ? ', ' + esc(user.first_name) : ''}! Soy el asistente de Parkia.<br>¿En qué puedo ayudarte?`);
+      bot(
+        `¡Hola${user ? ', ' + esc(user.first_name) : ''}! Soy <b>ParkIA</b>, tu asistente inteligente de estacionamientos.<br>` +
+        `Puedo recomendarte la mejor cochera en tiempo real adaptada a tu destino y vehículo.`
+      );
     }
   };
 
@@ -353,7 +583,7 @@ export function ChatWidget() {
     <div id="pk-root" className={`${open ? 'open' : ''} ${seen ? 'seen' : ''} ${tip && !open ? 'tip' : ''}`}>
       <div className="pk-tip" role="status">
         <button type="button" className="pk-tip-open" onClick={openChat}>
-          ¿Te ayudo a encontrar lugar?
+          ¿Buscás cochera? Te recomiendo con IA ⚡
         </button>
         <button
           type="button"
@@ -367,7 +597,13 @@ export function ChatWidget() {
           ×
         </button>
       </div>
-      <button id="pk-fab" type="button" onClick={() => (open ? setOpen(false) : openChat())} aria-expanded={open} aria-label={open ? 'Cerrar asistente' : 'Abrir asistente Parkia'}>
+      <button
+        id="pk-fab"
+        type="button"
+        onClick={() => (open ? setOpen(false) : openChat())}
+        aria-expanded={open}
+        aria-label={open ? 'Cerrar asistente' : 'Abrir asistente Parkia'}
+      >
         <svg className="ic ic-b" width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-7l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" stroke="#A3E635" strokeWidth="2" strokeLinejoin="round" />
           <circle cx="8" cy="11" r="1.4" fill="#D9F99D" />
@@ -386,8 +622,8 @@ export function ChatWidget() {
             <i aria-hidden="true" />
           </div>
           <div>
-            <b>Parkia · Soporte</b>
-            <small>Consultas y recepción de reclamos · 24 h</small>
+            <b>Parkia · Asistente IA</b>
+            <small>Recomendaciones personalizadas · 24 h</small>
           </div>
           <button type="button" className="x" onClick={() => setOpen(false)} aria-label="Cerrar">
             ×
@@ -398,7 +634,17 @@ export function ChatWidget() {
           ref={listRef}
           aria-live="polite"
           onClick={(e) => {
-            const q = (e.target as HTMLElement).closest('[data-q]')?.getAttribute('data-q');
+            const target = e.target as HTMLElement;
+
+            // Manejo de navegación directa desde los botones de los cards
+            const nav = target.closest('[data-nav]')?.getAttribute('data-nav');
+            if (nav) {
+              setOpen(false);
+              navigate(nav);
+              return;
+            }
+
+            const q = target.closest('[data-q]')?.getAttribute('data-q');
             if (q && !flow.current) send(q);
           }}
         >
@@ -427,7 +673,14 @@ export function ChatWidget() {
           ))}
         </div>
         <form id="pk-f" onSubmit={onSubmit}>
-          <input id="pk-t" value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí tu consulta…" autoComplete="off" aria-label="Mensaje" />
+          <input
+            id="pk-t"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Pedile a la IA o escribí tu consulta…"
+            autoComplete="off"
+            aria-label="Mensaje"
+          />
           <button className="send" aria-label="Enviar" type="submit">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
@@ -435,9 +688,7 @@ export function ChatWidget() {
           </button>
         </form>
         <div className="note">
-          Respondemos los reclamos en hasta 48 h hábiles.
-          <br />
-          La atención humana depende del horario del equipo.
+          💡 <b>ParkIA Advisor:</b> Te ayuda a comparar cocheras, precios y disponibilidad en tiempo real.
         </div>
       </section>
     </div>
