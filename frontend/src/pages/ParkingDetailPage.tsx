@@ -19,7 +19,9 @@ import {
   Layers,
   Lock,
   Unlock,
-  Info
+  Info,
+  Sparkles,
+  Leaf
 } from 'lucide-react';
 import { Parking, ParkingSpace } from '../types';
 import { parkingService } from '../services/parkingService';
@@ -100,6 +102,7 @@ export const ParkingDetailPage: React.FC = () => {
   const [availableSpaces, setAvailableSpaces] = useState<any[]>([]);
   const [durationHours, setDurationHours] = useState<number>(3.0);
   const [estimatedPrice, setEstimatedPrice] = useState<number>(0);
+  const [greenPointsInfo, setGreenPointsInfo] = useState<any>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -153,6 +156,7 @@ export const ParkingDetailPage: React.FC = () => {
       setAvailableSpaces(spaces);
       setDurationHours(res.duration_hours || 1.0);
       setEstimatedPrice(res.estimated_price || Number(parking.price_per_hour));
+      setGreenPointsInfo(res.green_points || null);
 
       // Verificar si nuestra plaza seleccionada fue bloqueada por otro
       if (selectedSpaceId) {
@@ -787,17 +791,43 @@ export const ParkingDetailPage: React.FC = () => {
                 )}
 
                 {/* Pricing Summary */}
-                <div className="p-4 bg-slate-900 dark:bg-parkia-page-dark border border-slate-800 dark:border-parkia-line-dark rounded-2xl text-white space-y-2 mt-4">
+                <div className="p-4 bg-slate-900 dark:bg-parkia-page-dark border border-slate-800 dark:border-parkia-line-dark rounded-2xl text-white space-y-2 mt-4 shadow-lg">
                   <div className="flex justify-between text-xs text-slate-400">
                     <span>Duración ({durationHours.toFixed(1)} hs):</span>
                     <strong className="text-white font-medium">{selectedMethod}</strong>
                   </div>
+
+                  {/* Park for Good: Descuento 10% Green Points (F3) */}
+                  {greenPointsInfo?.eligible && (
+                    <div className="p-2.5 bg-emerald-950/70 border border-emerald-500/40 rounded-xl space-y-1">
+                      <div className="flex items-center justify-between text-xs font-bold text-emerald-300">
+                        <span className="flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                          Descuento Green Points ({greenPointsInfo.discount_percent}%)
+                        </span>
+                        <span className="text-emerald-400 font-black">
+                          -${Number(greenPointsInfo.discount_amount).toLocaleString('es-AR')}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-emerald-200/80">
+                        Canje de 100 puntos • Absorbido por Parkia (el dueño cobra su 85% sobre el precio completo)
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center text-sm border-t border-slate-800 dark:border-parkia-line-dark pt-2">
-                    <span className="font-semibold">
-                      {selectedMethod === 'Efectivo' ? 'Abonás en garita:' : 'Total a pagar:'}
-                    </span>
+                    <div>
+                      <span className="font-semibold block">
+                        {selectedMethod === 'Efectivo' ? 'Abonás en garita:' : 'Total a pagar:'}
+                      </span>
+                      {greenPointsInfo?.eligible && (
+                        <span className="text-xs text-slate-400 line-through">
+                          ${estimatedPrice.toLocaleString('es-AR')}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xl font-black text-emerald-400">
-                      ${estimatedPrice.toLocaleString('es-AR')}
+                      ${(greenPointsInfo?.eligible ? greenPointsInfo.final_price : estimatedPrice).toLocaleString('es-AR')}
                     </span>
                   </div>
                 </div>
@@ -830,7 +860,7 @@ export const ParkingDetailPage: React.FC = () => {
           isOpen={isCheckoutOpen}
           onClose={() => setIsCheckoutOpen(false)}
           method={selectedMethod}
-          amount={estimatedPrice}
+          amount={greenPointsInfo?.eligible ? greenPointsInfo.final_price : estimatedPrice}
           parkingName={parking.name}
           durationHours={durationHours}
           lockExpiresAt={lockExpiresAt}

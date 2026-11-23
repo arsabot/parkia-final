@@ -108,6 +108,13 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         reservation.save()
 
+        # Manejo de Green Points en cancelaciones: reintegrar puntos usados o descontar sumados
+        try:
+            from apps.green_points.services import handle_reservation_cancellation_or_refund
+            handle_reservation_cancellation_or_refund(reservation)
+        except Exception:
+            pass
+
         # Liberar la plaza asociada si estaba reservada
         if reservation.space and reservation.space.status == 'reserved':
             reservation.space.status = 'available'
@@ -174,6 +181,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 'error': f'Esta reserva fue cancelada previamente (Motivo: {reservation.cancellation_reason or "Cancelada por usuario"}). No habilitada para ingreso/egreso.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Si el pago online está pendiente, no habilitar acceso QR
+        if reservation.status == Reservation.Status.PENDING or (reservation.payment_status == 'pending' and reservation.payment_method != 'Efectivo'):
+            return Response({
+                'error': 'El pago de esta reserva se encuentra pendiente. No habilitada para ingreso.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         return Response({
             'valid': True,
             'message': 'Código QR validado exitosamente.',
@@ -188,6 +201,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         from django.utils import timezone
         reservation = self.get_object()
+
+        # No permitir check-in en reservas canceladas
+        if reservation.status == Reservation.Status.CANCELLED:
+            return Response({
+                'error': 'No se puede registrar el ingreso de una reserva cancelada.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         # Si es dueño de garaje, validar que sea su propio estacionamiento
         if request.user.role == 'owner' and reservation.parking.owner != request.user and not request.user.is_superuser:
@@ -213,6 +232,13 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         reservation.save()
 
+        # Sincronizar y sumar Green Points al completar la reserva con check-in
+        try:
+            from apps.green_points.services import sync_user_points
+            sync_user_points(reservation.user)
+        except Exception:
+            pass
+
         return Response({
             'message': f'¡Ingreso registrado para {reservation.vehicle_plate}!',
             'reservation': ReservationSerializer(reservation).data
@@ -226,6 +252,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         from django.utils import timezone
         reservation = self.get_object()
+
+        # No permitir check-out en reservas canceladas
+        if reservation.status == Reservation.Status.CANCELLED:
+            return Response({
+                'error': 'No se puede registrar el egreso de una reserva cancelada.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         # Si es dueño de garaje, validar que sea su propio estacionamiento
         if request.user.role == 'owner' and reservation.parking.owner != request.user and not request.user.is_superuser:
@@ -252,6 +284,13 @@ class ReservationViewSet(viewsets.ModelViewSet):
             reservation.staff_notes = notes
 
         reservation.save()
+
+        # Sincronizar y sumar Green Points al completar la reserva con check-in
+        try:
+            from apps.green_points.services import sync_user_points
+            sync_user_points(reservation.user)
+        except Exception:
+            pass
 
         return Response({
             'message': f'¡Egreso registrado exitosamente! Cobro completado: ${reservation.total_price}',
@@ -411,6 +450,38 @@ class ReservationViewSet(viewsets.ModelViewSet):
         duration = (datetime.combine(res_date, end_time) - datetime.combine(res_date, start_time)).total_seconds() / 3600.0
         estimated_price = round(duration * float(parking.price_per_hour), 2) if duration > 0 else 0
 
+        # Información de descuento Green Points para usuarios autenticados
+        green_points_info = {
+            'eligible': False,
+            'user_balance': 0,
+            'threshold': 100,
+            'discount_percent': 10,
+            'original_price': estimated_price,
+            'discount_amount': 0.0,
+            'final_price': estimated_price,
+        }
+        if user and user.is_authenticated:
+            try:
+                from apps.green_points.services import get_user_points_balance, sync_user_points
+                from django.conf import settings
+                sync_user_points(user)
+                balance = get_user_points_balance(user)
+                threshold = getattr(settings, 'GREEN_POINTS_REDEMPTION_THRESHOLD', 100)
+                disc_pct = getattr(settings, 'GREEN_POINTS_DISCOUNT_PERCENT', 10)
+                is_eligible = balance >= threshold
+                disc_amt = round(estimated_price * (disc_pct / 100.0), 2) if is_eligible else 0.0
+                green_points_info = {
+                    'eligible': is_eligible,
+                    'user_balance': balance,
+                    'threshold': threshold,
+                    'discount_percent': disc_pct,
+                    'original_price': estimated_price,
+                    'discount_amount': disc_amt,
+                    'final_price': round(estimated_price - disc_amt, 2),
+                }
+            except Exception:
+                pass
+
         return Response({
             'parking_id': parking.id,
             'total_spaces': len(spaces_data),
@@ -418,6 +489,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             'has_availability': available_count > 0,
             'duration_hours': duration,
             'estimated_price': estimated_price,
+            'green_points': green_points_info,
             'spaces': spaces_data
         })
 

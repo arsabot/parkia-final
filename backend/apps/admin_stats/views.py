@@ -1,4 +1,6 @@
 from datetime import date, timedelta
+from decimal import Decimal
+from django.conf import settings
 from django.db.models import Sum, Count, Q
 from rest_framework import views, permissions, status
 from rest_framework.response import Response
@@ -45,12 +47,48 @@ class AdminDashboardStatsView(views.APIView):
         today_revenue = revenue_qs.filter(date=today).aggregate(total=Sum('total_price'))['total'] or 0
 
         # Lógica de comisión y división de ingresos (Estándar: 15% Parkia Super Admin / 85% Dueño Garaje)
-        COMMISSION_RATE = 0.15
-        OWNER_RATE = 0.85
-        platform_commission = round(float(total_revenue) * COMMISSION_RATE, 2)
-        owner_net_revenue = round(float(total_revenue) * OWNER_RATE, 2)
-        today_platform_commission = round(float(today_revenue) * COMMISSION_RATE, 2)
-        today_owner_net_revenue = round(float(today_revenue) * OWNER_RATE, 2)
+        # Regla Green Points: El descuento del 10% lo absorbe Parkia. El dueño cobra su 85% sobre el precio completo.
+        commission_percent = getattr(settings, 'PARKIA_COMMISSION_PERCENT', 15)
+        COMMISSION_RATE = commission_percent / 100.0
+        OWNER_RATE = 1.0 - COMMISSION_RATE
+
+        owner_net_revenue = 0.0
+        platform_commission = 0.0
+        for res in revenue_qs.select_related('green_points_discount'):
+            if hasattr(res, 'green_points_discount') and res.green_points_discount:
+                full_price = float(res.green_points_discount.original_price)
+                owner_cut = round(full_price * OWNER_RATE, 2)
+                parkia_cut = round(float(res.total_price) - owner_cut, 2)
+            else:
+                full_price = float(res.total_price)
+                owner_cut = round(full_price * OWNER_RATE, 2)
+                parkia_cut = round(full_price * COMMISSION_RATE, 2)
+            owner_net_revenue += owner_cut
+            platform_commission += parkia_cut
+
+        owner_net_revenue = round(owner_net_revenue, 2)
+        platform_commission = round(platform_commission, 2)
+
+        today_owner_net_revenue = 0.0
+        today_platform_commission = 0.0
+        today_revenue_qs = revenue_qs.filter(date=today).select_related('green_points_discount')
+        for res in today_revenue_qs:
+            if hasattr(res, 'green_points_discount') and res.green_points_discount:
+                full_price = float(res.green_points_discount.original_price)
+                owner_cut = round(full_price * OWNER_RATE, 2)
+                parkia_cut = round(float(res.total_price) - owner_cut, 2)
+            else:
+                full_price = float(res.total_price)
+                owner_cut = round(full_price * OWNER_RATE, 2)
+                parkia_cut = round(full_price * COMMISSION_RATE, 2)
+            today_owner_net_revenue += owner_cut
+            today_platform_commission += parkia_cut
+
+        today_owner_net_revenue = round(today_owner_net_revenue, 2)
+        today_platform_commission = round(today_platform_commission, 2)
+
+        from apps.green_points.services import calculate_causes_totals
+        causes_summary = calculate_causes_totals()
 
         # 2. Charts: Last 7 days trend
         days_names = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -125,6 +163,7 @@ class AdminDashboardStatsView(views.APIView):
                 'owner_net_revenue': owner_net_revenue,
                 'today_platform_commission': today_platform_commission,
                 'today_owner_net_revenue': today_owner_net_revenue,
+                'causes_summary': causes_summary,
             },
             'charts': {
                 'reservations_by_day': reservations_by_day,

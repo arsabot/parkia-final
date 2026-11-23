@@ -12,6 +12,7 @@ import {
   ReservationStatus,
   AdminDashboardData,
   LockAcquireResult,
+  GreenPointsAvailabilityInfo,
 } from '../types';
 
 // Helper display mappings
@@ -1260,6 +1261,7 @@ export const supabaseReservations = {
     has_availability: boolean;
     duration_hours: number;
     estimated_price: number;
+    green_points?: GreenPointsAvailabilityInfo;
     spaces: Array<{
       id: number;
       code: string;

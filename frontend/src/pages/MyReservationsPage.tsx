@@ -17,10 +17,15 @@ import {
   Wallet,
   CreditCard,
   Banknote,
-  Smartphone
+  Smartphone,
+  Sparkles,
+  Leaf
 } from 'lucide-react';
-import { Reservation } from '../types';
+import { Reservation, GreenPointsSummary } from '../types';
 import { reservationService } from '../services/reservationService';
+import { greenPointsService } from '../services/greenPointsService';
+import { GreenPointsCard } from '../components/greenPoints/GreenPointsCard';
+import { ParkForGoodModal } from '../components/greenPoints/ParkForGoodModal';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -40,6 +45,9 @@ export const MyReservationsPage: React.FC = () => {
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [greenPointsSummary, setGreenPointsSummary] = useState<GreenPointsSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [isParkForGoodModalOpen, setIsParkForGoodModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
   const [selectedForCancel, setSelectedForCancel] = useState<Reservation | null>(null);
   const [selectedForQr, setSelectedForQr] = useState<Reservation | null>(null);
@@ -63,6 +71,18 @@ export const MyReservationsPage: React.FC = () => {
     }
   };
 
+  const fetchGreenPoints = async () => {
+    try {
+      setSummaryLoading(true);
+      const data = await greenPointsService.getGreenPointsSummary();
+      setGreenPointsSummary(data);
+    } catch (err) {
+      console.error('Error fetching green points summary', err);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   const handlePaymentComplete = async (details: { method: PaymentMethod; status: 'paid' | 'pending' }) => {
     if (!selectedForPayment) return;
     try {
@@ -83,6 +103,7 @@ export const MyReservationsPage: React.FC = () => {
     }
     if (isAuthenticated) {
       fetchReservations();
+      fetchGreenPoints();
     }
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -100,6 +121,7 @@ export const MyReservationsPage: React.FC = () => {
     setReservations((prev) =>
       prev.map((r) => (r.id === updated.id ? updated : r))
     );
+    fetchGreenPoints();
   };
 
   return (
@@ -115,6 +137,13 @@ export const MyReservationsPage: React.FC = () => {
             Gestiona tus plazas de estacionamiento reservadas y revisa tu historial.
           </p>
         </div>
+
+        {/* Park for Good / Green Points Impact Card (F2 & BF1) */}
+        <GreenPointsCard
+          summary={greenPointsSummary}
+          loading={summaryLoading}
+          onOpenInfoModal={() => setIsParkForGoodModalOpen(true)}
+        />
 
         {/* Featured Card: Next Reservation */}
         {nextReservation && (
@@ -302,6 +331,22 @@ export const MyReservationsPage: React.FC = () => {
                         Pendiente
                       </span>
                     )}
+
+                    {/* Park for Good: Check-in Badge (F3) */}
+                    {(res.has_check_in || res.check_in_time) && (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                        <Leaf className="w-3 h-3 text-emerald-500" />
+                        Check-in validado • +10 Green Points
+                      </span>
+                    )}
+
+                    {/* Park for Good: 10% Discount Badge (F3) */}
+                    {res.green_points_discount && (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-300 dark:border-teal-800 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-teal-500" />
+                        Descuento 10% Green Points (-${res.green_points_discount.discount_amount})
+                      </span>
+                    )}
                   </div>
 
                   <h4 className="text-lg font-bold text-slate-900 dark:text-white">{res.parking_name}</h4>
@@ -461,6 +506,11 @@ export const MyReservationsPage: React.FC = () => {
           onPaymentSuccess={handlePaymentComplete}
         />
       )}
+      {/* Park for Good Presentation Modal */}
+      <ParkForGoodModal
+        isOpen={isParkForGoodModalOpen}
+        onClose={() => setIsParkForGoodModalOpen(false)}
+      />
     </div>
   );
 };

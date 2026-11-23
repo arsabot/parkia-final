@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.admin_stats',
     'apps.claims',
     'apps.pagos',
+    'apps.green_points',
 ]
 
 MIDDLEWARE = [
@@ -216,3 +217,16 @@ CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', str(not DEBUG)).lower() in 
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 LANGUAGE_COOKIE_HTTPONLY = True
+
+# -----------------------------------------------------------------------------
+# Park for Good / Green Points
+# -----------------------------------------------------------------------------
+GREEN_POINTS_PER_RESERVATION = int(os.getenv('GREEN_POINTS_PER_RESERVATION', 10))
+GREEN_POINTS_KM_SAVED_PER_RESERVATION = float(os.getenv('GREEN_POINTS_KM_SAVED_PER_RESERVATION', 5.0))
+GREEN_POINTS_CO2_SAVED_KG_PER_RESERVATION = float(os.getenv('GREEN_POINTS_CO2_SAVED_KG_PER_RESERVATION', 1.0))
+GREEN_POINTS_REDEMPTION_THRESHOLD = int(os.getenv('GREEN_POINTS_REDEMPTION_THRESHOLD', 100))
+GREEN_POINTS_DISCOUNT_PERCENT = int(os.getenv('GREEN_POINTS_DISCOUNT_PERCENT', 10))  # 10%
+PARKIA_COMMISSION_PERCENT = int(os.getenv('PARKIA_COMMISSION_PERCENT', 15))          # 15%
+CAUSE_ENVIRONMENT_COMMISSION_SHARE = float(os.getenv('CAUSE_ENVIRONMENT_COMMISSION_SHARE', 5.0))  # 5% de la comisión
+CAUSE_INCLUSION_COMMISSION_SHARE = float(os.getenv('CAUSE_INCLUSION_COMMISSION_SHARE', 5.0))      # 5% de la comisión
+
