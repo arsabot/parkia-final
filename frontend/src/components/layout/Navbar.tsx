@@ -16,6 +16,8 @@ import {
   ScanLine,
   Building2,
   Crown,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -28,24 +30,35 @@ export const Navbar: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [demoDropdownOpen, setDemoDropdownOpen] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+  const demoDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
       if (
         userDropdownOpen &&
         userDropdownRef.current &&
-        !userDropdownRef.current.contains(event.target as Node)
+        !userDropdownRef.current.contains(target)
       ) {
         setUserDropdownOpen(false);
+      }
+      if (
+        demoDropdownOpen &&
+        demoDropdownRef.current &&
+        !demoDropdownRef.current.contains(target)
+      ) {
+        setDemoDropdownOpen(false);
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setUserDropdownOpen(false);
+        setDemoDropdownOpen(false);
         setMobileMenuOpen(false);
       }
     };
@@ -59,10 +72,11 @@ export const Navbar: React.FC = () => {
       document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [userDropdownOpen]);
+  }, [userDropdownOpen, demoDropdownOpen]);
 
   useEffect(() => {
     setUserDropdownOpen(false);
+    setDemoDropdownOpen(false);
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
@@ -80,6 +94,7 @@ export const Navbar: React.FC = () => {
 
   const handleQuickDemo = async (role: UserRole) => {
     setUserDropdownOpen(false);
+    setDemoDropdownOpen(false);
     setMobileMenuOpen(false);
 
     // Si estamos en una ruta de administración y cambiamos a conductor, navegamos primero a /search
@@ -102,221 +117,272 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-parkia-navy/95 backdrop-blur-md border-b border-slate-200 dark:border-parkia-line-dark transition-all">
+    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-parkia-navy/95 backdrop-blur-md border-b border-slate-200/80 dark:border-parkia-line-dark transition-all">
       <div className={`${isSearchPage ? 'max-w-7xl xl:max-w-[1600px] px-4 sm:px-6 lg:px-8' : 'max-w-[1280px] px-4 sm:px-6'} mx-auto`}>
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
           
-          {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2 group shrink-0">
-            <img
-              src={isDark ? "/logo-parkia-oscuro.png" : "/logo-parkia.png"}
-              alt="PARKIA"
-              className="h-9 sm:h-[42px] w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
-            />
-          </Link>
+          {/* Left: Brand Logo + Desktop Nav */}
+          <div className="flex items-center gap-6 xl:gap-8 min-w-0">
+            {/* Brand Logo */}
+            <Link to="/" className="flex items-center gap-2 group shrink-0">
+              <img
+                src={isDark ? "/logo-parkia-oscuro.png" : "/logo-parkia.png"}
+                alt="PARKIA"
+                className="h-9 sm:h-[42px] w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+              />
+            </Link>
 
-          {/* Navigation Links (Visible on Tablet md+ and Desktop) */}
-          <nav className="hidden md:flex items-center gap-1 xl:gap-2 shrink-0">
-            {!isAdmin ? (
-              <>
-                <Link
-                  to="/search"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/search')
-                      ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Compass className="w-4 h-4 shrink-0" />
-                  <span>Buscar</span>
-                </Link>
+            {/* Navigation Links (Visible on Desktop lg+) */}
+            <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2.5">
+              {!isAdmin ? (
+                <>
+                  <Link
+                    to="/search"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/search')
+                        ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Compass className="w-4 h-4 shrink-0" />
+                    <span>Buscar</span>
+                  </Link>
 
-                <Link
-                  to="/my-reservations"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/my-reservations')
-                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <CalendarCheck className="w-4 h-4 shrink-0" />
-                  <span><span className="hidden xl:inline">Mis </span>Reservas</span>
-                </Link>
+                  <Link
+                    to="/my-reservations"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/my-reservations')
+                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <CalendarCheck className="w-4 h-4 shrink-0" />
+                    <span>Mis Reservas</span>
+                  </Link>
 
-                <Link
-                  to="/favorites"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/favorites')
-                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Bookmark className="w-4 h-4 shrink-0" />
-                  <span>Favoritos</span>
-                </Link>
-              </>
-            ) : isSuperAdmin ? (
-              /* Super Admin Links (Platform Master) */
-              <>
-                <Link
-                  to="/admin"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/admin')
-                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4 shrink-0" />
-                  <span>Dashboard</span>
-                </Link>
+                  <Link
+                    to="/favorites"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/favorites')
+                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Bookmark className="w-4 h-4 shrink-0" />
+                    <span>Favoritos</span>
+                  </Link>
+                </>
+              ) : isSuperAdmin ? (
+                /* Super Admin Links */
+                <>
+                  <Link
+                    to="/admin"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/admin')
+                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-4 h-4 shrink-0" />
+                    <span>Dashboard</span>
+                  </Link>
 
-                <Link
-                  to="/admin/parkings"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
-                    isActive('/admin/parkings')
-                      ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/60'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Crown className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span><span className="hidden xl:inline">Alta/Baja </span>Garajes</span>
-                </Link>
+                  <Link
+                    to="/admin/parkings"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
+                      isActive('/admin/parkings')
+                        ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/60'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>Garajes</span>
+                  </Link>
 
-                <Link
-                  to="/admin/gate"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/admin/gate')
-                      ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                  <span>Control QR</span>
-                </Link>
+                  <Link
+                    to="/admin/gate"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/admin/gate')
+                        ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                    <span>Control QR</span>
+                  </Link>
 
-                <Link
-                  to="/admin/spaces"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/admin/spaces')
-                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Grid className="w-4 h-4 shrink-0" />
-                  <span>Plazas</span>
-                </Link>
+                  <Link
+                    to="/admin/spaces"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/admin/spaces')
+                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Grid className="w-4 h-4 shrink-0" />
+                    <span>Plazas</span>
+                  </Link>
 
-                <Link
-                  to="/admin/reservations"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/admin/reservations')
-                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <CalendarCheck className="w-4 h-4 shrink-0" />
-                  <span>Reservas</span>
-                </Link>
-              </>
-            ) : (
-              /* Parking Owner / Operator Links (Garaje Tools) */
-              <>
-                <Link
-                  to="/admin/gate"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
-                    isActive('/admin/gate')
-                      ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                  <span>Cámara QR<span className="hidden xl:inline"> & Garita</span></span>
-                </Link>
+                  <Link
+                    to="/admin/reservations"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/admin/reservations')
+                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <CalendarCheck className="w-4 h-4 shrink-0" />
+                    <span>Reservas</span>
+                  </Link>
+                </>
+              ) : (
+                /* Parking Owner / Operator Links */
+                <>
+                  <Link
+                    to="/admin/gate"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
+                      isActive('/admin/gate')
+                        ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                    <span>Cámara QR & Garita</span>
+                  </Link>
 
-                <Link
-                  to="/admin/spaces"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-bold transition-colors ${
-                    isActive('/admin/spaces')
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>Plazas<span className="hidden xl:inline"> Vacantes</span></span>
-                </Link>
+                  <Link
+                    to="/admin/spaces"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
+                      isActive('/admin/spaces')
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Plazas Vacantes</span>
+                  </Link>
 
-                <Link
-                  to="/admin/reservations"
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
-                    isActive('/admin/reservations')
-                      ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <CalendarCheck className="w-4 h-4 shrink-0" />
-                  <span>Caja<span className="hidden xl:inline"> & Turnos</span></span>
-                </Link>
-              </>
-            )}
-          </nav>
+                  <Link
+                    to="/admin/reservations"
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isActive('/admin/reservations')
+                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <CalendarCheck className="w-4 h-4 shrink-0" />
+                    <span>Caja & Turnos</span>
+                  </Link>
+                </>
+              )}
+            </nav>
+          </div>
 
-          {/* User / Auth Actions */}
-          <div className="hidden md:ml-auto md:flex items-center gap-2 lg:gap-3 shrink-0">
+          {/* Right: Actions (Desktop lg+) */}
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
             {!isAuthenticated ? (
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Demo Logins for fast testing - visible on 2xl to avoid overflowing navbar on smaller screens */}
-                <div className="hidden 2xl:flex items-center gap-2">
+              <>
+                {/* Demo Dropdown Selector */}
+                <div className="relative shrink-0" ref={demoDropdownRef}>
                   <button
                     type="button"
-                    onClick={() => handleQuickDemo('driver')}
-                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-blue-200 bg-white px-3 py-2 text-xs font-bold text-blue-800 shadow-[0_0_12px_rgba(37,99,235,0.12)] transition-all hover:border-blue-400 hover:bg-blue-50 hover:shadow-[0_0_18px_rgba(37,99,235,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:border-blue-400/40 dark:bg-blue-950/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
-                    title="Entrar rápido como conductor demo"
+                    onClick={() => setDemoDropdownOpen(!demoDropdownOpen)}
+                    aria-expanded={demoDropdownOpen}
+                    aria-haspopup="true"
+                    aria-label="Acceso demo rápido"
+                    className="inline-flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-xl border border-blue-200/90 dark:border-blue-800/60 bg-blue-50/80 dark:bg-blue-950/40 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-all shadow-sm cursor-pointer"
+                    title="Ingresar rápido con un perfil de prueba"
                   >
-                    <Car className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                    Conductor
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <span>Demo</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${demoDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickDemo('owner')}
-                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50/80 px-3 py-2 text-xs font-bold text-teal-800 shadow-[0_0_12px_rgba(20,184,166,0.12)] transition-all hover:border-teal-400 hover:bg-teal-100 hover:shadow-[0_0_18px_rgba(20,184,166,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 dark:border-teal-400/40 dark:bg-teal-950/40 dark:text-teal-200 dark:hover:bg-teal-900/50"
-                    title="Entrar rápido como Dueño de Estacionamiento (Roberto Garaje Central)"
-                  >
-                    <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    Dueño Garaje
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickDemo('admin')}
-                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs font-bold text-amber-800 shadow-[0_0_12px_rgba(245,158,11,0.12)] transition-all hover:border-amber-400 hover:bg-amber-100 hover:shadow-[0_0_18px_rgba(245,158,11,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-900/50"
-                    title="Entrar rápido como Super Admin Ariel (Alta/Baja de Garajes)"
-                  >
-                    <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    Super Admin
-                  </button>
+
+                  {demoDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-parkia-card-dark rounded-2xl shadow-2xl border border-slate-200 dark:border-parkia-line-dark p-2 animate-scale-in z-50 overflow-hidden">
+                      <div className="px-3 py-1.5 border-b border-slate-100 dark:border-parkia-line-dark mb-1">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Acceso Demo Rápido
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => handleQuickDemo('driver')}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0">
+                            <Car className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="leading-tight font-bold">Conductor</p>
+                            <p className="text-[10px] font-normal text-slate-500 dark:text-slate-400">Reservar estacionamiento</p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickDemo('owner')}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-teal-800 dark:text-teal-200 hover:bg-teal-50 dark:hover:bg-teal-950/60 text-left transition-colors cursor-pointer"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200 flex items-center justify-center shrink-0">
+                            <Building2 className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="leading-tight font-bold">Dueño Garaje</p>
+                            <p className="text-[10px] font-normal text-teal-600 dark:text-teal-400">Control QR y plazas</p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickDemo('admin')}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-amber-800 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-amber-950/60 text-left transition-colors cursor-pointer"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200 flex items-center justify-center shrink-0">
+                            <Crown className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="leading-tight font-bold">Super Admin</p>
+                            <p className="text-[10px] font-normal text-amber-600 dark:text-amber-400">Gestión de garajes</p>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                <div className="h-6 w-px bg-slate-200 dark:bg-parkia-line-dark" aria-hidden="true" />
+
+                {/* Theme Switch */}
                 <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
 
-                {showLoginAction && (
-                  <Link to="/login" className="shrink-0">
-                    <Button variant={isRegisterPage ? 'primary' : 'ghost'} size="sm">
-                      Iniciar Sesión
-                    </Button>
-                  </Link>
-                )}
-                {showRegisterAction && (
-                  <Link to="/register" className="shrink-0">
-                    <Button variant="primary" size="sm">
-                      Registrarse
-                    </Button>
-                  </Link>
-                )}
-              </div>
+                <div className="h-6 w-px bg-slate-200 dark:bg-parkia-line-dark" aria-hidden="true" />
+
+                {/* Auth Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {showLoginAction && (
+                    <Link to="/login" className="shrink-0">
+                      <Button variant={isRegisterPage ? 'primary' : 'ghost'} size="sm">
+                        Iniciar Sesión
+                      </Button>
+                    </Link>
+                  )}
+                  {showRegisterAction && (
+                    <Link to="/register" className="shrink-0">
+                      <Button variant="primary" size="sm">
+                        Registrarse
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </>
             ) : (
-              <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+              <>
+                {/* Theme Switch */}
                 <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
-                
-                {/* User Dropdown Anchor Container */}
+
+                <div className="h-6 w-px bg-slate-200 dark:bg-parkia-line-dark" aria-hidden="true" />
+
+                {/* User Dropdown Anchor */}
                 <div className="relative shrink-0" ref={userDropdownRef}>
                   <button
                     type="button"
@@ -324,9 +390,9 @@ export const Navbar: React.FC = () => {
                     aria-expanded={userDropdownOpen}
                     aria-haspopup="true"
                     aria-label="Menú de usuario"
-                    className="flex items-center gap-2 lg:gap-3 p-1.5 lg:pl-3 rounded-2xl border border-slate-200 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    className="flex items-center gap-3 p-1.5 pl-3 rounded-2xl border border-slate-200 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-sm"
                   >
-                    <div className="text-left hidden lg:block max-w-[120px] xl:max-w-none">
+                    <div className="text-left hidden xl:block max-w-[140px]">
                       <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                         {user?.first_name} {user?.last_name}
                       </p>
@@ -355,7 +421,7 @@ export const Navbar: React.FC = () => {
                     </div>
                   </button>
 
-                  {/* Dropdown Menu - Perfectly anchored right under the trigger button */}
+                  {/* Dropdown Menu */}
                   {userDropdownOpen && (
                     <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-parkia-card-dark rounded-2xl shadow-2xl border border-slate-200 dark:border-parkia-line-dark py-2 animate-scale-in z-50 overflow-hidden">
                       <div className="px-4 py-2 border-b border-slate-100 dark:border-parkia-line-dark">
@@ -491,55 +557,90 @@ export const Navbar: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Mobile Menu Toggle & Theme Button (Visible only on mobile <md) */}
-          <div className="flex md:hidden items-center gap-2 shrink-0">
+          {/* Mobile / Tablet Controls (< lg) */}
+          <div className="flex lg:hidden items-center gap-2.5 shrink-0">
             <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
+
+            {/* If logged in on mobile/tablet, show user avatar quick button */}
+            {isAuthenticated && (
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  aria-expanded={userDropdownOpen}
+                  aria-label="Perfil de usuario"
+                  className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 border border-slate-200 dark:border-parkia-line-dark cursor-pointer ${
+                    isSuperAdmin
+                      ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200'
+                      : isOwner
+                      ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
+                      : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
+                  }`}
+                >
+                  {user?.first_name ? user.first_name[0] : (user?.email ? user.email[0].toUpperCase() : 'U')}
+                </button>
+              </div>
+            )}
+
+            {/* Hamburger Menu Toggle */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-label={mobileMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl border border-slate-200 dark:border-parkia-line-dark bg-white dark:bg-parkia-card-dark text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer (Only for mobile <md) */}
+      {/* Mobile & Tablet Drawer (Visible only on < lg) */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-parkia-line-dark bg-white dark:bg-parkia-navy px-4 pt-3 pb-6 space-y-3 animate-fade-in shadow-lg">
-          <nav className="flex flex-col gap-1">
+        <div className="lg:hidden border-t border-slate-200 dark:border-parkia-line-dark bg-white dark:bg-parkia-navy px-4 pt-4 pb-6 space-y-4 animate-fade-in shadow-xl">
+          <nav className="flex flex-col gap-1.5">
             {!isAdmin ? (
               <>
                 <Link
                   to="/search"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
+                    isActive('/search')
+                      ? 'bg-lime-50 text-lime-800 dark:bg-parkia-lime/10 dark:text-parkia-lime'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
+                  }`}
                 >
-                  <Compass className="w-5 h-5 text-brand-600" />
-                  Buscar Estacionamientos
+                  <Compass className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Buscar Estacionamientos</span>
                 </Link>
                 <Link
                   to="/my-reservations"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
+                    isActive('/my-reservations')
+                      ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
+                  }`}
                 >
-                  <CalendarCheck className="w-5 h-5 text-brand-600" />
-                  Mis Reservas
+                  <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Mis Reservas</span>
                 </Link>
                 <Link
                   to="/favorites"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
+                    isActive('/favorites')
+                      ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
+                  }`}
                 >
-                  <Bookmark className="w-5 h-5 text-brand-600" />
-                  Favoritos
+                  <Bookmark className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Favoritos</span>
                 </Link>
               </>
             ) : isSuperAdmin ? (
@@ -547,42 +648,42 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
                 >
-                  <LayoutDashboard className="w-5 h-5 text-brand-600" />
-                  Dashboard Global
+                  <LayoutDashboard className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Dashboard Global</span>
                 </Link>
                 <Link
                   to="/admin/parkings"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-bold text-amber-700 hover:bg-amber-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
                 >
                   <Crown className="w-5 h-5 text-amber-500" />
-                  Alta y Baja de Garajes
+                  <span>Alta y Baja de Garajes</span>
                 </Link>
                 <Link
                   to="/admin/gate"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
                 >
-                  <ScanLine className="w-5 h-5 text-teal-600" />
-                  Control Accesos & QR
+                  <ScanLine className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  <span>Control Accesos & QR</span>
                 </Link>
                 <Link
                   to="/admin/spaces"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
                 >
-                  <Grid className="w-5 h-5 text-brand-600" />
-                  Plazas
+                  <Grid className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Plazas</span>
                 </Link>
                 <Link
                   to="/admin/reservations"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
                 >
-                  <CalendarCheck className="w-5 h-5 text-brand-600" />
-                  Reservas
+                  <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Reservas</span>
                 </Link>
               </>
             ) : (
@@ -590,67 +691,61 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/admin/gate"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-bold text-teal-800 hover:bg-teal-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-teal-800 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
                 >
-                  <ScanLine className="w-5 h-5 text-teal-600" />
-                  Cámara QR & Garita (Tablet/Móvil)
+                  <ScanLine className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  <span>Cámara QR & Garita</span>
                 </Link>
                 <Link
                   to="/admin/spaces"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-bold text-emerald-800 hover:bg-emerald-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                 >
-                  <Grid className="w-5 h-5 text-emerald-600" />
-                  Plazas Vacantes en Vivo
+                  <Grid className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Plazas Vacantes en Vivo</span>
                 </Link>
                 <Link
                   to="/admin/reservations"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
                 >
-                  <CalendarCheck className="w-5 h-5 text-brand-600" />
-                  Caja & Turnos
+                  <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Caja & Turnos</span>
                 </Link>
               </>
             )}
           </nav>
 
-          <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
+          <div className="pt-4 border-t border-slate-200 dark:border-parkia-line-dark flex flex-col gap-3">
             {!isAuthenticated ? (
               <>
-                <p className="text-[11px] font-bold uppercase text-slate-400 text-center">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 text-center">
                   Acceso Demo Rápido:
                 </p>
-                <div className="grid grid-cols-3 gap-2 pb-2">
+                <div className="grid grid-cols-3 gap-2 pb-1">
                   <button
-                    onClick={() => {
-                      handleQuickDemo('driver');
-                      setMobileMenuOpen(false);
-                    }}
-                    className="p-2 text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark text-slate-800 dark:text-slate-200 text-center flex flex-col items-center gap-1"
+                    type="button"
+                    onClick={() => handleQuickDemo('driver')}
+                    className="p-2.5 text-xs font-bold rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark text-slate-800 dark:text-slate-200 text-center flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                   >
-                    <Car className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                    Conductor
+                    <Car className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                    <span>Conductor</span>
                   </button>
                   <button
-                    onClick={() => {
-                      handleQuickDemo('owner');
-                      setMobileMenuOpen(false);
-                    }}
-                    className="p-2 text-xs font-bold rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 text-center border border-teal-200 dark:border-teal-800/60 flex flex-col items-center gap-1"
+                    type="button"
+                    onClick={() => handleQuickDemo('owner')}
+                    className="p-2.5 text-xs font-bold rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-200 text-center border border-teal-200 dark:border-teal-800/60 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                   >
-                    <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    Dueño Garaje
+                    <Building2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    <span>Dueño</span>
                   </button>
                   <button
-                    onClick={() => {
-                      handleQuickDemo('admin');
-                      setMobileMenuOpen(false);
-                    }}
-                    className="p-2 text-xs font-bold rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 text-center border border-amber-200 dark:border-amber-800/60 flex flex-col items-center gap-1"
+                    type="button"
+                    onClick={() => handleQuickDemo('admin')}
+                    className="p-2.5 text-xs font-bold rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 text-center border border-amber-200 dark:border-amber-800/60 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                   >
-                    <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    Super Admin
+                    <Crown className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                    <span>Super</span>
                   </button>
                 </div>
                 {showLoginAction && (
@@ -669,12 +764,14 @@ export const Navbar: React.FC = () => {
                 )}
               </>
             ) : (
-              <div className="space-y-2">
-                <div className="p-3 bg-slate-50 rounded-xl">
-                  <p className="text-sm font-bold text-slate-900">{user?.first_name} {user?.last_name}</p>
-                  <p className="text-xs text-slate-500">{user?.email}</p>
-                  <p className="text-[11px] font-extrabold text-teal-600 uppercase mt-1">
-                    {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje' : 'Conductor'}
+              <div className="space-y-3">
+                <div className="p-4 bg-slate-50 dark:bg-parkia-card-dark rounded-2xl border border-slate-200 dark:border-parkia-line-dark">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{user?.first_name} {user?.last_name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
+                  <p className={`text-[11px] font-extrabold uppercase mt-1.5 ${
+                    isSuperAdmin ? 'text-amber-600 dark:text-amber-400' : isOwner ? 'text-teal-600 dark:text-teal-400' : 'text-brand-600 dark:text-brand-400'
+                  }`}>
+                    {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje Operador' : 'Conductor'}
                   </p>
                 </div>
                 <Button variant="danger" onClick={handleLogout} className="w-full">
