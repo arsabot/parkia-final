@@ -1,3 +1,4 @@
+import re
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
@@ -5,6 +6,8 @@ from django.utils.encoding import force_str
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
+
+STRICT_EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -69,6 +72,16 @@ class RegisterSerializer(serializers.ModelSerializer):
             'cud_expiration',
         ]
 
+    def validate_email(self, value):
+        clean_email = (value or '').strip().lower()
+        if len(clean_email) > 254:
+            raise serializers.ValidationError('El correo no puede superar los 254 caracteres.')
+        if not re.match(STRICT_EMAIL_REGEX, clean_email):
+            raise serializers.ValidationError('Formato de correo inválido. Caracteres no autorizados.')
+        if User.objects.filter(email=clean_email).exists():
+            raise serializers.ValidationError('Ya existe un usuario con este correo.')
+        return clean_email
+
     def validate(self, data):
         if data['password'] != data['password_confirmation']:
             raise serializers.ValidationError({'password_confirmation': 'Las contraseñas no coinciden.'})
@@ -120,8 +133,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField(max_length=254)
     password = serializers.CharField(write_only=True)
+
+    def validate_email(self, value):
+        clean_email = (value or '').strip().lower()
+        if len(clean_email) > 254:
+            raise serializers.ValidationError('El correo no puede superar los 254 caracteres.')
+        if not re.match(STRICT_EMAIL_REGEX, clean_email):
+            raise serializers.ValidationError('Formato de correo inválido. Caracteres no autorizados.')
+        return clean_email
 
     def validate(self, data):
         email = data.get('email', '').strip().lower()
@@ -145,10 +166,15 @@ class LoginSerializer(serializers.Serializer):
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField(max_length=254)
 
     def validate_email(self, value):
-        return value.strip().lower()
+        clean_email = (value or '').strip().lower()
+        if len(clean_email) > 254:
+            raise serializers.ValidationError('El correo no puede superar los 254 caracteres.')
+        if not re.match(STRICT_EMAIL_REGEX, clean_email):
+            raise serializers.ValidationError('Formato de correo inválido. Caracteres no autorizados.')
+        return clean_email
 
 
 class PasswordResetValidateSerializer(serializers.Serializer):

@@ -23,6 +23,7 @@ import { Input } from '../components/common/Input';
 import { PasswordField } from '../components/auth/PasswordField';
 import { PasswordStrength } from '../components/auth/PasswordStrength';
 import { isPasswordValid } from '../components/auth/passwordScore';
+import { validateStrictEmail } from '../utils/securityValidation';
 import { UserRole } from '../types';
 import { GoogleLoginButton } from '../components/auth/GoogleLoginButton';
 import { isSupabaseConfigured } from '../services/supabaseClient';
@@ -112,11 +113,8 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     const nextFirstNameError = firstName.trim() ? '' : 'Ingresa tu nombre.';
     const nextLastNameError = lastName.trim() ? '' : 'Ingresa tu apellido.';
-    const nextEmailError = !email.trim()
-      ? 'Ingresa tu correo electrónico.'
-      : emailRef.current && !emailRef.current.validity.valid
-        ? 'Ingresa un correo electrónico válido.'
-        : '';
+    const emailValidation = validateStrictEmail(email);
+    const nextEmailError = emailValidation.valid ? '' : (emailValidation.error || 'Ingresa un correo electrónico válido.');
     const nextPasswordError = !password
       ? 'Ingresa una contraseña.'
       : !isPasswordValid(password)
@@ -156,7 +154,7 @@ export const RegisterPage: React.FC = () => {
       const res = await register({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        email: email.trim(),
+        email: emailValidation.cleanEmail,
         phone: phone.trim(),
         role,
         password,
@@ -462,6 +460,7 @@ export const RegisterPage: React.FC = () => {
               required
               autoComplete="email"
               placeholder="carlos@ejemplo.com"
+              maxLength={254}
               value={email}
               error={emailError}
               onChange={(e) => {
