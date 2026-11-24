@@ -18,6 +18,8 @@ import {
   Crown,
   Sparkles,
   ChevronDown,
+  Users,
+  Mail,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -83,6 +85,7 @@ export const Navbar: React.FC = () => {
   const isSearchPage = location.pathname === '/search';
   const isLoginPage = location.pathname === '/login';
   const isRegisterPage = location.pathname === '/register';
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const showLoginAction = !isLoginPage;
   const showRegisterAction = !isRegisterPage;
 
@@ -134,7 +137,112 @@ export const Navbar: React.FC = () => {
 
             {/* Navigation Links (Visible on Desktop lg+) */}
             <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2.5">
-              {!isAdmin ? (
+              {isAdminRoute ? (
+                isSuperAdmin ? (
+                  /* Super Admin Workspace Links */
+                  <>
+                    <Link
+                      to="/admin"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        isActive('/admin')
+                          ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <LayoutDashboard className="w-4 h-4 shrink-0" />
+                      <span>Dashboard</span>
+                    </Link>
+
+                    <Link
+                      to="/admin/parkings"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
+                        isActive('/admin/parkings')
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/60'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span>Garajes</span>
+                    </Link>
+
+                    <Link
+                      to="/admin/gate"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        isActive('/admin/gate')
+                          ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>Control QR</span>
+                    </Link>
+
+                    <Link
+                      to="/admin/spaces"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        isActive('/admin/spaces')
+                          ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <Grid className="w-4 h-4 shrink-0" />
+                      <span>Plazas</span>
+                    </Link>
+
+                    <Link
+                      to="/admin/reservations"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        isActive('/admin/reservations')
+                          ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <CalendarCheck className="w-4 h-4 shrink-0" />
+                      <span>Reservas</span>
+                    </Link>
+                  </>
+                ) : (
+                  /* Parking Owner / Operator Workspace Links */
+                  <>
+                    <Link
+                      to="/admin/gate"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
+                        isActive('/admin/gate')
+                          ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>Cámara QR & Garita</span>
+                    </Link>
+
+                    <Link
+                      to="/admin/spaces"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
+                        isActive('/admin/spaces')
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>Plazas Vacantes</span>
+                    </Link>
+
+                    <Link
+                      to="/admin/reservations"
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        isActive('/admin/reservations')
+                          ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <CalendarCheck className="w-4 h-4 shrink-0" />
+                      <span>Caja & Turnos</span>
+                    </Link>
+                  </>
+                )
+              ) : (
+                /* Public / Client Navigation (Active on /nosotros, /contacto, /search, etc.) */
                 <>
                   <Link
                     to="/search"
@@ -149,130 +257,56 @@ export const Navbar: React.FC = () => {
                   </Link>
 
                   <Link
-                    to="/my-reservations"
+                    to="/nosotros"
                     className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/my-reservations')
-                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      isActive('/nosotros')
+                        ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <CalendarCheck className="w-4 h-4 shrink-0" />
-                    <span>Mis Reservas</span>
+                    <Users className="w-4 h-4 shrink-0" />
+                    <span>Nosotros</span>
                   </Link>
 
                   <Link
-                    to="/favorites"
+                    to="/contacto"
                     className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/favorites')
-                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                      isActive('/contacto')
+                        ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Bookmark className="w-4 h-4 shrink-0" />
-                    <span>Favoritos</span>
-                  </Link>
-                </>
-              ) : isSuperAdmin ? (
-                /* Super Admin Links */
-                <>
-                  <Link
-                    to="/admin"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/admin')
-                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <LayoutDashboard className="w-4 h-4 shrink-0" />
-                    <span>Dashboard</span>
+                    <Mail className="w-4 h-4 shrink-0" />
+                    <span>Contacto</span>
                   </Link>
 
-                  <Link
-                    to="/admin/parkings"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
-                      isActive('/admin/parkings')
-                        ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/60'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Crown className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span>Garajes</span>
-                  </Link>
+                  {(!isAdmin || !isAuthenticated) && (
+                    <>
+                      <Link
+                        to="/my-reservations"
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                          isActive('/my-reservations')
+                            ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <CalendarCheck className="w-4 h-4 shrink-0" />
+                        <span>Mis Reservas</span>
+                      </Link>
 
-                  <Link
-                    to="/admin/gate"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/admin/gate')
-                        ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                    <span>Control QR</span>
-                  </Link>
-
-                  <Link
-                    to="/admin/spaces"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/admin/spaces')
-                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Grid className="w-4 h-4 shrink-0" />
-                    <span>Plazas</span>
-                  </Link>
-
-                  <Link
-                    to="/admin/reservations"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/admin/reservations')
-                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <CalendarCheck className="w-4 h-4 shrink-0" />
-                    <span>Reservas</span>
-                  </Link>
-                </>
-              ) : (
-                /* Parking Owner / Operator Links */
-                <>
-                  <Link
-                    to="/admin/gate"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
-                      isActive('/admin/gate')
-                        ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                    <span>Cámara QR & Garita</span>
-                  </Link>
-
-                  <Link
-                    to="/admin/spaces"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
-                      isActive('/admin/spaces')
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span>Plazas Vacantes</span>
-                  </Link>
-
-                  <Link
-                    to="/admin/reservations"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/admin/reservations')
-                        ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <CalendarCheck className="w-4 h-4 shrink-0" />
-                    <span>Caja & Turnos</span>
-                  </Link>
+                      <Link
+                        to="/favorites"
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                          isActive('/favorites')
+                            ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
+                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <Bookmark className="w-4 h-4 shrink-0" />
+                        <span>Favoritos</span>
+                      </Link>
+                    </>
+                  )}
                 </>
               )}
             </nav>
@@ -377,6 +411,40 @@ export const Navbar: React.FC = () => {
               </>
             ) : (
               <>
+                {/* Quick Portal Switch Button for Admin / Owner */}
+                {isAdmin && !isAdminRoute && (
+                  isOwner ? (
+                    <Link
+                      to="/admin/gate"
+                      className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 transition-all shadow-sm shrink-0"
+                      title="Ir a Garita y Gestión"
+                    >
+                      <ScanLine className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>Control Garita</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/admin"
+                      className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all shadow-sm shrink-0"
+                      title="Ir al Dashboard General"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>Dashboard Admin</span>
+                    </Link>
+                  )
+                )}
+
+                {isAdmin && isAdminRoute && (
+                  <Link
+                    to="/"
+                    className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0"
+                    title="Volver a la vista pública de Parkia"
+                  >
+                    <Compass className="w-3.5 h-3.5 shrink-0" />
+                    <span>Ver Sitio</span>
+                  </Link>
+                )}
+
                 {/* Theme Switch */}
                 <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
 
@@ -604,7 +672,95 @@ export const Navbar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-slate-200 dark:border-parkia-line-dark bg-white dark:bg-parkia-navy px-4 pt-4 pb-6 space-y-4 animate-fade-in shadow-xl">
           <nav className="flex flex-col gap-1.5">
-            {!isAdmin ? (
+            {isAdminRoute ? (
+              isSuperAdmin ? (
+                <>
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                  >
+                    <LayoutDashboard className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                    <span>Dashboard Global</span>
+                  </Link>
+                  <Link
+                    to="/admin/parkings"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                  >
+                    <Crown className="w-5 h-5 text-amber-500" />
+                    <span>Alta y Baja de Garajes</span>
+                  </Link>
+                  <Link
+                    to="/admin/gate"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                  >
+                    <ScanLine className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    <span>Control Accesos & QR</span>
+                  </Link>
+                  <Link
+                    to="/admin/spaces"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                  >
+                    <Grid className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                    <span>Plazas</span>
+                  </Link>
+                  <Link
+                    to="/admin/reservations"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                  >
+                    <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                    <span>Reservas</span>
+                  </Link>
+                  <Link
+                    to="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70 border-t border-slate-100 dark:border-parkia-line-dark mt-1"
+                  >
+                    <Compass className="w-5 h-5 text-slate-400" />
+                    <span>Ver Sitio Público</span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/admin/gate"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-teal-800 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
+                  >
+                    <ScanLine className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    <span>Cámara QR & Garita</span>
+                  </Link>
+                  <Link
+                    to="/admin/spaces"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                  >
+                    <Grid className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Plazas Vacantes en Vivo</span>
+                  </Link>
+                  <Link
+                    to="/admin/reservations"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                  >
+                    <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                    <span>Caja & Turnos</span>
+                  </Link>
+                  <Link
+                    to="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70 border-t border-slate-100 dark:border-parkia-line-dark mt-1"
+                  >
+                    <Compass className="w-5 h-5 text-slate-400" />
+                    <span>Ver Sitio Público</span>
+                  </Link>
+                </>
+              )
+            ) : (
               <>
                 <Link
                   to="/search"
@@ -619,99 +775,79 @@ export const Navbar: React.FC = () => {
                   <span>Buscar Estacionamientos</span>
                 </Link>
                 <Link
-                  to="/my-reservations"
+                  to="/nosotros"
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                    isActive('/my-reservations')
-                      ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
+                    isActive('/nosotros')
+                      ? 'bg-lime-50 text-lime-800 dark:bg-parkia-lime/10 dark:text-parkia-lime'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
                   }`}
                 >
-                  <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  <span>Mis Reservas</span>
+                  <Users className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Nosotros</span>
                 </Link>
                 <Link
-                  to="/favorites"
+                  to="/contacto"
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                    isActive('/favorites')
-                      ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
+                    isActive('/contacto')
+                      ? 'bg-lime-50 text-lime-800 dark:bg-parkia-lime/10 dark:text-parkia-lime'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
                   }`}
                 >
-                  <Bookmark className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  <span>Favoritos</span>
+                  <Mail className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>Contacto</span>
                 </Link>
-              </>
-            ) : isSuperAdmin ? (
-              <>
-                <Link
-                  to="/admin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                >
-                  <LayoutDashboard className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  <span>Dashboard Global</span>
-                </Link>
-                <Link
-                  to="/admin/parkings"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-                >
-                  <Crown className="w-5 h-5 text-amber-500" />
-                  <span>Alta y Baja de Garajes</span>
-                </Link>
-                <Link
-                  to="/admin/gate"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                >
-                  <ScanLine className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                  <span>Control Accesos & QR</span>
-                </Link>
-                <Link
-                  to="/admin/spaces"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                >
-                  <Grid className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  <span>Plazas</span>
-                </Link>
-                <Link
-                  to="/admin/reservations"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                >
-                  <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  <span>Reservas</span>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/admin/gate"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-teal-800 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
-                >
-                  <ScanLine className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                  <span>Cámara QR & Garita</span>
-                </Link>
-                <Link
-                  to="/admin/spaces"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-                >
-                  <Grid className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  <span>Plazas Vacantes en Vivo</span>
-                </Link>
-                <Link
-                  to="/admin/reservations"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
-                >
-                  <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  <span>Caja & Turnos</span>
-                </Link>
+
+                {(!isAdmin || !isAuthenticated) && (
+                  <>
+                    <Link
+                      to="/my-reservations"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
+                        isActive('/my-reservations')
+                          ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
+                      }`}
+                    >
+                      <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                      <span>Mis Reservas</span>
+                    </Link>
+                    <Link
+                      to="/favorites"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
+                        isActive('/favorites')
+                          ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
+                      }`}
+                    >
+                      <Bookmark className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                      <span>Favoritos</span>
+                    </Link>
+                  </>
+                )}
+
+                {isOwner && (
+                  <Link
+                    to="/admin/gate"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-teal-800 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/50"
+                  >
+                    <ScanLine className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    <span>Ir a Control Garita</span>
+                  </Link>
+                )}
+                {isSuperAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-bold text-amber-800 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50"
+                  >
+                    <LayoutDashboard className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    <span>Ir a Panel Admin</span>
+                  </Link>
+                )}
               </>
             )}
           </nav>

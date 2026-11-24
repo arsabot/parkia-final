@@ -474,23 +474,23 @@ export const LandingPage: React.FC = () => {
   const destLabel = isSuperAdmin ? 'Panel Admin' : isOwner ? 'Control Garita' : 'Mis reservas';
 
   const authLinks = isAuthenticated ? (
-    <>
-      <Link to={destination} className="pk-ing" onClick={closeMenu}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+      <Link to={destination} className="pk-ing" onClick={closeMenu} style={{ padding: "8px 16px", fontSize: "13px" }}>
         {destLabel}
       </Link>
-      <Link to="/search" className="pk-reg" onClick={closeMenu}>
+      <Link to="/search" className="pk-reg" onClick={closeMenu} style={{ padding: "8px 16px", fontSize: "13px" }}>
         Buscar lugar
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </Link>
-    </>
+    </div>
   ) : (
-    <>
-      <Link to="/login" className="pk-ing" onClick={closeMenu}>Ingresar</Link>
-      <Link to="/register" className="pk-reg" onClick={closeMenu}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+      <Link to="/login" className="pk-ing" onClick={closeMenu} style={{ padding: "8px 16px", fontSize: "13px" }}>Ingresar</Link>
+      <Link to="/register" className="pk-reg" onClick={closeMenu} style={{ padding: "8px 16px", fontSize: "13px" }}>
         Registrate
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </Link>
-    </>
+    </div>
   );
 
   // Manejadores que tocan refs: quedan fuera de "v" (solo se usan en eventos).
@@ -551,13 +551,13 @@ export const LandingPage: React.FC = () => {
     <div className={`pk-root ${v.themeCls}`} style={{ width: "100%", background: "var(--bg0,#05080F)", fontFamily: "'Albert Sans', sans-serif", color: "var(--tx,#FFFFFF)", overflow: "hidden" }}>
     
     <header className={v.isLight ? "pk-hdr" : "pk-dark pk-hdr"} style={{ position: "relative", zIndex: 5, borderBottom: "1px solid rgba(var(--fg-rgb,255,255,255),0.07)", background: v.isLight ? "rgba(255,255,255,0.96)" : "rgba(5,8,15,0.96)", backdropFilter: "blur(14px)" }}>
-    <div style={{ position: "relative", maxWidth: "1280px", margin: "0 auto", padding: "16px 24px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-    <Link to="/" aria-label="Parkia, inicio" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "var(--tx,#FFFFFF)" }}>
+    <div style={{ position: "relative", maxWidth: "1280px", margin: "0 auto", padding: "16px 24px", display: "flex", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
+    <Link to="/" aria-label="Parkia, inicio" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "var(--tx,#FFFFFF)", flexShrink: 0 }}>
     <img src={logoIcon} alt="" style={{ width: "42px", height: "42px" }} />
     <span style={{ fontSize: "23px", fontWeight: 800, letterSpacing: "0.06em" }}>PARKIA</span>
     </Link>
     <button type="button" className="pk-burger" onClick={v.toggleMenu} aria-expanded={v.menuOpen} aria-label="Abrir menú"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
-    <nav aria-label="Principal" className={`pk-nav ${v.menuCls}`} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "28px", fontSize: "16px" }}>
+    <nav aria-label="Principal" className={`pk-nav ${v.menuCls}`} style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "18px", fontSize: "14px", whiteSpace: "nowrap" }}>
     <Link to="/" aria-current="page" style={{ color: "var(--tx,#FFFFFF)", textDecoration: "none", fontWeight: 600 }}>Inicio</Link>
     <a href="#como-funciona" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Cómo funciona</a>
     <a href="#duenos" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Tengo un estacionamiento</a>
