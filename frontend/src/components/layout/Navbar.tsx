@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Compass, 
@@ -28,8 +28,43 @@ export const Navbar: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        userDropdownOpen &&
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node)
+      ) {
+        setUserDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setUserDropdownOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userDropdownOpen]);
+
+  useEffect(() => {
+    setUserDropdownOpen(false);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const isSearchPage = location.pathname === '/search';
   const isLoginPage = location.pathname === '/login';
@@ -67,7 +102,7 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 dark:bg-parkia-navy/95 backdrop-blur-md border-b border-slate-200 dark:border-parkia-line-dark transition-all">
+    <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-parkia-navy/95 backdrop-blur-md border-b border-slate-200 dark:border-parkia-line-dark transition-all">
       <div className={`${isSearchPage ? 'max-w-7xl xl:max-w-[1600px] px-4 sm:px-6 lg:px-8' : 'max-w-[1280px] px-4 sm:px-6'} mx-auto`}>
         <div className="flex items-center justify-between h-16 sm:h-20">
           
@@ -81,7 +116,7 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {/* Navigation Links (Visible on Tablet md+ and Desktop) */}
-          <nav className="hidden md:flex items-center gap-1 xl:gap-2">
+          <nav className="hidden md:flex items-center gap-1 xl:gap-2 shrink-0">
             {!isAdmin ? (
               <>
                 <Link
@@ -226,12 +261,13 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* User / Auth Actions */}
-          <div className="hidden md:ml-auto md:flex items-center gap-2 lg:gap-3">
+          <div className="hidden md:ml-auto md:flex items-center gap-2 lg:gap-3 shrink-0">
             {!isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                {/* Demo Logins for fast testing */}
-                <div className="hidden xl:flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Demo Logins for fast testing - visible on 2xl to avoid overflowing navbar on smaller screens */}
+                <div className="hidden 2xl:flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => handleQuickDemo('driver')}
                     className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-blue-200 bg-white px-3 py-2 text-xs font-bold text-blue-800 shadow-[0_0_12px_rgba(37,99,235,0.12)] transition-all hover:border-blue-400 hover:bg-blue-50 hover:shadow-[0_0_18px_rgba(37,99,235,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:border-blue-400/40 dark:bg-blue-950/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
                     title="Entrar rápido como conductor demo"
@@ -240,6 +276,7 @@ export const Navbar: React.FC = () => {
                     Conductor
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleQuickDemo('owner')}
                     className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50/80 px-3 py-2 text-xs font-bold text-teal-800 shadow-[0_0_12px_rgba(20,184,166,0.12)] transition-all hover:border-teal-400 hover:bg-teal-100 hover:shadow-[0_0_18px_rgba(20,184,166,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 dark:border-teal-400/40 dark:bg-teal-950/40 dark:text-teal-200 dark:hover:bg-teal-900/50"
                     title="Entrar rápido como Dueño de Estacionamiento (Roberto Garaje Central)"
@@ -248,6 +285,7 @@ export const Navbar: React.FC = () => {
                     Dueño Garaje
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleQuickDemo('admin')}
                     className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs font-bold text-amber-800 shadow-[0_0_12px_rgba(245,158,11,0.12)] transition-all hover:border-amber-400 hover:bg-amber-100 hover:shadow-[0_0_18px_rgba(245,158,11,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-900/50"
                     title="Entrar rápido como Super Admin Ariel (Alta/Baja de Garajes)"
@@ -260,14 +298,14 @@ export const Navbar: React.FC = () => {
                 <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
 
                 {showLoginAction && (
-                  <Link to="/login">
+                  <Link to="/login" className="shrink-0">
                     <Button variant={isRegisterPage ? 'primary' : 'ghost'} size="sm">
                       Iniciar Sesión
                     </Button>
                   </Link>
                 )}
                 {showRegisterAction && (
-                  <Link to="/register">
+                  <Link to="/register" className="shrink-0">
                     <Button variant="primary" size="sm">
                       Registrarse
                     </Button>
@@ -275,182 +313,190 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="relative flex items-center gap-2">
+              <div className="flex items-center gap-2 lg:gap-3 shrink-0">
                 <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
-                <button
-                  type="button"
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  aria-expanded={userDropdownOpen}
-                  aria-haspopup="true"
-                  aria-label="Menú de usuario"
-                  className="flex items-center gap-2 lg:gap-3 p-1.5 lg:pl-3 rounded-2xl border border-slate-200 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                >
-                  <div className="text-left hidden lg:block max-w-[120px] xl:max-w-none">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
-                      {user?.first_name} {user?.last_name}
-                    </p>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider block ${
-                      isSuperAdmin 
-                        ? 'text-amber-600 dark:text-amber-400' 
-                        : isOwner 
-                        ? 'text-teal-600 dark:text-teal-400' 
-                        : 'text-brand-600 dark:text-brand-400'
-                    }`}>
-                      {isSuperAdmin 
-                        ? 'Super Admin' 
-                        : isOwner 
-                        ? 'Dueño Garaje' 
-                        : 'Conductor'}
-                    </span>
-                  </div>
-                  <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 ${
-                    isSuperAdmin
-                      ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200'
-                      : isOwner
-                      ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
-                      : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
-                  }`}>
-                    {user?.first_name ? user.first_name[0] : 'U'}
-                  </div>
-                </button>
-
-                {/* Dropdown Menu */}
-                {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-parkia-card-dark rounded-2xl shadow-xl border border-slate-200 dark:border-parkia-line-dark py-2 animate-scale-in z-50">
-                    <div className="px-4 py-2 border-b border-slate-100 dark:border-parkia-line-dark">
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Sesión iniciada como</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.email}</p>
-                      <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
+                
+                {/* User Dropdown Anchor Container */}
+                <div className="relative shrink-0" ref={userDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    aria-expanded={userDropdownOpen}
+                    aria-haspopup="true"
+                    aria-label="Menú de usuario"
+                    className="flex items-center gap-2 lg:gap-3 p-1.5 lg:pl-3 rounded-2xl border border-slate-200 dark:border-parkia-line-dark hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  >
+                    <div className="text-left hidden lg:block max-w-[120px] xl:max-w-none">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
+                        {user?.first_name} {user?.last_name}
+                      </p>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider block ${
                         isSuperAdmin 
-                          ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800' 
+                          ? 'text-amber-600 dark:text-amber-400' 
                           : isOwner 
-                          ? 'bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800' 
-                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                          ? 'text-teal-600 dark:text-teal-400' 
+                          : 'text-brand-600 dark:text-brand-400'
                       }`}>
-                        {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje Operador' : 'Conductor'}
+                        {isSuperAdmin 
+                          ? 'Super Admin' 
+                          : isOwner 
+                          ? 'Dueño Garaje' 
+                          : 'Conductor'}
                       </span>
                     </div>
-
-                    <div className="py-1">
-                      {isSuperAdmin ? (
-                        <>
-                          <Link
-                            to="/admin"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          >
-                            <LayoutDashboard className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                            Panel General
-                          </Link>
-                          <Link
-                            to="/admin/parkings"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-50 dark:hover:bg-slate-800"
-                          >
-                            <Crown className="w-4 h-4 text-amber-500" />
-                            Alta y Baja de Garajes
-                          </Link>
-                          <Link
-                            to="/admin/gate"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          >
-                            <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                            Cámara QR & Garita
-                          </Link>
-                        </>
-                      ) : isOwner ? (
-                        <>
-                          <Link
-                            to="/admin/gate"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-teal-800 dark:text-teal-300 font-bold hover:bg-teal-50 dark:hover:bg-slate-800"
-                          >
-                            <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                            Cámara QR & Control Garita
-                          </Link>
-                          <Link
-                            to="/admin/spaces"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          >
-                            <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            Plazas Vacantes en Vivo
-                          </Link>
-                          <Link
-                            to="/admin/reservations"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          >
-                            <CalendarCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                            Caja & Historial
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <Link
-                            to="/my-reservations"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          >
-                            <CalendarCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                            Mis Reservas
-                          </Link>
-                          <Link
-                            to="/favorites"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          >
-                            <Bookmark className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                            Mis Favoritos
-                          </Link>
-                        </>
-                      )}
+                    <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 ${
+                      isSuperAdmin
+                        ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200'
+                        : isOwner
+                        ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
+                        : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
+                    }`}>
+                      {user?.first_name ? user.first_name[0] : (user?.email ? user.email[0].toUpperCase() : 'U')}
                     </div>
+                  </button>
 
-                    <div className="border-t border-slate-100 dark:border-parkia-line-dark pt-1">
-                      <div className="px-3 py-1">
-                        <p className="text-[10px] font-bold uppercase text-slate-400 px-1 mb-1">
-                          Cambiar de rol demo:
-                        </p>
-                        <div className="grid grid-cols-3 gap-1">
-                          <button
-                            onClick={() => handleQuickDemo('driver')}
-                            className="px-2 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
-                          >
-                            Conductor
-                          </button>
-                          <button
-                            onClick={() => handleQuickDemo('owner')}
-                            className="px-2 py-1 text-[11px] font-bold rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800"
-                          >
-                            Dueño
-                          </button>
-                          <button
-                            onClick={() => handleQuickDemo('admin')}
-                            className="px-2 py-1 text-[11px] font-bold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800"
-                          >
-                            Super
-                          </button>
-                        </div>
+                  {/* Dropdown Menu - Perfectly anchored right under the trigger button */}
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-parkia-card-dark rounded-2xl shadow-2xl border border-slate-200 dark:border-parkia-line-dark py-2 animate-scale-in z-50 overflow-hidden">
+                      <div className="px-4 py-2 border-b border-slate-100 dark:border-parkia-line-dark">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Sesión iniciada como</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.email}</p>
+                        <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
+                          isSuperAdmin 
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800' 
+                            : isOwner 
+                            ? 'bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800' 
+                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                        }`}>
+                          {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje Operador' : 'Conductor'}
+                        </span>
                       </div>
 
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left flex items-center gap-2 px-4 py-2 mt-1 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Cerrar Sesión
-                      </button>
+                      <div className="py-1">
+                        {isSuperAdmin ? (
+                          <>
+                            <Link
+                              to="/admin"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <LayoutDashboard className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                              Panel General
+                            </Link>
+                            <Link
+                              to="/admin/parkings"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <Crown className="w-4 h-4 text-amber-500" />
+                              Alta y Baja de Garajes
+                            </Link>
+                            <Link
+                              to="/admin/gate"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                              Cámara QR & Garita
+                            </Link>
+                          </>
+                        ) : isOwner ? (
+                          <>
+                            <Link
+                              to="/admin/gate"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-teal-800 dark:text-teal-300 font-bold hover:bg-teal-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                              Cámara QR & Control Garita
+                            </Link>
+                            <Link
+                              to="/admin/spaces"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                              Plazas Vacantes en Vivo
+                            </Link>
+                            <Link
+                              to="/admin/reservations"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <CalendarCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                              Caja & Historial
+                            </Link>
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              to="/my-reservations"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <CalendarCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                              Mis Reservas
+                            </Link>
+                            <Link
+                              to="/favorites"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <Bookmark className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                              Mis Favoritos
+                            </Link>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="border-t border-slate-100 dark:border-parkia-line-dark pt-1">
+                        <div className="px-3 py-1">
+                          <p className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 px-1 mb-1">
+                            Cambiar de rol demo:
+                          </p>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleQuickDemo('driver')}
+                              className="px-1.5 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-center transition-colors truncate"
+                            >
+                              Conductor
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickDemo('owner')}
+                              className="px-1.5 py-1.5 text-[11px] font-bold rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/80 text-teal-800 dark:text-teal-200 text-center transition-colors truncate border border-teal-200 dark:border-teal-800/60"
+                            >
+                              Dueño
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickDemo('admin')}
+                              className="px-1.5 py-1.5 text-[11px] font-bold rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/80 text-amber-800 dark:text-amber-200 text-center transition-colors truncate border border-amber-200 dark:border-amber-800/60"
+                            >
+                              Super
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          className="w-full text-left flex items-center gap-2 px-4 py-2 mt-1 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Cerrar Sesión
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
           </div>
 
           {/* Mobile Menu Toggle & Theme Button (Visible only on mobile <md) */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-2 shrink-0">
             <ThemeSwitch isDark={isDark} onToggle={toggleTheme} className="shrink-0" />
             <button
               type="button"
