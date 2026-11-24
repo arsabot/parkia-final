@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
+import { validateStrictEmail } from '../utils/securityValidation';
 import '../styles/auth-card.css';
 
 export const ForgotPasswordPage: React.FC = () => {
@@ -23,11 +24,8 @@ export const ForgotPasswordPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nextEmailError = !email.trim()
-      ? 'Ingresa tu correo electrónico.'
-      : emailRef.current && !emailRef.current.validity.valid
-        ? 'Ingresa un correo electrónico válido.'
-        : '';
+    const emailValidation = validateStrictEmail(email);
+    const nextEmailError = emailValidation.valid ? '' : (emailValidation.error || 'Ingresa un correo electrónico válido.');
     setEmailError(nextEmailError);
     setFormError('');
 
@@ -37,7 +35,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const res = await authService.requestPasswordReset(email.trim());
+      const res = await authService.requestPasswordReset(emailValidation.cleanEmail);
       setSubmitted(true);
       if (res.dev_reset_url) {
         setDevResetUrl(res.dev_reset_url);
@@ -90,6 +88,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 required
                 autoComplete="email"
                 placeholder="tu@email.com"
+                maxLength={254}
                 value={email}
                 error={emailError}
                 onChange={(e) => {

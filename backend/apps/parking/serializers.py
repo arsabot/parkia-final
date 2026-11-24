@@ -1,3 +1,5 @@
+import re
+import urllib.parse
 from rest_framework import serializers
 from .models import Parking, ParkingSpace, ParkingFavorite
 
@@ -87,6 +89,19 @@ class ParkingCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parking
         fields = '__all__'
+
+    def validate_image_url(self, value):
+        if not value:
+            return value
+        clean_val = value.strip()
+        parsed = urllib.parse.urlparse(clean_val)
+        if parsed.scheme not in ('http', 'https'):
+            raise serializers.ValidationError('La URL de la imagen debe comenzar con http:// o https://.')
+        path_lower = parsed.path.lower()
+        is_valid_ext = any(path_lower.endswith(ext) for ext in ('.jpg', '.jpeg', '.png', '.webp')) or ('unsplash.com' in parsed.netloc and '/photo-' in path_lower)
+        if not is_valid_ext and not re.search(r'\.(jpg|jpeg|png|webp)($|\?)', clean_val, re.IGNORECASE):
+            raise serializers.ValidationError('La URL debe ser un enlace directo a una imagen válida (.jpg, .jpeg o .png).')
+        return clean_val
 
     def _handle_owner_email(self, validated_data):
         from apps.users.models import User

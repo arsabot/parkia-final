@@ -23,6 +23,7 @@ import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
 import { parkingService } from '../../services/parkingService';
 import { Parking } from '../../types';
+import { isValidImageUrl } from '../../utils/securityValidation';
 import { Pagination } from '../../components/common/Pagination';
 
 export const AdminParkingsPage: React.FC = () => {
@@ -150,6 +151,13 @@ export const AdminParkingsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.image_url) {
+      const imgValidation = isValidImageUrl(formData.image_url);
+      if (!imgValidation.valid) {
+        error(imgValidation.error || 'La URL de la foto debe ser un enlace válido (.jpg, .jpeg o .png).');
+        return;
+      }
+    }
     try {
       setIsSubmitting(true);
       if (editingParking) {
@@ -501,9 +509,10 @@ export const AdminParkingsPage: React.FC = () => {
               <Input
                 label="URL de Foto del Garaje"
                 type="url"
-                placeholder="https://images.unsplash.com/..."
+                placeholder="https://images.unsplash.com/... o enlace a .jpg/.png"
                 value={formData.image_url}
                 onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                hint="Debe ser un enlace seguro a una imagen (.jpg, .jpeg o .png)."
               />
 
               <Input

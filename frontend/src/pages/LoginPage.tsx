@@ -10,6 +10,7 @@ import { UserRole } from '../types';
 import { GoogleLoginButton } from '../components/auth/GoogleLoginButton';
 import { authService } from '../services/authService';
 import { isSupabaseConfigured } from '../services/supabaseClient';
+import { validateStrictEmail } from '../utils/securityValidation';
 import '../styles/auth-card.css';
 
 export const LoginPage: React.FC = () => {
@@ -71,11 +72,8 @@ export const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nextEmailError = !email.trim()
-      ? 'Ingresa tu correo electrónico.'
-      : emailRef.current && !emailRef.current.validity.valid
-        ? 'Ingresa un correo electrónico válido.'
-        : '';
+    const emailValidation = validateStrictEmail(email);
+    const nextEmailError = emailValidation.valid ? '' : (emailValidation.error || 'Ingresa un correo electrónico válido.');
     const nextPasswordError = password ? '' : 'Ingresa tu contraseña.';
     setEmailError(nextEmailError);
     setPasswordError(nextPasswordError);
@@ -87,7 +85,7 @@ export const LoginPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const res = await login({ email, password });
+      const res = await login({ email: emailValidation.cleanEmail, password });
       success(`¡Bienvenido de vuelta, ${res.user.first_name}!`);
       if (res.user.role === 'admin') {
         navigate('/admin');
@@ -212,6 +210,7 @@ export const LoginPage: React.FC = () => {
               required
               autoComplete="email"
               placeholder="tu@email.com"
+              maxLength={254}
               value={email}
               error={emailError}
               onChange={(e) => {
