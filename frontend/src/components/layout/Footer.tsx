@@ -88,6 +88,7 @@ export const Footer: React.FC = () => {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} PARKIA Mobility Technologies. Todos los derechos reservados.</p>
           <div className="flex items-center gap-6">
+            <Link to="/nosotros" className="hover:text-brand-400 transition-colors">Nosotros</Link>
             <span>Privacidad</span>
             <span>Términos y Condiciones</span>
             <span>Contacto y Soporte</span>
