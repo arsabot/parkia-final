@@ -156,6 +156,7 @@ export const ContactoPage: React.FC = () => {
                 <div className="pkc-tick"><TickIcon /></div>
                 <h2>Recibimos tu mensaje</h2>
                 <p>Gracias por escribirnos, {nombre.trim().split(' ')[0]}. Te vamos a responder a {correo.trim()}.</p>
+                <p className="pkc-spam">No te olvides de revisar tu carpeta de spam o correo no deseado: ahí puede caer nuestro mail de confirmación.</p>
                 <button type="button" className="pkc-btn" onClick={reiniciar}>Enviar otro mensaje</button>
               </div>
             ) : (
