@@ -35,6 +35,7 @@ textarea.pkc-input { resize: vertical; min-height: 130px; line-height: 1.5; }
 .pkc-ok .pkc-tick { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(var(--rgb), .12); color: var(--acc); }
 .pkc-ok h2 { margin: 0; }
 .pkc-ok p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--tx2); }
+.pkc-ok .pkc-spam { font-size: 15px; opacity: .85; }
 
 .pkc-side { display: flex; flex-direction: column; gap: 20px; }
 .pkc-item { display: flex; gap: 14px; align-items: flex-start; }
