@@ -30,6 +30,29 @@ const REDES: { id: string; nombre: string; url: string; fill?: boolean; path: Re
 // Clave pública de Web3Forms (se genera en web3forms.com con el correo del equipo). Va en .env como VITE_WEB3FORMS_KEY.
 const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY as string | undefined;
 
+// Mail de agradecimiento a quien escribió (EmailJS). Es opcional: sin estas 3 variables simplemente no se manda.
+const EMAILJS_SERVICE = import.meta.env.VITE_EMAILJS_SERVICE_ID as string | undefined;
+const EMAILJS_TEMPLATE = import.meta.env.VITE_EMAILJS_TEMPLATE_ID as string | undefined;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY as string | undefined;
+
+const mandarAgradecimiento = async (nombre: string, correo: string) => {
+  if (!EMAILJS_SERVICE || !EMAILJS_TEMPLATE || !EMAILJS_PUBLIC_KEY) return;
+  try {
+    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: EMAILJS_SERVICE,
+        template_id: EMAILJS_TEMPLATE,
+        user_id: EMAILJS_PUBLIC_KEY,
+        template_params: { nombre, correo },
+      }),
+    });
+  } catch {
+    // Si falla el agradecimiento no pasa nada: el mensaje al equipo ya salió.
+  }
+};
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MailIcon: React.FC = () => (
@@ -89,7 +112,10 @@ export const ContactoPage: React.FC = () => {
         }),
       });
       const data = await res.json();
-      if (res.ok && data.success) setEnviado(true);
+      if (res.ok && data.success) {
+        setEnviado(true);
+        void mandarAgradecimiento(nombre.trim().split(' ')[0], correo.trim());
+      }
       else setFalloEnvio('No pudimos enviar tu mensaje. Probá de nuevo o escribinos a equipoparkia@gmail.com.');
     } catch {
       setFalloEnvio('No pudimos enviar tu mensaje. Revisá tu conexión o escribinos a equipoparkia@gmail.com.');
