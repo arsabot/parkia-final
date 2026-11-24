@@ -561,6 +561,8 @@ export const LandingPage: React.FC = () => {
     <Link to="/" aria-current="page" style={{ color: "var(--tx,#FFFFFF)", textDecoration: "none", fontWeight: 600 }}>Inicio</Link>
     <a href="#como-funciona" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Cómo funciona</a>
     <a href="#duenos" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Tengo un estacionamiento</a>
+    <Link to="/nosotros" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Nosotros</Link>
+    <Link to="/contacto" onClick={v.closeMenu} style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none" }}>Contacto</Link>
     <ThemeSwitch isDark={!v.isLight} onToggle={v.toggleTheme} />
     {v.authLinks}
     
@@ -859,6 +861,8 @@ export const LandingPage: React.FC = () => {
     <Link to="/my-reservations" style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none", fontSize: "16px" }}>Mis reservas</Link>
     <Link to="/favorites" style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none", fontSize: "16px" }}>Mis favoritos</Link>
     <a href="#como-funciona" style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none", fontSize: "16px" }}>Cómo funciona</a>
+    <Link to="/nosotros" style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none", fontSize: "16px" }}>Nosotros</Link>
+    <Link to="/contacto" style={{ color: "var(--tx2,#9AA6BA)", textDecoration: "none", fontSize: "16px" }}>Contacto</Link>
     </nav>
     <nav aria-label="Dueños y garajes" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
     <h4 style={{ margin: "0 0 4px 0", fontSize: "17px", fontWeight: 800, color: "var(--tx,#FFFFFF)" }}>Dueños y garajes</h4>
@@ -876,7 +880,7 @@ export const LandingPage: React.FC = () => {
     </div>
     <div style={{ marginTop: "48px", paddingTop: "24px", borderTop: "1px solid rgba(var(--fg-rgb,255,255,255),.07)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "14px", fontSize: "14px", color: "var(--tx3,#6F7C93)" }}>
     <span>© {new Date().getFullYear()} Parkia. Proyecto Fundación Pescar.</span>
-    <nav aria-label="Legales" style={{ display: "flex", flexWrap: "wrap", gap: "22px" }}><span style={{ color: "var(--tx3,#8A96AB)", textDecoration: "none" }}>Privacidad</span><span style={{ color: "var(--tx3,#8A96AB)", textDecoration: "none" }}>Términos y condiciones</span><span style={{ color: "var(--tx3,#8A96AB)", textDecoration: "none" }}>Contacto</span></nav>
+    <nav aria-label="Legales" style={{ display: "flex", flexWrap: "wrap", gap: "22px" }}><span style={{ color: "var(--tx3,#8A96AB)", textDecoration: "none" }}>Privacidad</span><span style={{ color: "var(--tx3,#8A96AB)", textDecoration: "none" }}>Términos y condiciones</span><Link to="/contacto" style={{ color: "var(--tx3,#8A96AB)", textDecoration: "none" }}>Contacto</Link></nav>
     </div>
     </div>
     </footer>

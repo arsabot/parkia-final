@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { RoadSvg } from './nosotros/RoadSvg';
 import './nosotros/nosotros.css';
+import './contacto/contacto.css';
 
 /**
  * Página "Nosotros" (¿Quiénes somos?, cultura y equipo).
@@ -228,6 +230,17 @@ export const NosotrosPage: React.FC = () => {
               })}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ---------- Aviso corto que lleva a Contacto ---------- */}
+      <section className="pkc-cta" aria-labelledby="pkc-cta-t">
+        <div className="pkc-cta-in">
+          <div>
+            <h2 id="pkc-cta-t">¿Hablamos?</h2>
+            <p>Si tenés dudas, ideas o querés sumar tu garaje, escribinos.</p>
+          </div>
+          <Link to="/contacto" className="pkc-btn">Ir a contacto</Link>
         </div>
       </section>
     </div>
