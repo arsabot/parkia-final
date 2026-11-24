@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RoadSvg } from './nosotros/RoadSvg';
 import './nosotros/nosotros.css';
@@ -67,6 +67,13 @@ const Pill: React.FC<{ children: React.ReactNode; href?: string }> = ({ children
 const B: React.FC<{ children: React.ReactNode }> = ({ children }) => <b className="pkn-b">{children}</b>;
 
 export const NosotrosPage: React.FC = () => {
+  const carRef = useRef<HTMLDivElement>(null);
+  const mover = (dir: 1 | -1) => {
+    const el = carRef.current;
+    if (!el) return;
+    const card = el.querySelector('.pkn-vc') as HTMLElement | null;
+    el.scrollBy({ left: dir * ((card?.offsetWidth ?? 320) + 16), behavior: 'smooth' });
+  };
   const [heroTab, setHeroTab] = useState(0);
   const [teamTab, setTeamTab] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
@@ -146,7 +153,7 @@ export const NosotrosPage: React.FC = () => {
           </div>
 
           <div className="pkn-rv pkn-carousel">
-            <div className="pkn-cs">
+            <div className="pkn-cs" ref={carRef} tabIndex={0} aria-label="Nuestros valores (deslizá para ver más)">
               {VALUES.map((v) => (
                 <article key={v.titulo} className="pkn-vc" style={{ ['--c' as string]: v.azul ? 'var(--rgb2)' : 'var(--rgb)' }}>
                   <img src={v.foto} alt="" style={{ objectPosition: v.pos }} loading="lazy" />
@@ -158,7 +165,17 @@ export const NosotrosPage: React.FC = () => {
                 </article>
               ))}
             </div>
-            <div className="pkn-csh" aria-hidden="true"><span className="pkn-csb" /></div>
+            <div className="pkn-cfoot">
+              <div className="pkn-csh" aria-hidden="true"><span className="pkn-csb" /></div>
+              <div className="pkn-cnav">
+                <button type="button" onClick={() => mover(-1)} aria-label="Valor anterior">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
+                </button>
+                <button type="button" onClick={() => mover(1)} aria-label="Valor siguiente">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+                </button>
+              </div>
+            </div>
             <p className="pkn-csh2">Deslizá para ver los demás</p>
           </div>
         </div>
