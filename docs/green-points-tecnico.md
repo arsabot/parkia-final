@@ -35,8 +35,8 @@ Park for Good recompensa a los usuarios que evitan ese trayecto de búsqueda err
 
 4. **Las Dos Causas de Park for Good**:
    - Parkia destina el **5% de su comisión** (15% del total de la reserva) a dos causas:
-     1. **Ambiente**: Reforestación de árboles nativos en Argentina (ONGs aliadas: *PlantArg*, *Plantarse*).
-     2. **Inclusión**: Accesibilidad universal para personas con discapacidad visual, auditiva e intelectual (ONGs aliadas: *Fundación Rumbos*, *Acceso Ya*, *Fundación TINC*).
+     1. **Ambiente**: Reforestación de árboles nativos en Argentina (ONGs candidatas, sin acuerdo todavía: *PlantArg*, *Plantarse*).
+     2. **Inclusión**: Accesibilidad universal para personas con discapacidad visual, auditiva e intelectual (ONGs candidatas, sin acuerdo todavía: *Fundación Rumbos*, *Acceso Ya*, *Fundación TINC*).
    - Al usuario no se le cobra de más y el garajista no resigna ingresos. La donación es automática y financiada por Parkia.
    - La plataforma visibiliza el total acumulado donado a cada causa.
 
