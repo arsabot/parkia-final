@@ -9,6 +9,7 @@ import { Footer } from './components/layout/Footer';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
+import { NosotrosPage } from './pages/NosotrosPage';
 import { SearchPage } from './pages/SearchPage';
 import { ParkingDetailPage } from './pages/ParkingDetailPage';
 import { BookingConfirmationPage } from './pages/BookingConfirmationPage';
@@ -123,6 +124,7 @@ export const App: React.FC = () => {
               <Routes>
                 {/* Public & Driver Routes */}
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/nosotros" element={<NosotrosPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/parking/:id" element={<ParkingDetailPage />} />
                 <Route path="/booking/confirmation/:id" element={<BookingConfirmationPage />} />
