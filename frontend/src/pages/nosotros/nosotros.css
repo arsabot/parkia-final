@@ -200,6 +200,24 @@
 @media (hover: hover) and (pointer: fine) { .pkn-m:hover { transform: translate(-50%, -50%) scale(1.07); } }
 .pkn-m:active { transform: translate(-50%, -50%) scale(.95); }
 
+/* en computadora el anillo del equipo ocupa más */
+@media (min-width: 1100px) {
+  .pkn-twrap { max-width: 1240px; }
+  .pkn-tcol { max-width: 500px; }
+  .pkn-ringw { flex-basis: 580px; width: 580px; }
+  .pkn-layer.def span { font-size: 25px; }
+  .pkn-nm { font-size: 22px; }
+  .pkn-rl { font-size: 17px; }
+  .pkn-lk { font-size: 14px; }
+}
+@media (min-width: 1300px) {
+  .pkn-ringw { flex-basis: 660px; width: 660px; }
+  .pkn-layer.def span { font-size: 29px; }
+  .pkn-nm { font-size: 25px; }
+  .pkn-rl { font-size: 19px; }
+  .pkn-lk { font-size: 15px; }
+}
+
 @media (max-width: 760px) {
   .pkn-h1, .pkn-h2 { font-size: 40px; }
   .pkn-head { padding-top: 56px; }
