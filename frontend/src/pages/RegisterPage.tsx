@@ -125,7 +125,9 @@ export const RegisterPage: React.FC = () => {
       : password !== passwordConfirm
         ? 'Las contraseñas no coinciden.'
         : '';
-    const nextCudNumberError = hasDisabilityPermit && !cudNumber.trim()
+    const isDriver = role === 'driver';
+    const applyCud = isDriver && hasDisabilityPermit;
+    const nextCudNumberError = applyCud && !cudNumber.trim()
       ? 'Ingresá tu número de CUD.'
       : '';
 
@@ -159,13 +161,13 @@ export const RegisterPage: React.FC = () => {
         role,
         password,
         password_confirmation: passwordConfirm,
-        has_disability_permit: hasDisabilityPermit,
-        cud_number: hasDisabilityPermit ? cudNumber.trim() : undefined,
-        cud_dni: hasDisabilityPermit ? cudDni.trim() : undefined,
-        cud_expiration: hasDisabilityPermit && cudExpiration ? cudExpiration : undefined,
+        has_disability_permit: applyCud,
+        cud_number: applyCud ? cudNumber.trim() : undefined,
+        cud_dni: applyCud ? cudDni.trim() : undefined,
+        cud_expiration: applyCud && cudExpiration ? cudExpiration : undefined,
       });
 
-      if (hasDisabilityPermit) {
+      if (applyCud) {
         success('¡Cuenta creada con acceso habilitado a plazas accesibles!');
       } else {
         success('¡Cuenta creada exitosamente!');
@@ -235,7 +237,16 @@ export const RegisterPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('owner')}
+                  onClick={() => {
+                    setRole('owner');
+                    setHasDisabilityPermit(false);
+                    setCudNumber('');
+                    setCudDni('');
+                    setCudExpiration('');
+                    setCudVerifiedSuccess(false);
+                    setCudNumberError('');
+                    setCudVerificationMessage('');
+                  }}
                   className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
                     role === 'owner' || role === 'admin'
                       ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-800 dark:text-teal-300 shadow-sm'
@@ -265,162 +276,164 @@ export const RegisterPage: React.FC = () => {
               </div>
             )}
 
-            {/* Accessibility / CUD Disability Option */}
-            <div className={`pk-register-accessibility rounded-2xl border transition-all p-3.5 sm:p-4 ${
-              hasDisabilityPermit 
-                ? 'border-blue-400/80 dark:border-blue-500/60 bg-blue-50/50 dark:bg-blue-950/20' 
-                : 'border-slate-200 dark:border-parkia-line-dark bg-slate-50/60 dark:bg-slate-800/40'
-            }`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <div className={`p-2 rounded-xl shrink-0 mt-0.5 ${
-                    hasDisabilityPermit 
-                      ? 'bg-blue-500 text-white shadow-sm' 
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                  }`}>
-                    <Accessibility className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        Plazas Accesibles / CUD
-                      </span>
-                      <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
-                        SIA
-                      </span>
+            {/* Accessibility / CUD Disability Option (Exclusivo para conductores) */}
+            {role === 'driver' && (
+              <div className={`pk-register-accessibility rounded-2xl border transition-all p-3.5 sm:p-4 ${
+                hasDisabilityPermit 
+                  ? 'border-blue-400/80 dark:border-blue-500/60 bg-blue-50/50 dark:bg-blue-950/20' 
+                  : 'border-slate-200 dark:border-parkia-line-dark bg-slate-50/60 dark:bg-slate-800/40'
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                      hasDisabilityPermit 
+                        ? 'bg-blue-500 text-white shadow-sm' 
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                    }`}>
+                      <Accessibility className="w-4 h-4" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                      Habilitación para personas con discapacidad mediante Certificado Único de Discapacidad.
-                    </p>
-                  </div>
-                </div>
-
-                <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                  <input
-                    type="checkbox"
-                    checked={hasDisabilityPermit}
-                    onChange={(e) => {
-                      setHasDisabilityPermit(e.target.checked);
-                      setCudNumberError('');
-                      setFormError('');
-                      if (!e.target.checked) {
-                        setCudVerifiedSuccess(false);
-                      }
-                    }}
-                    className="sr-only peer"
-                    aria-label="Poseo Certificado Único de Discapacidad (CUD)"
-                  />
-                  <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600" />
-                </label>
-              </div>
-
-              {/* Expanded CUD verification form */}
-              {hasDisabilityPermit && (
-                <div className="mt-3.5 pt-3.5 border-t border-blue-200/80 dark:border-blue-900/50 space-y-3 animate-fade-in">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1">
-                      <FileCheck2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      Validación Oficial CUD (ANDIS / Mi Argentina)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleFillDemoCud}
-                      className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      Usar CUD de prueba
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Número de CUD / Código *
-                      </label>
-                      <input
-                        type="text"
-                        required={hasDisabilityPermit}
-                        aria-invalid={!!cudNumberError}
-                        aria-describedby={cudNumberError ? 'cud-number-error' : undefined}
-                        placeholder="Ej: 04-38912456-7"
-                        value={cudNumber}
-                        onChange={(e) => {
-                          setCudNumber(e.target.value.toUpperCase());
-                          setCudNumberError('');
-                          setFormError('');
-                          setCudVerifiedSuccess(false);
-                        }}
-                        className={`w-full text-xs font-mono font-bold bg-white dark:bg-slate-800 border rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px] ${
-                          cudNumberError ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-parkia-line-dark'
-                        }`}
-                      />
-                      {cudNumberError && (
-                        <p id="cud-number-error" className="mt-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400" role="alert">
-                          {cudNumberError}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        DNI del Titular
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ej: 38.123.456"
-                        value={cudDni}
-                        onChange={(e) => {
-                          setCudDni(e.target.value);
-                          setCudVerifiedSuccess(false);
-                        }}
-                        className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px]"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Fecha de Vencimiento del CUD
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="date"
-                        value={cudExpiration}
-                        onChange={(e) => {
-                          setCudExpiration(e.target.value);
-                          setCudVerifiedSuccess(false);
-                        }}
-                        className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px]"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleVerifyCudOnline}
-                        disabled={isVerifyingCud || !cudNumber.trim()}
-                        className="px-3 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
-                      >
-                        {isVerifyingCud ? 'Validando...' : 'Verificar CUD'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Verification result pill */}
-                  {cudVerifiedSuccess ? (
-                    <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-start gap-2 text-xs text-emerald-800 dark:text-emerald-200 animate-fade-in">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="block font-bold">CUD Verificado y Vigente</strong>
-                        <span className="text-[11px] leading-tight block text-emerald-700 dark:text-emerald-300">
-                          {cudVerificationMessage || 'Tu cuenta podrá reservar todas las plazas exclusivas para personas con discapacidad.'}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          Plazas Accesibles / CUD
+                        </span>
+                        <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
+                          SIA
                         </span>
                       </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                        Habilitación para personas con discapacidad mediante Certificado Único de Discapacidad.
+                      </p>
                     </div>
-                  ) : (
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-                      La verificación online comprueba la vigencia en la base de datos nacional para asignar automáticamente el rol de acceso a plazas reservadas.
-                    </p>
-                  )}
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                    <input
+                      type="checkbox"
+                      checked={hasDisabilityPermit}
+                      onChange={(e) => {
+                        setHasDisabilityPermit(e.target.checked);
+                        setCudNumberError('');
+                        setFormError('');
+                        if (!e.target.checked) {
+                          setCudVerifiedSuccess(false);
+                        }
+                      }}
+                      className="sr-only peer"
+                      aria-label="Poseo Certificado Único de Discapacidad (CUD)"
+                    />
+                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600" />
+                  </label>
                 </div>
-              )}
-            </div>
+
+                {/* Expanded CUD verification form */}
+                {hasDisabilityPermit && (
+                  <div className="mt-3.5 pt-3.5 border-t border-blue-200/80 dark:border-blue-900/50 space-y-3 animate-fade-in">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1">
+                        <FileCheck2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        Validación Oficial CUD (ANDIS / Mi Argentina)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleFillDemoCud}
+                        className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        Usar CUD de prueba
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Número de CUD / Código *
+                        </label>
+                        <input
+                          type="text"
+                          required={hasDisabilityPermit}
+                          aria-invalid={!!cudNumberError}
+                          aria-describedby={cudNumberError ? 'cud-number-error' : undefined}
+                          placeholder="Ej: 04-38912456-7"
+                          value={cudNumber}
+                          onChange={(e) => {
+                            setCudNumber(e.target.value.toUpperCase());
+                            setCudNumberError('');
+                            setFormError('');
+                            setCudVerifiedSuccess(false);
+                          }}
+                          className={`w-full text-xs font-mono font-bold bg-white dark:bg-slate-800 border rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px] ${
+                            cudNumberError ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-parkia-line-dark'
+                          }`}
+                        />
+                        {cudNumberError && (
+                          <p id="cud-number-error" className="mt-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400" role="alert">
+                            {cudNumberError}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          DNI del Titular
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej: 38.123.456"
+                          value={cudDni}
+                          onChange={(e) => {
+                            setCudDni(e.target.value);
+                            setCudVerifiedSuccess(false);
+                          }}
+                          className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Fecha de Vencimiento del CUD
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={cudExpiration}
+                          onChange={(e) => {
+                            setCudExpiration(e.target.value);
+                            setCudVerifiedSuccess(false);
+                          }}
+                          className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-parkia-line-dark rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyCudOnline}
+                          disabled={isVerifyingCud || !cudNumber.trim()}
+                          className="px-3 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                        >
+                          {isVerifyingCud ? 'Validando...' : 'Verificar CUD'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Verification result pill */}
+                    {cudVerifiedSuccess ? (
+                      <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-start gap-2 text-xs text-emerald-800 dark:text-emerald-200 animate-fade-in">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="block font-bold">CUD Verificado y Vigente</strong>
+                          <span className="text-[11px] leading-tight block text-emerald-700 dark:text-emerald-300">
+                            {cudVerificationMessage || 'Tu cuenta podrá reservar todas las plazas exclusivas para personas con discapacidad.'}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
+                        La verificación online comprueba la vigencia en la base de datos nacional para asignar automáticamente el rol de acceso a plazas reservadas.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Name and Last Name */}
             <div className="pk-register-names grid grid-cols-2 gap-3">
