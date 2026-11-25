@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Compass, 
-  Bookmark, 
-  CalendarCheck, 
-  LayoutDashboard, 
-  Car, 
-  Grid, 
-  LogOut, 
-  User as UserIcon, 
-  Menu, 
-  X, 
+import {
+  Compass,
+  Bookmark,
+  CalendarCheck,
+  LayoutDashboard,
+  Car,
+  Grid,
+  LogOut,
+  User as UserIcon,
+  Menu,
+  X,
   ShieldAlert,
   ParkingCircle,
   ScanLine,
@@ -123,7 +123,7 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-parkia-navy/95 backdrop-blur-md border-b border-slate-200/80 dark:border-parkia-line-dark transition-all">
       <div className={`${isSearchPage ? 'max-w-7xl xl:max-w-[1600px] px-4 sm:px-6 lg:px-8' : 'max-w-[1280px] px-4 sm:px-6'} mx-auto`}>
         <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
-          
+
           {/* Left: Brand Logo + Desktop Nav */}
           <div className="flex items-center gap-6 xl:gap-8 min-w-0">
             {/* Brand Logo */}
@@ -143,11 +143,10 @@ export const Navbar: React.FC = () => {
                   <>
                     <Link
                       to="/admin"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        isActive('/admin')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/admin')
                           ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <LayoutDashboard className="w-4 h-4 shrink-0" />
                       <span>Dashboard</span>
@@ -155,11 +154,10 @@ export const Navbar: React.FC = () => {
 
                     <Link
                       to="/admin/parkings"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
-                        isActive('/admin/parkings')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${isActive('/admin/parkings')
                           ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/60'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <Crown className="w-4 h-4 text-amber-500 shrink-0" />
                       <span>Garajes</span>
@@ -167,11 +165,10 @@ export const Navbar: React.FC = () => {
 
                     <Link
                       to="/admin/gate"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        isActive('/admin/gate')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/admin/gate')
                           ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                       <span>Control QR</span>
@@ -179,11 +176,10 @@ export const Navbar: React.FC = () => {
 
                     <Link
                       to="/admin/spaces"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        isActive('/admin/spaces')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/admin/spaces')
                           ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <Grid className="w-4 h-4 shrink-0" />
                       <span>Plazas</span>
@@ -191,11 +187,10 @@ export const Navbar: React.FC = () => {
 
                     <Link
                       to="/admin/reservations"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        isActive('/admin/reservations')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/admin/reservations')
                           ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <CalendarCheck className="w-4 h-4 shrink-0" />
                       <span>Reservas</span>
@@ -206,11 +201,10 @@ export const Navbar: React.FC = () => {
                   <>
                     <Link
                       to="/admin/gate"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
-                        isActive('/admin/gate')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${isActive('/admin/gate')
                           ? 'bg-teal-50 text-teal-800 border border-teal-200 shadow-sm dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700/60'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <ScanLine className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                       <span>Cámara QR & Garita</span>
@@ -218,11 +212,10 @@ export const Navbar: React.FC = () => {
 
                     <Link
                       to="/admin/spaces"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
-                        isActive('/admin/spaces')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${isActive('/admin/spaces')
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <Grid className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>Plazas Vacantes</span>
@@ -230,11 +223,10 @@ export const Navbar: React.FC = () => {
 
                     <Link
                       to="/admin/reservations"
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        isActive('/admin/reservations')
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/admin/reservations')
                           ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       <CalendarCheck className="w-4 h-4 shrink-0" />
                       <span>Caja & Turnos</span>
@@ -246,11 +238,10 @@ export const Navbar: React.FC = () => {
                 <>
                   <Link
                     to="/search"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/search')
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/search')
                         ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     <Compass className="w-4 h-4 shrink-0" />
                     <span>Buscar</span>
@@ -258,11 +249,10 @@ export const Navbar: React.FC = () => {
 
                   <Link
                     to="/nosotros"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/nosotros')
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/nosotros')
                         ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     <Users className="w-4 h-4 shrink-0" />
                     <span>Nosotros</span>
@@ -270,11 +260,10 @@ export const Navbar: React.FC = () => {
 
                   <Link
                     to="/contacto"
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      isActive('/contacto')
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/contacto')
                         ? 'bg-lime-50 text-lime-700 border border-lime-200 dark:bg-parkia-lime/10 dark:text-parkia-lime dark:border-parkia-lime/40 dark:shadow-[0_0_16px_rgba(163,230,53,0.12)]'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     <Mail className="w-4 h-4 shrink-0" />
                     <span>Contacto</span>
@@ -284,11 +273,10 @@ export const Navbar: React.FC = () => {
                     <>
                       <Link
                         to="/my-reservations"
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                          isActive('/my-reservations')
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/my-reservations')
                             ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
                             : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+                          }`}
                       >
                         <CalendarCheck className="w-4 h-4 shrink-0" />
                         <span>Mis Reservas</span>
@@ -296,11 +284,10 @@ export const Navbar: React.FC = () => {
 
                       <Link
                         to="/favorites"
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                          isActive('/favorites')
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${isActive('/favorites')
                             ? 'bg-brand-50 text-brand-700 dark:bg-parkia-blue/30 dark:text-blue-300'
                             : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+                          }`}
                       >
                         <Bookmark className="w-4 h-4 shrink-0" />
                         <span>Favoritos</span>
@@ -464,27 +451,25 @@ export const Navbar: React.FC = () => {
                       <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                         {user?.first_name} {user?.last_name}
                       </p>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider block ${
-                        isSuperAdmin 
-                          ? 'text-amber-600 dark:text-amber-400' 
-                          : isOwner 
-                          ? 'text-teal-600 dark:text-teal-400' 
-                          : 'text-brand-600 dark:text-brand-400'
-                      }`}>
-                        {isSuperAdmin 
-                          ? 'Super Admin' 
-                          : isOwner 
-                          ? 'Dueño Garaje' 
-                          : 'Conductor'}
+                      <span className={`text-[10px] font-bold uppercase tracking-wider block ${isSuperAdmin
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : isOwner
+                            ? 'text-teal-600 dark:text-teal-400'
+                            : 'text-brand-600 dark:text-brand-400'
+                        }`}>
+                        {isSuperAdmin
+                          ? 'Super Admin'
+                          : isOwner
+                            ? 'Dueño Garaje'
+                            : 'Conductor'}
                       </span>
                     </div>
-                    <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 ${
-                      isSuperAdmin
+                    <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 ${isSuperAdmin
                         ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200'
                         : isOwner
-                        ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
-                        : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
-                    }`}>
+                          ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
+                          : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
+                      }`}>
                       {user?.first_name ? user.first_name[0] : (user?.email ? user.email[0].toUpperCase() : 'U')}
                     </div>
                   </button>
@@ -495,13 +480,12 @@ export const Navbar: React.FC = () => {
                       <div className="px-4 py-2 border-b border-slate-100 dark:border-parkia-line-dark">
                         <p className="text-xs text-slate-500 dark:text-slate-400">Sesión iniciada como</p>
                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.email}</p>
-                        <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
-                          isSuperAdmin 
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800' 
-                            : isOwner 
-                            ? 'bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800' 
-                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                        }`}>
+                        <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md font-extrabold ${isSuperAdmin
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+                            : isOwner
+                              ? 'bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800'
+                              : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                          }`}>
                           {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje Operador' : 'Conductor'}
                         </span>
                       </div>
@@ -641,13 +625,12 @@ export const Navbar: React.FC = () => {
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   aria-expanded={userDropdownOpen}
                   aria-label="Perfil de usuario"
-                  className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 border border-slate-200 dark:border-parkia-line-dark cursor-pointer ${
-                    isSuperAdmin
+                  className={`w-9 h-9 rounded-xl font-black flex items-center justify-center text-sm shadow-inner shrink-0 border border-slate-200 dark:border-parkia-line-dark cursor-pointer ${isSuperAdmin
                       ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200'
                       : isOwner
-                      ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
-                      : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
-                  }`}
+                        ? 'bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-200'
+                        : 'bg-brand-100 dark:bg-brand-950/70 text-brand-700 dark:text-brand-200'
+                    }`}
                 >
                   {user?.first_name ? user.first_name[0] : (user?.email ? user.email[0].toUpperCase() : 'U')}
                 </button>
@@ -765,11 +748,10 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/search"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                    isActive('/search')
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${isActive('/search')
                       ? 'bg-lime-50 text-lime-800 dark:bg-parkia-lime/10 dark:text-parkia-lime'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
-                  }`}
+                    }`}
                 >
                   <Compass className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                   <span>Buscar Estacionamientos</span>
@@ -777,11 +759,10 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/nosotros"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                    isActive('/nosotros')
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${isActive('/nosotros')
                       ? 'bg-lime-50 text-lime-800 dark:bg-parkia-lime/10 dark:text-parkia-lime'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
-                  }`}
+                    }`}
                 >
                   <Users className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                   <span>Nosotros</span>
@@ -789,11 +770,10 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/contacto"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                    isActive('/contacto')
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${isActive('/contacto')
                       ? 'bg-lime-50 text-lime-800 dark:bg-parkia-lime/10 dark:text-parkia-lime'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
-                  }`}
+                    }`}
                 >
                   <Mail className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                   <span>Contacto</span>
@@ -804,11 +784,10 @@ export const Navbar: React.FC = () => {
                     <Link
                       to="/my-reservations"
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                        isActive('/my-reservations')
+                      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${isActive('/my-reservations')
                           ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
                           : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
-                      }`}
+                        }`}
                     >
                       <CalendarCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                       <span>Mis Reservas</span>
@@ -816,11 +795,10 @@ export const Navbar: React.FC = () => {
                     <Link
                       to="/favorites"
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                        isActive('/favorites')
+                      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-base font-semibold transition-colors ${isActive('/favorites')
                           ? 'bg-brand-50 text-brand-800 dark:bg-parkia-blue/30 dark:text-blue-300'
                           : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70'
-                      }`}
+                        }`}
                     >
                       <Bookmark className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                       <span>Favoritos</span>
@@ -904,9 +882,8 @@ export const Navbar: React.FC = () => {
                 <div className="p-4 bg-slate-50 dark:bg-parkia-card-dark rounded-2xl border border-slate-200 dark:border-parkia-line-dark">
                   <p className="text-sm font-bold text-slate-900 dark:text-white">{user?.first_name} {user?.last_name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
-                  <p className={`text-[11px] font-extrabold uppercase mt-1.5 ${
-                    isSuperAdmin ? 'text-amber-600 dark:text-amber-400' : isOwner ? 'text-teal-600 dark:text-teal-400' : 'text-brand-600 dark:text-brand-400'
-                  }`}>
+                  <p className={`text-[11px] font-extrabold uppercase mt-1.5 ${isSuperAdmin ? 'text-amber-600 dark:text-amber-400' : isOwner ? 'text-teal-600 dark:text-teal-400' : 'text-brand-600 dark:text-brand-400'
+                    }`}>
                     {isSuperAdmin ? 'Super Administrador (Ariel)' : isOwner ? 'Dueño Garaje Operador' : 'Conductor'}
                   </p>
                 </div>

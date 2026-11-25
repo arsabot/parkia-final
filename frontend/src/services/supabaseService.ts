@@ -929,7 +929,7 @@ export const supabaseReservations = {
 
     // 1. Get parking price
     const { data: parking } = await supabase.from('parkings').select('*').eq('id', data.parking).single();
-    const pricePerHour = parking ? Number(parking.price_per_hour) : 2000;
+    const pricePerHour = parking ? Number(parking.price_per_hour) : 4200;
 
     // Calculate hours
     const [startH] = data.start_time.split(':').map(Number);
@@ -1242,7 +1242,7 @@ export const supabaseReservations = {
     if (!supabase) throw new Error('Supabase no está configurado.');
 
     const { data: parking } = await supabase.from('parkings').select('*').eq('id', data.parking_id).single();
-    const pricePerHour = parking ? Number(parking.price_per_hour) : 2200;
+    const pricePerHour = parking ? Number(parking.price_per_hour) : 4200;
     const totalPrice = data.hours * pricePerHour;
 
     const { data: freeSpace } = await supabase

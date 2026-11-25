@@ -60,8 +60,8 @@ const FALLBACK_PARKINGS: Parking[] = [
     longitude: -58.3816,
     description: 'Estacionamiento premium subterráneo ubicado a 50m del Obelisco y teatros de calle Corrientes. Vigilancia 24hs.',
     phone: '+54 11 4322-9090',
-    price_per_hour: 2400,
-    price_per_day: 18000,
+    price_per_hour: 4800,
+    price_per_day: 26000,
     opening_time: '00:00:00',
     closing_time: '23:59:59',
     is_24_hours: true,
@@ -90,8 +90,8 @@ const FALLBACK_PARKINGS: Parking[] = [
     longitude: -58.4283,
     description: 'Cochera moderna en el corazón gastronómico y de diseño de Palermo Soho. Fácil acceso y plazas amplias.',
     phone: '+54 11 4833-1122',
-    price_per_hour: 2200,
-    price_per_day: 16500,
+    price_per_hour: 4500,
+    price_per_day: 25000,
     opening_time: '07:00:00',
     closing_time: '01:00:00',
     is_24_hours: false,
@@ -120,8 +120,8 @@ const FALLBACK_PARKINGS: Parking[] = [
     longitude: -58.4042,
     description: 'Frente al Parque Las Heras, ideal para residentes, médicos y paseos por Recoleta y Palermo.',
     phone: '+54 11 4801-7788',
-    price_per_hour: 1900,
-    price_per_day: 14000,
+    price_per_hour: 4800,
+    price_per_day: 27000,
     opening_time: '00:00:00',
     closing_time: '23:59:59',
     is_24_hours: true,
@@ -150,8 +150,8 @@ const FALLBACK_PARKINGS: Parking[] = [
     longitude: -58.3653,
     description: 'Seguridad de primer nivel en Dique 4 de Puerto Madero. Espacios para camionetas y autos eléctricos.',
     phone: '+54 11 4314-5500',
-    price_per_hour: 2800,
-    price_per_day: 22000,
+    price_per_hour: 5600,
+    price_per_day: 32000,
     opening_time: '00:00:00',
     closing_time: '23:59:59',
     is_24_hours: true,
@@ -180,8 +180,8 @@ const FALLBACK_PARKINGS: Parking[] = [
     longitude: -58.4566,
     description: 'Cochera a metros del subte D y zona comercial Cabildo y Juramento. Tarifa más baja de la zona.',
     phone: '+54 11 4788-3300',
-    price_per_hour: 1700,
-    price_per_day: 12500,
+    price_per_hour: 4200,
+    price_per_day: 24000,
     opening_time: '06:00:00',
     closing_time: '00:00:00',
     is_24_hours: false,
@@ -277,7 +277,7 @@ export const aiRecommendationService = {
 
     // Calcular el precio promedio del catálogo
     const avgPrice =
-      parkings.reduce((acc, p) => acc + Number(p.price_per_hour || 2000), 0) /
+      parkings.reduce((acc, p) => acc + Number(p.price_per_hour || 4200), 0) /
       (parkings.length || 1);
 
     // Contexto de ubicación o búsqueda detectada
@@ -311,7 +311,7 @@ export const aiRecommendationService = {
       }
 
       // 2. PRECIO Y RELACIÓN COSTO-BENEFICIO
-      const price = Number(p.price_per_hour || 2000);
+      const price = Number(p.price_per_hour || 4200);
       const priceDiff = avgPrice - price;
 
       if (effectivePriority === 'cheapest') {
