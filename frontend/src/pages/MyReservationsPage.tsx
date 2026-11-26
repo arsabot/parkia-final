@@ -19,8 +19,7 @@ import {
   Banknote,
   Smartphone,
   Leaf,
-  ArrowLeft,
-  HelpCircle
+  ArrowLeft
 } from 'lucide-react';
 import { Reservation } from '../types';
 import { reservationService } from '../services/reservationService';
@@ -36,6 +35,7 @@ import { PaymentCheckoutModal, PaymentMethod } from '../components/reservations/
 import { GreenPointsImpactCard } from '../components/reservations/GreenPointsImpactCard';
 import { useToast } from '../context/ToastContext';
 import confetti from 'canvas-confetti';
+import '../styles/auth-card.css';
 
 export const MyReservationsPage: React.FC = () => {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -108,7 +108,7 @@ export const MyReservationsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-parkia-page-dark py-10 text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="pk-auth-bg pk-auth-light-bg min-h-screen px-4 py-10 text-slate-900 dark:text-slate-100 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Header */}
@@ -130,94 +130,91 @@ export const MyReservationsPage: React.FC = () => {
               </p>
             </div>
           </div>
-
-          <button
-            onClick={() => setIsHowItWorksOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white text-xs font-bold transition-all self-start sm:self-auto cursor-pointer"
-          >
-            <HelpCircle className="w-4 h-4 text-[#A3E635]" />
-            ¿Cómo funciona?
-          </button>
         </div>
 
         {/* F2: Bloque de puntos y CO2 (Park for Good) */}
         <GreenPointsImpactCard
           isHowItWorksOpen={isHowItWorksOpen}
           onHowItWorksClose={() => setIsHowItWorksOpen(false)}
+          onHowItWorksOpen={() => setIsHowItWorksOpen(true)}
         />
 
         {/* Featured Card: Next Reservation */}
         {nextReservation && (
-          <div className="bg-gradient-to-tr from-slate-950 via-slate-900 to-brand-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#0B1327] border border-slate-200 dark:border-[#A3E635]/40 shadow-xl dark:shadow-[0_0_35px_rgba(163,230,53,0.12)] p-6 sm:p-7 md:p-8 transition-all duration-300 hover:border-emerald-500/50 dark:hover:border-[#A3E635]/70 hover:shadow-2xl dark:hover:shadow-[0_0_45px_rgba(163,230,53,0.18)]">
+            <div className="pointer-events-none absolute -top-20 -left-20 w-72 h-72 rounded-full bg-emerald-400/5 dark:bg-[#A3E635]/8 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-teal-400/5 dark:bg-[#A3E635]/5 blur-3xl" />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100 dark:border-white/5 relative z-10">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-[#A3E635] bg-emerald-50 dark:bg-[#A3E635]/10 border border-emerald-300 dark:border-[#A3E635]/30 px-3 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-[#A3E635] animate-pulse" />
                     Próxima Reserva
                   </span>
                   {nextReservation.check_in_time && (
-                    <span className="text-[11px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-                      <Leaf className="w-3 h-3 text-emerald-400" />
+                    <span className="text-[11px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                      <Leaf className="w-3 h-3 text-emerald-600 dark:text-[#A3E635]" />
                       +10 Green Points
                     </span>
                   )}
                   {nextReservation.payment_status === 'paid' ? (
-                    <span className="text-[11px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[11px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                       ✓ Pago Acreditado ({nextReservation.payment_method || 'Mercado Pago'})
                     </span>
                   ) : nextReservation.payment_method === 'Efectivo' ? (
-                    <span className="text-[11px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[11px] font-extrabold uppercase bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 px-2.5 py-0.5 rounded-full">
                       Pago en Garita
                     </span>
                   ) : (
-                    <span className="text-[11px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[11px] font-extrabold uppercase bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 px-2.5 py-0.5 rounded-full">
                       Pago Pendiente
                     </span>
                   )}
                 </div>
-                <h3 className="text-2xl font-bold text-white mt-2">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
                   {nextReservation.parking_name}
                 </h3>
-                <p className="text-xs text-slate-300 flex items-center gap-1.5 mt-1">
-                  <MapPin className="w-4 h-4 text-brand-400 shrink-0" />
+                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
+                  <MapPin className="w-4 h-4 text-emerald-600 dark:text-[#A3E635] shrink-0" />
                   {nextReservation.parking_address}, {nextReservation.parking_city}
                 </p>
               </div>
 
               <div className="text-left sm:text-right">
-                <span className="text-xs text-slate-400 font-medium block">Código</span>
-                <span className="font-mono text-xl font-black text-amber-300">
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">Código</span>
+                <span className="font-mono text-xl font-black text-amber-600 dark:text-amber-300">
                   {nextReservation.booking_code}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 mb-6 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50/80 dark:bg-[#121D36]/80 rounded-2xl border border-slate-200 dark:border-white/5 mb-6 text-xs relative z-10">
               <div>
-                <span className="text-slate-400 block">Fecha:</span>
-                <strong className="text-white text-sm">{nextReservation.date}</strong>
+                <span className="text-slate-500 dark:text-slate-400 block">Fecha:</span>
+                <strong className="text-slate-900 dark:text-white text-sm">{nextReservation.date}</strong>
               </div>
               <div>
-                <span className="text-slate-400 block">Horario:</span>
-                <strong className="text-white text-sm">
+                <span className="text-slate-500 dark:text-slate-400 block">Horario:</span>
+                <strong className="text-slate-900 dark:text-white text-sm">
                   {nextReservation.start_time.slice(0, 5)} - {nextReservation.end_time.slice(0, 5)} hs
                 </strong>
               </div>
               <div>
-                <span className="text-slate-400 block">Plaza:</span>
-                <strong className="text-emerald-400 text-sm">
+                <span className="text-slate-500 dark:text-slate-400 block">Plaza:</span>
+                <strong className="text-emerald-600 dark:text-[#A3E635] text-sm">
                   {nextReservation.space_code} ({nextReservation.space_floor})
                 </strong>
               </div>
               <div>
-                <span className="text-slate-400 block">Total estimado:</span>
-                <strong className="text-white text-sm">
+                <span className="text-slate-500 dark:text-slate-400 block">Total estimado:</span>
+                <strong className="text-slate-900 dark:text-white text-sm">
                   ${Number(nextReservation.total_price).toLocaleString('es-AR')}
                 </strong>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-200 dark:border-white/10 relative z-10">
               <div className="flex flex-wrap items-center gap-2">
                 {nextReservation.status === 'confirmed' && nextReservation.payment_status !== 'paid' && nextReservation.payment_method !== 'Efectivo' && (
                   <Button
@@ -255,7 +252,7 @@ export const MyReservationsPage: React.FC = () => {
 
               <button
                 onClick={() => setSelectedForCancel(nextReservation)}
-                className="text-xs font-semibold text-rose-300 hover:text-rose-100 transition-colors"
+                className="text-xs font-semibold text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-100 transition-colors"
               >
                 Cancelar reserva
               </button>

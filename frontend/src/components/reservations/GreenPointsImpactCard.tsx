@@ -19,12 +19,14 @@ import { Modal } from '../common/Modal';
 interface GreenPointsImpactCardProps {
   className?: string;
   isHowItWorksOpen?: boolean;
+  onHowItWorksOpen?: () => void;
   onHowItWorksClose?: () => void;
 }
 
 export const GreenPointsImpactCard: React.FC<GreenPointsImpactCardProps> = ({
   className = '',
   isHowItWorksOpen: externalOpen,
+  onHowItWorksOpen: externalOpenCallback,
   onHowItWorksClose: externalClose
 }) => {
   const { balance, transactions, loading, error, pointsNeeded, hasDiscount, refetch } = useGreenPoints();
@@ -99,7 +101,10 @@ export const GreenPointsImpactCard: React.FC<GreenPointsImpactCardProps> = ({
               Ver Historial
             </button>
             <button
-              onClick={() => (externalOpen !== undefined ? externalOpen : setInternalHowItWorksOpen(true))}
+              onClick={() => {
+                if (externalOpenCallback) externalOpenCallback();
+                else setInternalHowItWorksOpen(true);
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#121D36] hover:bg-slate-100 dark:hover:bg-[#1A284A] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-sm"
             >
               <HelpCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-[#A3E635]" />
