@@ -17,7 +17,10 @@ import {
   Wallet,
   CreditCard,
   Banknote,
-  Smartphone
+  Smartphone,
+  Leaf,
+  ArrowLeft,
+  HelpCircle
 } from 'lucide-react';
 import { Reservation } from '../types';
 import { reservationService } from '../services/reservationService';
@@ -30,6 +33,7 @@ import { Pagination } from '../components/common/Pagination';
 import { QRCodeDisplay } from '../components/common/QRCodeDisplay';
 import { CancelReservationModal } from '../components/reservations/CancelReservationModal';
 import { PaymentCheckoutModal, PaymentMethod } from '../components/reservations/PaymentCheckoutModal';
+import { GreenPointsImpactCard } from '../components/reservations/GreenPointsImpactCard';
 import { useToast } from '../context/ToastContext';
 import confetti from 'canvas-confetti';
 
@@ -46,6 +50,7 @@ export const MyReservationsPage: React.FC = () => {
   const [selectedForPayment, setSelectedForPayment] = useState<Reservation | null>(null);
   const [reservationsPage, setReservationsPage] = useState<number>(1);
   const [reservationsPageSize, setReservationsPageSize] = useState<number>(5);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
 
   useEffect(() => {
     setReservationsPage(1);
@@ -107,14 +112,39 @@ export const MyReservationsPage: React.FC = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Mis Reservas
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            Gestiona tus plazas de estacionamiento reservadas y revisa tu historial.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Volver"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Mis reservas
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+                Gestioná tus reservas y descubrí tus beneficios
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsHowItWorksOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white text-xs font-bold transition-all self-start sm:self-auto cursor-pointer"
+          >
+            <HelpCircle className="w-4 h-4 text-[#A3E635]" />
+            ¿Cómo funciona?
+          </button>
         </div>
+
+        {/* F2: Bloque de puntos y CO2 (Park for Good) */}
+        <GreenPointsImpactCard
+          isHowItWorksOpen={isHowItWorksOpen}
+          onHowItWorksClose={() => setIsHowItWorksOpen(false)}
+        />
 
         {/* Featured Card: Next Reservation */}
         {nextReservation && (
@@ -125,6 +155,12 @@ export const MyReservationsPage: React.FC = () => {
                   <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30">
                     Próxima Reserva
                   </span>
+                  {nextReservation.check_in_time && (
+                    <span className="text-[11px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                      <Leaf className="w-3 h-3 text-emerald-400" />
+                      +10 Green Points
+                    </span>
+                  )}
                   {nextReservation.payment_status === 'paid' ? (
                     <span className="text-[11px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                       ✓ Pago Acreditado ({nextReservation.payment_method || 'Mercado Pago'})
@@ -280,6 +316,13 @@ export const MyReservationsPage: React.FC = () => {
                       #{res.booking_code}
                     </span>
                     <Badge variant={res.status as any}>{res.status_display}</Badge>
+                    {/* F3: Etiqueta Green Points si tiene check-in */}
+                    {res.check_in_time && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                        <Leaf className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        +10 Green Points
+                      </span>
+                    )}
                     {res.payment_method && (
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                         {res.payment_method}

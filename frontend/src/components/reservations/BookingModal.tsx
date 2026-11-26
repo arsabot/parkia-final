@@ -10,12 +10,15 @@ import {
   ShieldCheck,
   Lock,
   Unlock,
-  AlertTriangle
+  AlertTriangle,
+  Leaf,
+  Sparkles
 } from 'lucide-react';
 import { Parking } from '../../types';
 import { reservationService } from '../../services/reservationService';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useGreenPoints } from '../../hooks/useGreenPoints';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { SpaceGrid } from './SpaceGrid';
@@ -93,6 +96,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [estimatedPrice, setEstimatedPrice] = useState<number>(Number(parking.price_per_hour) * 2);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // F3: Integración de descuento Green Points
+  const { balance, hasDiscount } = useGreenPoints();
+  const discountPercentage = balance?.discountPercentage || 10;
+  const discountAmount = hasDiscount ? Math.round(estimatedPrice * (discountPercentage / 100)) : 0;
+  const finalPrice = Math.max(0, estimatedPrice - discountAmount);
 
   // Function to query availability with lock information
   const checkSlots = useCallback(async () => {
@@ -570,21 +579,57 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             </div>
           )}
 
-          {/* Price & Summary breakdown */}
-          <div className="p-4 bg-slate-900 dark:bg-parkia-page-dark border border-slate-800 dark:border-parkia-line-dark rounded-2xl text-white flex items-center justify-between shadow-lg">
-            <div>
-              <span className="text-xs text-slate-400 block font-medium">
-                Duración: <strong className="text-white">{durationHours.toFixed(1)} hs</strong> • {selectedMethod}
-              </span>
-              <span className="text-xs text-slate-400">
-                {selectedMethod === 'Efectivo' ? 'Abonás en garita al ingresar:' : 'Total a pagar ahora:'}
-              </span>
+          {/* Price & Summary breakdown con Green Points */}
+          <div className="p-4 bg-slate-900 dark:bg-parkia-page-dark border border-slate-800 dark:border-parkia-line-dark rounded-2xl text-white shadow-lg space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-400 block font-medium">
+                  Duración: <strong className="text-white">{durationHours.toFixed(1)} hs</strong> • {selectedMethod}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {selectedMethod === 'Efectivo' ? 'Abonás en garita al ingresar:' : 'Total a pagar:'}
+                </span>
+              </div>
+              <div className="text-right">
+                {hasDiscount && discountAmount > 0 ? (
+                  <div>
+                    <span className="text-xs text-slate-400 line-through block">
+                      ${estimatedPrice.toLocaleString('es-AR')}
+                    </span>
+                    <span className="text-2xl font-black text-emerald-400">
+                      ${finalPrice.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-2xl font-black text-emerald-400">
+                    ${estimatedPrice.toLocaleString('es-AR')}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="text-right">
-              <span className="text-2xl font-black text-emerald-400">
-                ${estimatedPrice.toLocaleString('es-AR')}
-              </span>
-            </div>
+
+            {/* Detalle del descuento Green Points o aviso de suma de puntos */}
+            {hasDiscount && discountAmount > 0 ? (
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800 dark:border-slate-800/80 text-xs">
+                <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Descuento Green Points ({discountPercentage}%) aplicado
+                </span>
+                <span className="font-extrabold text-emerald-400">
+                  -${discountAmount.toLocaleString('es-AR')}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800 dark:border-slate-800/80 text-[11px] text-slate-400">
+                <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
+                  <Leaf className="w-3 h-3 text-emerald-400" />
+                  Con esta reserva sumás +10 Green Points
+                </span>
+                <span className="text-slate-400">
+                  {balance ? `Saldo: ${balance.points} GP` : ''}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Submit button */}
@@ -615,7 +660,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         method={selectedMethod}
-        amount={estimatedPrice}
+        amount={finalPrice}
         parkingName={parking.name}
         durationHours={durationHours}
         lockExpiresAt={lockExpiresAt}
